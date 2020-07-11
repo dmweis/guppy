@@ -3,7 +3,6 @@ mod arm_driver;
 mod speech_service;
 
 use clap::Clap;
-use lss_driver;
 
 #[derive(Clap)]
 #[clap()]
