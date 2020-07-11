@@ -3,10 +3,21 @@ use async_trait::async_trait;
 use std::error::Error;
 
 pub struct JointPositions {
-    base: f32,
-    shoulder: f32,
-    elbow: f32,
-    wrist: f32,
+    pub base: f32,
+    pub shoulder: f32,
+    pub elbow: f32,
+    pub wrist: f32,
+}
+
+impl JointPositions {
+    pub fn new(base: f32, shoulder: f32, elbow: f32, wrist: f32) -> JointPositions {
+        JointPositions {
+            base,
+            shoulder,
+            elbow,
+            wrist,
+        }
+    }
 }
 
 #[async_trait(?Send)]
@@ -16,6 +27,7 @@ pub trait ArmDriver {
     async fn halt(&mut self) -> Result<(), Box<dyn Error>>;
     async fn limp(&mut self) -> Result<(), Box<dyn Error>>;
     async fn move_to(&mut self, position: JointPositions) -> Result<(), Box<dyn Error>>;
+    async fn read_position(&mut self) -> Result<JointPositions, Box<dyn Error>>;
 }
 
 pub struct SerialArmDriver {
@@ -85,5 +97,18 @@ impl ArmDriver for SerialArmDriver {
             .move_to_position(self.config.wrist_id, position.wrist)
             .await?;
         Ok(())
+    }
+
+    async fn read_position(&mut self) -> Result<JointPositions, Box<dyn Error>> {
+        let base_position = self.driver.query_position(self.config.base_id).await?;
+        let shoulder_position = self.driver.query_position(self.config.shoulder_id).await?;
+        let elbow_position = self.driver.query_position(self.config.elbow_id).await?;
+        let wrist_position = self.driver.query_position(self.config.wrist_id).await?;
+        Ok(JointPositions::new(
+            base_position,
+            shoulder_position,
+            elbow_position,
+            wrist_position,
+        ))
     }
 }
