@@ -3,10 +3,10 @@ use std::fs;
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct ArmConfig {
-    base_id: u8,
-    shoulder_id: u8,
-    elbow_id: u8,
-    wrist_id: u8,
+    pub base_id: u8,
+    pub shoulder_id: u8,
+    pub elbow_id: u8,
+    pub wrist_id: u8,
 }
 
 impl ArmConfig {

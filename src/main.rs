@@ -1,4 +1,5 @@
 mod arm_config;
+mod arm_controller;
 mod arm_driver;
 mod speech_service;
 
@@ -19,7 +20,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     if args.speak {
         speech_service::say(format!("Waking up arm. Connecting to {}", args.port)).await?;
     }
-    let mut driver = arm_driver::SerialArmDriver::new(&args.port)?;
+    let mut driver =
+        arm_driver::SerialArmDriver::new(&args.port, arm_config::ArmConfig::default()).await?;
     driver.set_color(lss_driver::LedColor::Cyan).await?;
     if args.speak {
         speech_service::say("Connected successfully!".to_owned()).await?;
