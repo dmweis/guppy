@@ -1,6 +1,5 @@
 use crate::arm_config;
 use async_trait::async_trait;
-use lss_driver;
 use std::error::Error;
 
 #[async_trait(?Send)]
@@ -13,6 +12,7 @@ pub struct SerialArmDriver {
 }
 
 impl SerialArmDriver {
+    #[allow(clippy::new_ret_no_self)]
     pub fn new(port: &str) -> Result<Box<dyn ArmDriver>, Box<dyn Error>> {
         let driver = lss_driver::LSSDriver::new(port)?;
         Ok(Box::new(SerialArmDriver { driver }))
