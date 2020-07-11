@@ -37,7 +37,6 @@ impl ArmConfig {
     }
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
