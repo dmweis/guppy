@@ -16,11 +16,13 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - uses: actions-rs/toolchain@v1
+    - name: Install toolchain
+    uses: actions-rs/toolchain@v1
       with:
         toolchain: nightly
         override: true
-    - uses: actions-rs/cargo@v1
+    - name: Test
+      uses: actions-rs/cargo@v1
       with:
         command: test
         args: --all-features --no-fail-fast
@@ -29,9 +31,9 @@ jobs:
         RUSTFLAGS: '-Zprofile -Ccodegen-units=1 -Cinline-threshold=0 -Clink-dead-code -Coverflow-checks=off -Cpanic=abort -Zpanic_abort_tests'
         RUSTDOCFLAGS: '-Zprofile -Ccodegen-units=1 -Cinline-threshold=0 -Clink-dead-code -Coverflow-checks=off -Cpanic=abort -Zpanic_abort_tests'
     - id: coverage
-      name: coverage
+      name: Gather coverage
       uses: actions-rs/grcov@v0.1
-    - name: Codecov
+    - name: Publish to Codecov
       uses: codecov/codecov-action@v1.0.7
       with:
         file: ${{ steps.coverage.outputs.report }}

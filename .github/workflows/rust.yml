@@ -1,4 +1,4 @@
-name: Rust
+name: Stable test
 
 on:
   push:
@@ -28,7 +28,8 @@ jobs:
       run: cargo test --verbose
     - name: Run rust fmt
       run: cargo fmt -- --check
-    - uses: actions-rs/clippy-check@v1.0.7
+    - name: Run clippy
+      uses: actions-rs/clippy-check@v1.0.7
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
         args: --all-features
