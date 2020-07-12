@@ -95,7 +95,7 @@ async fn ik_run(args: IkArgs) -> Result<(), Box<dyn std::error::Error>> {
         let positions = arm_controller.read_position().await?;
         visualizer.set_position(positions.clone());
         println!("{:?}", positions.end_effector);
-        sleep(Duration::from_secs_f32(0.2)).await;
+        sleep(Duration::from_secs_f32(0.02)).await;
     }
     sleep(Duration::from_secs_f32(0.2)).await;
     Ok(())
