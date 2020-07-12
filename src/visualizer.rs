@@ -1,7 +1,10 @@
-use kiss3d::window::Window;
-use nalgebra::{Isometry3, Translation3, UnitQuaternion, Point3, Point2, Vector3};
 use crate::arm_controller::ArmPositions;
-use std::sync::{ Arc, Mutex, atomic::{ AtomicBool, Ordering } };
+use kiss3d::window::Window;
+use nalgebra::{Isometry3, Point2, Point3, Translation3, UnitQuaternion, Vector3};
+use std::sync::{
+    atomic::{AtomicBool, Ordering},
+    Arc, Mutex,
+};
 
 fn add_ground_plane(window: &mut Window) {
     let size = 0.5;
@@ -66,7 +69,7 @@ fn convert_coordinates(position: Vector3<f32>) -> Point3<f32> {
     Point3::new(position.y, position.z, -position.x)
 }
 
-fn render_loop(current_arm_pose: Arc<Mutex<Option<ArmPositions>>>, keep_running: Arc<AtomicBool>,) {
+fn render_loop(current_arm_pose: Arc<Mutex<Option<ArmPositions>>>, keep_running: Arc<AtomicBool>) {
     let purple = Point3::new(0.5, 0.0, 0.5);
     let cyan = Point3::new(0.0, 0.5, 0.5);
     let white = Point3::new(1.0, 1.0, 1.0);
@@ -89,7 +92,16 @@ fn render_loop(current_arm_pose: Arc<Mutex<Option<ArmPositions>>>, keep_running:
             window.draw_point(&wrist, &purple);
             let end_effector = convert_coordinates(arm_pose.end_effector);
             window.draw_point(&end_effector, &cyan);
-            window.draw_text(&format!("x: {}\ny: {}\nz: {}", arm_pose.end_effector.x, arm_pose.end_effector.y, arm_pose.end_effector.z), &Point2::new(1.0, 1.0), 50.0, &kiss3d::text::Font::default(), &white)
+            window.draw_text(
+                &format!(
+                    "x: {}\ny: {}\nz: {}",
+                    arm_pose.end_effector.x, arm_pose.end_effector.y, arm_pose.end_effector.z
+                ),
+                &Point2::new(1.0, 1.0),
+                50.0,
+                &kiss3d::text::Font::default(),
+                &white,
+            )
         }
     }
     window.close()
