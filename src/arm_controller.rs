@@ -75,7 +75,7 @@ impl ArmController for LssArmController {
             &na::Vector3::y_axis(),
             motor_positions.shoulder.to_radians(),
         );
-        let elbow = shoulder + shoulder_rotation * base_rotation * self.config.elbow;
+        let elbow = shoulder + base_rotation * shoulder_rotation * self.config.elbow;
         let elbow_rotation = na::Rotation3::from_axis_angle(
             &na::Vector3::y_axis(),
             motor_positions.elbow.to_radians(),

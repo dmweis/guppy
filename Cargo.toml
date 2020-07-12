@@ -18,6 +18,7 @@ async-trait = "0.1"
 nalgebra = { version = "0.21", features = ["serde-serialize"] }
 async-std = "1.6"
 ctrlc = "3.1"
+kiss3d = "0.24"
 
 [dev-dependencies]
 mockito = "0.25"

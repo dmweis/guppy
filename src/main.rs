@@ -2,8 +2,11 @@ mod arm_config;
 mod arm_controller;
 mod arm_driver;
 mod speech_service;
+mod visualizer;
+
 use async_std::task::sleep;
 use std::time::Duration;
+use visualizer::VisualizerInterface;
 
 use clap::Clap;
 use std::path::Path;
@@ -68,6 +71,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 async fn ik_run(args: IkArgs) -> Result<(), Box<dyn std::error::Error>> {
     let running = Arc::new(AtomicBool::new(true));
     let running_handle = running.clone();
+    let mut visualizer = VisualizerInterface::new();
 
     ctrlc::set_handler(move || {
         running_handle.store(false, Ordering::Release);
@@ -89,6 +93,7 @@ async fn ik_run(args: IkArgs) -> Result<(), Box<dyn std::error::Error>> {
     }
     while running.load(Ordering::Acquire) {
         let positions = arm_controller.read_position().await?;
+        visualizer.set_position(positions.clone());
         println!("{:?}", positions.end_effector);
         sleep(Duration::from_secs_f32(0.2)).await;
     }
