@@ -20,6 +20,7 @@ struct Args {
 #[derive(Clap)]
 enum SubCommand {
     DisplayPositions(DisplayPositionsArgs),
+    Ik(IkArgs),
     Config(ConfigArgs),
 }
 
@@ -39,6 +40,14 @@ struct DisplayPositionsArgs {
     speak: bool,
 }
 
+#[derive(Clap)]
+struct IkArgs {
+    #[clap(about = "Serial port to use")]
+    port: String,
+    #[clap(short, long)]
+    speak: bool,
+}
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args: Args = Args::parse();
@@ -49,7 +58,41 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         SubCommand::Config(args) => {
             config(args)?;
         }
+        SubCommand::Ik(args) => {
+            ik_run(args).await?;
+        }
     }
+    Ok(())
+}
+
+async fn ik_run(args: IkArgs) -> Result<(), Box<dyn std::error::Error>> {
+    let running = Arc::new(AtomicBool::new(true));
+    let running_handle = running.clone();
+
+    ctrlc::set_handler(move || {
+        running_handle.store(false, Ordering::Release);
+        println!("Caught interrupt\nExiting...");
+    })?;
+
+    if args.speak {
+        speech_service::say(format!("Waking up arm. Connecting to {}", args.port)).await?;
+    }
+    let mut driver =
+        arm_driver::SerialArmDriver::new(&args.port, arm_config::ArmConfig::included()).await?;
+    driver.limp().await?;
+    driver.set_color(lss_driver::LedColor::Cyan).await?;
+    let mut arm_controller =
+        arm_controller::LssArmController::new(driver, arm_config::ArmConfig::included());
+
+    if args.speak {
+        speech_service::say("Connected successfully!".to_owned()).await?;
+    }
+    while running.load(Ordering::Acquire) {
+        let positions = arm_controller.read_position().await?;
+        println!("{:?}", positions.end_effector);
+        sleep(Duration::from_secs_f32(0.2)).await;
+    }
+    sleep(Duration::from_secs_f32(0.2)).await;
     Ok(())
 }
 
