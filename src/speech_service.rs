@@ -17,7 +17,7 @@ mod tests {
     use mockito::{mock, Matcher};
 
     #[tokio::test]
-    async fn simple_tts_request() {
+    async fn speech_service_posts() {
         let mock_tts_api = mock("POST", "/say")
             .match_body(Matcher::Exact("test message".to_owned()))
             .with_status(200)

@@ -2,6 +2,7 @@ use crate::arm_config;
 use async_trait::async_trait;
 use std::error::Error;
 
+#[derive(Debug, Clone, PartialEq)]
 pub struct JointPositions {
     pub base: f32,
     pub shoulder: f32,
