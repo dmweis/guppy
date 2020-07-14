@@ -9,10 +9,10 @@ use std::time::Duration;
 use visualizer::VisualizerInterface;
 
 use clap::Clap;
+use nalgebra as na;
 use std::path::Path;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
-use nalgebra as na;
 
 #[derive(Clap)]
 #[clap()]
@@ -65,7 +65,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
         SubCommand::Ik(args) => {
             ik_run(args).await?;
-        },
+        }
         SubCommand::Viz => test_visualizer().await?,
     }
     Ok(())

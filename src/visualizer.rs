@@ -1,10 +1,12 @@
 use crate::arm_controller::ArmPositions;
 use kiss3d::window::Window;
+use nalgebra as na;
 use nalgebra::{Isometry3, Point2, Point3, Translation3, UnitQuaternion, Vector3};
 use std::sync::{
     atomic::{AtomicBool, Ordering},
     Arc, Mutex,
 };
+use std::time::Instant;
 
 fn add_ground_plane(window: &mut Window) {
     let size = 0.5;
@@ -70,18 +72,28 @@ fn convert_coordinates(position: Vector3<f32>) -> Point3<f32> {
 }
 
 fn render_loop(current_arm_pose: Arc<Mutex<Option<ArmPositions>>>, keep_running: Arc<AtomicBool>) {
-    let purple = Point3::new(0.5, 0.0, 0.5);
     let blue = Point3::new(0.0, 0.0, 1.0);
-    let cyan = Point3::new(0.0, 0.5, 0.5);
     let white = Point3::new(1.0, 1.0, 1.0);
     let mut window = Window::new("Guppy");
+    let mut frame_counter = Instant::now();
 
     let mut camera =
         kiss3d::camera::ArcBall::new(Point3::new(1.0, 1.0, 1.0), Point3::new(0.0, 0.0, 0.0));
     camera.set_zoom_modifier(10.0);
 
     window.set_background_color(0.5, 0.5, 0.5);
-    window.set_point_size(10.0);
+    window.set_framerate_limit(Some(60));
+
+    let mut base_sphere = window.add_sphere(0.01);
+    base_sphere.set_color(1.0, 0.0, 1.0);
+    let mut shoulder_sphere = window.add_sphere(0.01);
+    shoulder_sphere.set_color(1.0, 0.0, 1.0);
+    let mut elbow_sphere = window.add_sphere(0.01);
+    elbow_sphere.set_color(1.0, 0.0, 1.0);
+    let mut wrist_sphere = window.add_sphere(0.01);
+    wrist_sphere.set_color(1.0, 0.0, 1.0);
+    let mut end_effector_sphere = window.add_sphere(0.01);
+    end_effector_sphere.set_color(0.0, 1.0, 1.0);
 
     add_ground_plane(&mut window);
 
@@ -89,36 +101,43 @@ fn render_loop(current_arm_pose: Arc<Mutex<Option<ArmPositions>>>, keep_running:
         let arm_pose = current_arm_pose.lock().unwrap().clone();
         if let Some(arm_pose) = arm_pose {
             let base = convert_coordinates(arm_pose.base);
-            window.draw_point(&base, &purple);
+            base_sphere.set_local_translation(na::Translation3::new(base.x, base.y, base.z));
 
             let shoulder = convert_coordinates(arm_pose.shoulder);
-            window.draw_point(&shoulder, &purple);
             window.draw_line(&base, &shoulder, &blue);
+            shoulder_sphere
+                .set_local_translation(na::Translation3::new(shoulder.x, shoulder.y, shoulder.z));
 
             let elbow = convert_coordinates(arm_pose.elbow);
-            window.draw_point(&elbow, &purple);
             window.draw_line(&shoulder, &elbow, &blue);
+            elbow_sphere.set_local_translation(na::Translation3::new(elbow.x, elbow.y, elbow.z));
 
             let wrist = convert_coordinates(arm_pose.wrist);
-            window.draw_point(&wrist, &purple);
             window.draw_line(&elbow, &wrist, &blue);
+            wrist_sphere.set_local_translation(na::Translation3::new(wrist.x, wrist.y, wrist.z));
 
             let end_effector = convert_coordinates(arm_pose.end_effector);
-            window.draw_point(&end_effector, &cyan);
+            end_effector_sphere.set_local_translation(na::Translation3::new(
+                end_effector.x,
+                end_effector.y,
+                end_effector.z,
+            ));
             window.draw_line(&wrist, &end_effector, &blue);
             window.draw_text(
                 &format!(
-                    "x: {}\ny: {}\nz: {}\nCamera dist: {}",
+                    "End effector:\n   x: {}\n   y: {}\n   z: {}\nCamera dist: {}\nframe time: {}ms",
                     arm_pose.end_effector.x,
                     arm_pose.end_effector.y,
                     arm_pose.end_effector.z,
-                    camera.dist()
+                    camera.dist(),
+                    frame_counter.elapsed().as_millis(),
                 ),
                 &Point2::new(1.0, 1.0),
                 50.0,
                 &kiss3d::text::Font::default(),
                 &white,
-            )
+            );
+            frame_counter = Instant::now();
         }
     }
     window.close()
