@@ -12,6 +12,7 @@ use clap::Clap;
 use std::path::Path;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
+use nalgebra as na;
 
 #[derive(Clap)]
 #[clap()]
@@ -25,6 +26,7 @@ enum SubCommand {
     DisplayPositions(DisplayPositionsArgs),
     Ik(IkArgs),
     Config(ConfigArgs),
+    Viz,
 }
 
 #[derive(Clap)]
@@ -63,7 +65,33 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
         SubCommand::Ik(args) => {
             ik_run(args).await?;
-        }
+        },
+        SubCommand::Viz => test_visualizer().await?,
+    }
+    Ok(())
+}
+
+async fn test_visualizer() -> Result<(), Box<dyn std::error::Error>> {
+    let running = Arc::new(AtomicBool::new(true));
+    let running_handle = running.clone();
+    let mut visualizer = VisualizerInterface::new();
+
+    ctrlc::set_handler(move || {
+        running_handle.store(false, Ordering::Release);
+        println!("Caught interrupt\nExiting...");
+    })?;
+
+    while running.load(Ordering::Acquire) {
+        let positions = crate::arm_controller::ArmPositions::new(
+            na::Vector3::new(0.0, 0.0, 0.0),
+            na::Vector3::new(0.1, 0.01, 0.1),
+            na::Vector3::new(0.0, 0.0, 0.2),
+            na::Vector3::new(0.1, 0.01, 0.3),
+            na::Vector3::new(0.0, 0.0, 0.5),
+        );
+        visualizer.set_position(positions.clone());
+        println!("{:?}", positions.end_effector);
+        sleep(Duration::from_secs_f32(0.02)).await;
     }
     Ok(())
 }

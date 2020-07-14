@@ -14,7 +14,7 @@ pub struct ArmPositions {
 }
 
 impl ArmPositions {
-    fn new(
+    pub fn new(
         base: na::Vector3<f32>,
         shoulder: na::Vector3<f32>,
         elbow: na::Vector3<f32>,
