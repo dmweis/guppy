@@ -81,7 +81,7 @@ fn render_loop(current_arm_pose: Arc<Mutex<Option<ArmPositions>>>, keep_running:
     camera.set_zoom_modifier(10.0);
 
     window.set_background_color(0.5, 0.5, 0.5);
-    window.set_point_size(40.0);
+    window.set_point_size(10.0);
 
     add_ground_plane(&mut window);
 
