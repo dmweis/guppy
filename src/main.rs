@@ -89,7 +89,15 @@ async fn test_visualizer() -> Result<(), Box<dyn std::error::Error>> {
             na::Vector3::new(0.1, 0.01, 0.3),
             na::Vector3::new(0.0, 0.0, 0.5),
         );
+        let positions_2 = crate::arm_controller::ArmPositions::new(
+            na::Vector3::new(0.2, 0.2, 0.0),
+            na::Vector3::new(0.3, 0.21, 0.1),
+            na::Vector3::new(0.2, 0.2, 0.2),
+            na::Vector3::new(0.3, 0.21, 0.3),
+            na::Vector3::new(0.2, 0.2, 0.5),
+        );
         visualizer.set_position(positions.clone());
+        visualizer.set_motion_plan(Some(vec![positions_2]));
         println!("{:?}", positions.end_effector);
         sleep(Duration::from_secs_f32(0.02)).await;
     }
@@ -122,6 +130,11 @@ async fn ik_run(args: IkArgs) -> Result<(), Box<dyn std::error::Error>> {
     while running.load(Ordering::Acquire) {
         let positions = arm_controller.read_position().await?;
         visualizer.set_position(positions.clone());
+        
+        let calculated_ik = arm_controller.calculate_ik(positions.end_effector, 0.0).await?;
+        let translated_fk = arm_controller.calculate_fk(calculated_ik).await?;
+        visualizer.set_motion_plan(Some(vec![translated_fk]));
+        
         println!("{:?}", positions.end_effector);
         sleep(Duration::from_secs_f32(0.02)).await;
     }
