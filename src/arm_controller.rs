@@ -64,22 +64,27 @@ impl ArmController for LssArmController {
     /// calculate Ik
     /// This method expects a point translated from arm base
     async fn calculate_ik(&self, position: na::Vector3<f32>, effector_angle: f32) -> Result<JointPositions, Box<dyn Error>> {
+        let effector_angle = effector_angle.to_radians();
         let base_angle = position.y.atan2(position.x);
         let horizontal_distance = (position.x.powi(2) + position.y.powi(2)).sqrt();
         let height = position.z - self.config.shoulder.z;
         let end_effector_len = self.config.end_effector.magnitude();
         // assuming end always at 0°
-        let reduced_horizontal_distance = horizontal_distance - end_effector_len;
+        let effector_horizontal = effector_angle.cos() * end_effector_len;
+        let effector_vertical = effector_angle.sin() * end_effector_len;
+        let reduced_horizontal_distance = horizontal_distance - 0.0;
         let reduced_height = height - 0.0;
         let shoulder_length = self.config.shoulder.magnitude();
         let forearm_length = self.config.elbow.magnitude();
         let arm_distance = (reduced_height.powi(2) + reduced_horizontal_distance.powi(2)).sqrt();
         let shoulder_plane_target_angle = (reduced_height / reduced_horizontal_distance).atan();
-
+        
         let upper_shoulder_angle = ((arm_distance.powi(2) + shoulder_length.powi(2) - forearm_length.powi(2)) / 2.0 * arm_distance * shoulder_length).acos();
         let shoulder_angle = shoulder_plane_target_angle + upper_shoulder_angle;
+        println!("{}", reduced_horizontal_distance);
 
         let elbow_angle = ((forearm_length.powi(2) + shoulder_length.powi(2) - arm_distance.powi(2)) / 2.0 * forearm_length * shoulder_length).acos();
+
 
         Ok(JointPositions::new(
             base_angle.to_degrees(),

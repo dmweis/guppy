@@ -131,11 +131,11 @@ async fn ik_run(args: IkArgs) -> Result<(), Box<dyn std::error::Error>> {
         let positions = arm_controller.read_position().await?;
         visualizer.set_position(positions.clone());
         
-        let calculated_ik = arm_controller.calculate_ik(positions.end_effector, 0.0).await?;
+        let calculated_ik = arm_controller.calculate_ik(positions.elbow, 0.0).await?;
         let translated_fk = arm_controller.calculate_fk(calculated_ik).await?;
         visualizer.set_motion_plan(Some(vec![translated_fk]));
         
-        println!("{:?}", positions.end_effector);
+        // println!("{:?}", positions.end_effector);
         sleep(Duration::from_secs_f32(0.02)).await;
     }
     sleep(Duration::from_secs_f32(0.2)).await;
