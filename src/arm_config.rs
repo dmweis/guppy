@@ -59,12 +59,12 @@ impl ArmConfig {
     }
 
     pub fn save_json(&self, path: &str) -> Result<(), Box<dyn std::error::Error>> {
-        let text = fs::write(path, &self.serialize_to_json()?)?;
+        fs::write(path, &self.serialize_to_json()?)?;
         Ok(())
     }
 
     pub fn save_yaml(&self, path: &str) -> Result<(), Box<dyn std::error::Error>> {
-        let text = fs::write(path, &self.serialize_to_yaml()?)?;
+        fs::write(path, &self.serialize_to_yaml()?)?;
         Ok(())
     }
 
