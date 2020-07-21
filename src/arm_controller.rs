@@ -71,20 +71,26 @@ impl ArmController for LssArmController {
         let base_angle = position.y.atan2(position.x);
         let horizontal_distance = (position.x.powi(2) + position.y.powi(2)).sqrt();
         let height = position.z - self.config.shoulder.z;
+        // end effector calc
         let end_effector_len = self.config.end_effector.magnitude();
-        // assuming end always at 0°
         let effector_horizontal = effector_angle.cos() * end_effector_len;
-        let effector_vertical = effector_angle.sin() * end_effector_len;
-        let reduced_horizontal_distance = horizontal_distance - 0.0;
-        let reduced_height = height - 0.0;
-        let shoulder_length = self.config.shoulder.magnitude();
-        let forearm_length = self.config.elbow.magnitude();
+        let effector_vertical = -(effector_angle.sin() * end_effector_len);
+        let reduced_horizontal_distance = horizontal_distance - effector_horizontal;
+        let reduced_height = height - effector_vertical;
+
+        // make sure these are always positive
+        let shoulder_length = self.config.elbow.magnitude();
+        let forearm_length = self.config.wrist.magnitude();
         let arm_distance = (reduced_height.powi(2) + reduced_horizontal_distance.powi(2)).sqrt();
-        let shoulder_plane_target_angle = (reduced_height / reduced_horizontal_distance).atan();
-        
-        let upper_shoulder_angle = ((arm_distance.powi(2) + shoulder_length.powi(2) - forearm_length.powi(2)) / 2.0 * arm_distance * shoulder_length).acos();
-        let shoulder_angle = shoulder_plane_target_angle + upper_shoulder_angle;
-        println!("{}", reduced_horizontal_distance);
+        // correct until here I think
+        // this is angle between horizontal plane and shoulder/forearm triangle
+        let shoulder_plane_target_angle = reduced_height.atan2(reduced_horizontal_distance);
+
+        let upper_shoulder_angle = ((arm_distance.powi(2) + forearm_length.powi(2) - shoulder_length.powi(2)) / (2.0 * arm_distance * forearm_length)).acos();
+        // don't forget about shoulder not being a straight line!
+        let shoulder_offset_angle = (self.config.elbow.x/self.config.elbow.z).atan();
+        let shoulder_angle = shoulder_plane_target_angle + upper_shoulder_angle + shoulder_offset_angle;
+        println!("{:?}", shoulder_angle.to_degrees());
 
         let elbow_angle = ((forearm_length.powi(2) + shoulder_length.powi(2) - arm_distance.powi(2)) / 2.0 * forearm_length * shoulder_length).acos();
 
