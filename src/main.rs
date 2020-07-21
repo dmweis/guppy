@@ -88,6 +88,7 @@ async fn test_visualizer() -> Result<(), Box<dyn std::error::Error>> {
             na::Vector3::new(0.0, 0.0, 0.2),
             na::Vector3::new(0.1, 0.01, 0.3),
             na::Vector3::new(0.0, 0.0, 0.5),
+            0.0,
         );
         let positions_2 = crate::arm_controller::ArmPositions::new(
             na::Vector3::new(0.2, 0.2, 0.0),
@@ -95,6 +96,7 @@ async fn test_visualizer() -> Result<(), Box<dyn std::error::Error>> {
             na::Vector3::new(0.2, 0.2, 0.2),
             na::Vector3::new(0.3, 0.21, 0.3),
             na::Vector3::new(0.2, 0.2, 0.5),
+            0.0,
         );
         visualizer.set_position(positions.clone());
         visualizer.set_motion_plan(Some(vec![positions_2]));

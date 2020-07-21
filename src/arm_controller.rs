@@ -12,6 +12,7 @@ pub struct ArmPositions {
     pub elbow: na::Vector3<f32>,
     pub wrist: na::Vector3<f32>,
     pub end_effector: na::Vector3<f32>,
+    pub end_effector_angle: f32,
 }
 
 impl ArmPositions {
@@ -21,6 +22,7 @@ impl ArmPositions {
         elbow: na::Vector3<f32>,
         wrist: na::Vector3<f32>,
         end_effector: na::Vector3<f32>,
+        end_effector_angle: f32,
     ) -> ArmPositions {
         ArmPositions {
             base,
@@ -28,6 +30,7 @@ impl ArmPositions {
             elbow,
             wrist,
             end_effector,
+            end_effector_angle,
         }
     }
 }
@@ -121,7 +124,7 @@ impl ArmController for LssArmController {
                 * elbow_rotation
                 * wrist_rotation
                 * self.config.end_effector;
-        let arm_positions = ArmPositions::new(base, shoulder, elbow, wrist, end_effector);
+        let arm_positions = ArmPositions::new(base, shoulder, elbow, wrist, end_effector, joints.elbow + joints.shoulder + joints.wrist);
         Ok(arm_positions)
     }
 
