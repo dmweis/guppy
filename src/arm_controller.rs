@@ -6,6 +6,21 @@ use std::error::Error;
 use crate::arm_driver::JointPositions;
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct EndEffectorPose {
+    pub position: na::Vector3<f32>,
+    pub end_effector_angle: f32,
+}
+
+impl EndEffectorPose {
+    pub fn new(position: na::Vector3<f32>, end_effector_angle: f32) -> EndEffectorPose {
+        EndEffectorPose {
+            position,
+            end_effector_angle
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct ArmPositions {
     pub base: na::Vector3<f32>,
     pub shoulder: na::Vector3<f32>,

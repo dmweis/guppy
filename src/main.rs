@@ -5,14 +5,16 @@ mod speech_service;
 mod visualizer;
 
 use async_std::task::sleep;
-use std::time::{ Duration, Instant };
+use std::time::Duration;
 use visualizer::VisualizerInterface;
 
 use clap::Clap;
 use nalgebra as na;
 use std::path::Path;
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::Arc;
+use std::sync::{ Arc, Mutex };
+use crate::arm_controller::EndEffectorPose;
+
 
 #[derive(Clap)]
 #[clap()]
@@ -78,7 +80,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 async fn test_visualizer() -> Result<(), Box<dyn std::error::Error>> {
     let running = Arc::new(AtomicBool::new(true));
     let running_handle = running.clone();
-    let mut visualizer = VisualizerInterface::new();
+    let desired_point = Arc::new(Mutex::new(EndEffectorPose::new(na::Vector3::new(0., 0., 0.), 0.)));
+    let mut visualizer = VisualizerInterface::new(desired_point.clone());
 
     ctrlc::set_handler(move || {
         running_handle.store(false, Ordering::Release);
@@ -113,7 +116,8 @@ async fn test_visualizer() -> Result<(), Box<dyn std::error::Error>> {
 async fn ik_run(args: GenericArgs) -> Result<(), Box<dyn std::error::Error>> {
     let running = Arc::new(AtomicBool::new(true));
     let running_handle = running.clone();
-    let mut visualizer = VisualizerInterface::new();
+    let desired_point = Arc::new(Mutex::new(EndEffectorPose::new(na::Vector3::new(0., 0., 0.), 0.)));
+    let mut visualizer = VisualizerInterface::new(desired_point.clone());
 
     ctrlc::set_handler(move || {
         running_handle.store(false, Ordering::Release);
@@ -151,7 +155,8 @@ async fn ik_run(args: GenericArgs) -> Result<(), Box<dyn std::error::Error>> {
 async fn move_run(args: GenericArgs) -> Result<(), Box<dyn std::error::Error>> {
     let running = Arc::new(AtomicBool::new(true));
     let running_handle = running.clone();
-    let mut visualizer = VisualizerInterface::new();
+    let desired_point = Arc::new(Mutex::new(EndEffectorPose::new(na::Vector3::new(0.2, 0., 0.2), 0.)));
+    let mut visualizer = VisualizerInterface::new(desired_point.clone());
 
     ctrlc::set_handler(move || {
         running_handle.store(false, Ordering::Release);
@@ -170,13 +175,14 @@ async fn move_run(args: GenericArgs) -> Result<(), Box<dyn std::error::Error>> {
     if args.speak {
         speech_service::say("Connected successfully!".to_owned()).await?;
     }
-    let start = Instant::now();
+    // let start = Instant::now();
     while running.load(Ordering::Acquire) {
-        let temporal = (start.elapsed().as_secs_f32() * 2.).sin();
-        let z = temporal * 0.07;
-        let y = temporal * 0.07;
-        let position = na::Vector3::new(0.2, 0.0 + y, 0.2 + z);
-        if let Ok(arm_positions) = arm_controller.move_to(position, 0.0).await {
+        // let temporal = (start.elapsed().as_secs_f32() * 2.).sin();
+        // let z = temporal * 0.07;
+        // let y = temporal * 0.07;
+        // let position = na::Vector3::new(0.2, 0.0 + y, 0.2 + z);
+        let pose = desired_point.lock().unwrap().clone();
+        if let Ok(arm_positions) = arm_controller.move_to(pose.position, pose.end_effector_angle).await {
             let joint_positions = arm_controller.calculate_fk(arm_positions).await?;
             visualizer.set_position(joint_positions);
         } else {

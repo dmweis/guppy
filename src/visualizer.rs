@@ -1,6 +1,9 @@
 use crate::arm_controller::ArmPositions;
 use kiss3d::window::Window;
 use kiss3d::scene::SceneNode;
+use kiss3d;
+use kiss3d::event::Key;
+use kiss3d::event::Action;
 use nalgebra as na;
 use nalgebra::{Isometry3, Point2, Point3, Translation3, UnitQuaternion, Vector3};
 use std::sync::{
@@ -8,6 +11,7 @@ use std::sync::{
     Arc, Mutex,
 };
 use std::time::Instant;
+use crate::arm_controller::EndEffectorPose;
 
 fn add_ground_plane(window: &mut Window) {
     let size = 0.5;
@@ -41,7 +45,7 @@ pub struct VisualizerInterface {
 }
 
 impl VisualizerInterface {
-    pub fn new() -> VisualizerInterface {
+    pub fn new(desired_end_point: Arc<Mutex<EndEffectorPose>>) -> VisualizerInterface {
         let current_arm_pose = Arc::new(Mutex::new(None));
         let motion_plan = Arc::new(Mutex::new(None));
         let keep_running = Arc::new(AtomicBool::new(true));
@@ -50,7 +54,7 @@ impl VisualizerInterface {
         let current_arm_pose_clone = current_arm_pose.clone();
         let motion_plan_clone = motion_plan.clone();
         let thread_handle = std::thread::spawn(move || {
-            render_loop(current_arm_pose_clone, motion_plan_clone, keep_running_clone);
+            render_loop(current_arm_pose_clone, motion_plan_clone, keep_running_clone, desired_end_point);
         });
         VisualizerInterface {
             current_arm_pose,
@@ -157,7 +161,10 @@ impl Drop for ArmRenderer {
     }
 }
 
-fn render_loop(current_arm_pose: Arc<Mutex<Option<ArmPositions>>>, motion_plan: Arc<Mutex<Option<Vec<ArmPositions>>>>, keep_running: Arc<AtomicBool>) {
+fn render_loop(current_arm_pose: Arc<Mutex<Option<ArmPositions>>>,
+        motion_plan: Arc<Mutex<Option<Vec<ArmPositions>>>>,
+        keep_running: Arc<AtomicBool>,
+        desired_end_point: Arc<Mutex<EndEffectorPose>>) {
     let white = Point3::new(1.0, 1.0, 1.0);
     let mut window = Window::new("Guppy");
     let mut frame_counter = Instant::now();
@@ -193,7 +200,6 @@ fn render_loop(current_arm_pose: Arc<Mutex<Option<ArmPositions>>>, motion_plan: 
                 &kiss3d::text::Font::default(),
                 &white,
             );
-            frame_counter = Instant::now();
         }
         let mut arm_renders = vec![];
         if let Some(motion_plan) = motion_plan_poses {
@@ -203,6 +209,39 @@ fn render_loop(current_arm_pose: Arc<Mutex<Option<ArmPositions>>>, motion_plan: 
                 arm_renders.push(arm_render);
             }
         }
+        let mut pos_copy = desired_end_point.lock().unwrap().clone();
+        if window.get_key(Key::D) == Action::Press {
+            pos_copy.position.y += frame_counter.elapsed().as_secs_f32() * 0.1;
+        }
+        if window.get_key(Key::A) == Action::Press {
+            pos_copy.position.y -= frame_counter.elapsed().as_secs_f32() * 0.1;
+        }
+        if window.get_key(Key::W) == Action::Press {
+            pos_copy.position.x += frame_counter.elapsed().as_secs_f32() * 0.1;
+        }
+        if window.get_key(Key::S) == Action::Press {
+            pos_copy.position.x -= frame_counter.elapsed().as_secs_f32() * 0.1;
+        }
+        if window.get_key(Key::E) == Action::Press {
+            pos_copy.position.z += frame_counter.elapsed().as_secs_f32() * 0.1;
+        }
+        if window.get_key(Key::Q) == Action::Press {
+            pos_copy.position.z -= frame_counter.elapsed().as_secs_f32() * 0.1;
+        }
+        if window.get_key(Key::R) == Action::Press {
+            pos_copy.end_effector_angle -= frame_counter.elapsed().as_secs_f32() * 20.;
+        }
+        if window.get_key(Key::F) == Action::Press {
+            pos_copy.end_effector_angle += frame_counter.elapsed().as_secs_f32() * 20.;
+        }
+        if window.get_key(Key::Return) == Action::Press {
+            pos_copy.end_effector_angle = 0.0;
+            pos_copy.position.x = 0.2;
+            pos_copy.position.y = 0.0;
+            pos_copy.position.z = 0.2;
+        }
+        (*desired_end_point.lock().unwrap()) = pos_copy;
+        frame_counter = Instant::now();
         window.render_with_camera(&mut camera);
     }
     window.close()
