@@ -41,6 +41,9 @@ pub trait ArmController {
     async fn calculate_ik(&self, position: na::Vector3<f32>, effector_angle: f32) -> Result<JointPositions, Box<dyn Error>>;
     async fn calculate_fk(&self, joints: JointPositions) -> Result<ArmPositions, Box<dyn Error>>;
     async fn read_position(&mut self) -> Result<ArmPositions, Box<dyn Error>>;
+    async fn move_to(&mut self, position: na::Vector3<f32>, effector_angle: f32) -> Result<JointPositions, Box<dyn Error>>;
+    async fn halt(&mut self) -> Result<(), Box<dyn Error>>;
+    async fn limp(&mut self) -> Result<(), Box<dyn Error>>;
 }
 
 pub struct LssArmController {
@@ -140,5 +143,21 @@ impl ArmController for LssArmController {
         let motor_positions = self.driver.read_position().await?;
         let arm_positions = self.calculate_fk(motor_positions).await?;
         Ok(arm_positions)
+    }
+
+    async fn move_to(&mut self, position: na::Vector3<f32>, effector_angle: f32) -> Result<JointPositions, Box<dyn Error>> {
+        let joint_positions = self.calculate_ik(position, effector_angle).await?;
+        self.driver.move_to(joint_positions.clone()).await?;
+        Ok(joint_positions)
+    }
+
+    async fn halt(&mut self) -> Result<(), Box<dyn Error>> {
+        self.driver.halt().await?;
+        Ok(())
+    }
+
+    async fn limp(&mut self) -> Result<(), Box<dyn Error>> {
+        self.driver.limp().await?;
+        Ok(())
     }
 }

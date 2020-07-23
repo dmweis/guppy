@@ -63,13 +63,13 @@ impl ArmDriver for SerialArmDriver {
             .set_motion_profile(lss_driver::BROADCAST_ID, false)
             .await?;
         self.driver
-            .set_angular_holding_stiffness(lss_driver::BROADCAST_ID, -2)
+            .set_angular_holding_stiffness(lss_driver::BROADCAST_ID, -4)
             .await?;
         self.driver
-            .set_angular_stiffness(lss_driver::BROADCAST_ID, -2)
+            .set_angular_stiffness(lss_driver::BROADCAST_ID, -4)
             .await?;
         self.driver
-            .set_filter_position_count(lss_driver::BROADCAST_ID, 4)
+            .set_filter_position_count(lss_driver::BROADCAST_ID, 0)
             .await?;
         Ok(())
     }

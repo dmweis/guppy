@@ -5,7 +5,7 @@ mod speech_service;
 mod visualizer;
 
 use async_std::task::sleep;
-use std::time::Duration;
+use std::time::{ Duration, Instant };
 use visualizer::VisualizerInterface;
 
 use clap::Clap;
@@ -24,7 +24,8 @@ struct Args {
 #[derive(Clap)]
 enum SubCommand {
     DisplayPositions(DisplayPositionsArgs),
-    Ik(IkArgs),
+    Ik(GenericArgs),
+    Move(GenericArgs),
     Config(ConfigArgs),
     Viz,
 }
@@ -46,7 +47,7 @@ struct DisplayPositionsArgs {
 }
 
 #[derive(Clap)]
-struct IkArgs {
+struct GenericArgs {
     #[clap(about = "Serial port to use")]
     port: String,
     #[clap(short, long)]
@@ -65,6 +66,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
         SubCommand::Ik(args) => {
             ik_run(args).await?;
+        }
+        SubCommand::Move(args) => {
+            move_run(args).await?;
         }
         SubCommand::Viz => test_visualizer().await?,
     }
@@ -106,7 +110,7 @@ async fn test_visualizer() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-async fn ik_run(args: IkArgs) -> Result<(), Box<dyn std::error::Error>> {
+async fn ik_run(args: GenericArgs) -> Result<(), Box<dyn std::error::Error>> {
     let running = Arc::new(AtomicBool::new(true));
     let running_handle = running.clone();
     let mut visualizer = VisualizerInterface::new();
@@ -140,6 +144,48 @@ async fn ik_run(args: IkArgs) -> Result<(), Box<dyn std::error::Error>> {
             eprintln!("Message error");
         }
     }
+    sleep(Duration::from_secs_f32(0.5)).await;
+    Ok(())
+}
+
+async fn move_run(args: GenericArgs) -> Result<(), Box<dyn std::error::Error>> {
+    let running = Arc::new(AtomicBool::new(true));
+    let running_handle = running.clone();
+    let mut visualizer = VisualizerInterface::new();
+
+    ctrlc::set_handler(move || {
+        running_handle.store(false, Ordering::Release);
+        println!("Caught interrupt\nExiting...");
+    })?;
+
+    if args.speak {
+        speech_service::say(format!("Waking up arm. Connecting to {}", args.port)).await?;
+    }
+    let mut driver =
+        arm_driver::SerialArmDriver::new(&args.port, arm_config::ArmConfig::included()).await?;
+    driver.set_color(lss_driver::LedColor::Magenta).await?;
+    let mut arm_controller =
+        arm_controller::LssArmController::new(driver, arm_config::ArmConfig::included());
+
+    if args.speak {
+        speech_service::say("Connected successfully!".to_owned()).await?;
+    }
+    let start = Instant::now();
+    while running.load(Ordering::Acquire) {
+        let temporal = (start.elapsed().as_secs_f32() * 2.).sin();
+        let z = temporal * 0.07;
+        let y = temporal * 0.07;
+        let position = na::Vector3::new(0.2, 0.0 + y, 0.2 + z);
+        if let Ok(arm_positions) = arm_controller.move_to(position, 0.0).await {
+            let joint_positions = arm_controller.calculate_fk(arm_positions).await?;
+            visualizer.set_position(joint_positions);
+        } else {
+            eprintln!("Message error");
+        }
+        sleep(Duration::from_micros(20)).await;
+    }
+    arm_controller.limp().await?;
+    arm_controller.set_color(lss_driver::LedColor::Yellow).await?;
     sleep(Duration::from_secs_f32(0.5)).await;
     Ok(())
 }
