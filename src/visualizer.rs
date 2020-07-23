@@ -1,9 +1,10 @@
 use crate::arm_controller::ArmPositions;
-use kiss3d::window::Window;
-use kiss3d::scene::SceneNode;
+use crate::arm_controller::EndEffectorPose;
 use kiss3d;
-use kiss3d::event::Key;
 use kiss3d::event::Action;
+use kiss3d::event::Key;
+use kiss3d::scene::SceneNode;
+use kiss3d::window::Window;
 use nalgebra as na;
 use nalgebra::{Isometry3, Point2, Point3, Translation3, UnitQuaternion, Vector3};
 use std::sync::{
@@ -11,7 +12,6 @@ use std::sync::{
     Arc, Mutex,
 };
 use std::time::Instant;
-use crate::arm_controller::EndEffectorPose;
 
 fn add_ground_plane(window: &mut Window) {
     let size = 0.5;
@@ -49,12 +49,17 @@ impl VisualizerInterface {
         let current_arm_pose = Arc::new(Mutex::new(None));
         let motion_plan = Arc::new(Mutex::new(None));
         let keep_running = Arc::new(AtomicBool::new(true));
-        
+
         let keep_running_clone = keep_running.clone();
         let current_arm_pose_clone = current_arm_pose.clone();
         let motion_plan_clone = motion_plan.clone();
         let thread_handle = std::thread::spawn(move || {
-            render_loop(current_arm_pose_clone, motion_plan_clone, keep_running_clone, desired_end_point);
+            render_loop(
+                current_arm_pose_clone,
+                motion_plan_clone,
+                keep_running_clone,
+                desired_end_point,
+            );
         });
         VisualizerInterface {
             current_arm_pose,
@@ -65,16 +70,25 @@ impl VisualizerInterface {
     }
 
     pub fn set_position(&mut self, arm_position: ArmPositions) {
-        self.current_arm_pose.lock().expect("Failed lock in set arm position").replace(arm_position);
+        self.current_arm_pose
+            .lock()
+            .expect("Failed lock in set arm position")
+            .replace(arm_position);
     }
 
     pub fn set_motion_plan(&mut self, motion_plan: Option<Vec<ArmPositions>>) {
         match motion_plan {
             Some(plan) => {
-                self.motion_plan.lock().expect("Failed lock in set_motion_plan").replace(plan);
-            },
+                self.motion_plan
+                    .lock()
+                    .expect("Failed lock in set_motion_plan")
+                    .replace(plan);
+            }
             None => {
-                self.motion_plan.lock().expect("Failed lock in set_motion_plan").take();
+                self.motion_plan
+                    .lock()
+                    .expect("Failed lock in set_motion_plan")
+                    .take();
             }
         }
     }
@@ -84,7 +98,9 @@ impl Drop for VisualizerInterface {
     fn drop(&mut self) {
         self.keep_running.store(false, Ordering::Release);
         if let Some(thread_handle) = self.thread_handle.take() {
-            thread_handle.join().expect("Failed drop for VisualizerInterface");
+            thread_handle
+                .join()
+                .expect("Failed drop for VisualizerInterface");
         }
     }
 }
@@ -103,7 +119,11 @@ struct ArmRenderer {
 }
 
 impl ArmRenderer {
-    fn new(window: &mut Window, color: Point3<f32>, end_effector_color: Point3<f32>) -> ArmRenderer {
+    fn new(
+        window: &mut Window,
+        color: Point3<f32>,
+        end_effector_color: Point3<f32>,
+    ) -> ArmRenderer {
         let mut base_sphere = window.add_sphere(0.01);
         base_sphere.set_color(color.x, color.y, color.z);
         let mut shoulder_sphere = window.add_sphere(0.01);
@@ -113,7 +133,11 @@ impl ArmRenderer {
         let mut wrist_sphere = window.add_sphere(0.01);
         wrist_sphere.set_color(color.x, color.y, color.z);
         let mut end_effector_sphere = window.add_sphere(0.01);
-        end_effector_sphere.set_color(end_effector_color.x, end_effector_color.y, end_effector_color.z);
+        end_effector_sphere.set_color(
+            end_effector_color.x,
+            end_effector_color.y,
+            end_effector_color.z,
+        );
         ArmRenderer {
             base_sphere,
             shoulder_sphere,
@@ -126,7 +150,8 @@ impl ArmRenderer {
 
     fn step(&mut self, window: &mut Window, arm_pose: &ArmPositions) {
         let base = convert_coordinates(arm_pose.base);
-        self.base_sphere.set_local_translation(na::Translation3::new(base.x, base.y, base.z));
+        self.base_sphere
+            .set_local_translation(na::Translation3::new(base.x, base.y, base.z));
 
         let shoulder = convert_coordinates(arm_pose.shoulder);
         window.draw_line(&base, &shoulder, &self.color);
@@ -135,18 +160,21 @@ impl ArmRenderer {
 
         let elbow = convert_coordinates(arm_pose.elbow);
         window.draw_line(&shoulder, &elbow, &self.color);
-        self.elbow_sphere.set_local_translation(na::Translation3::new(elbow.x, elbow.y, elbow.z));
+        self.elbow_sphere
+            .set_local_translation(na::Translation3::new(elbow.x, elbow.y, elbow.z));
 
         let wrist = convert_coordinates(arm_pose.wrist);
         window.draw_line(&elbow, &wrist, &self.color);
-        self.wrist_sphere.set_local_translation(na::Translation3::new(wrist.x, wrist.y, wrist.z));
+        self.wrist_sphere
+            .set_local_translation(na::Translation3::new(wrist.x, wrist.y, wrist.z));
 
         let end_effector = convert_coordinates(arm_pose.end_effector);
-        self.end_effector_sphere.set_local_translation(na::Translation3::new(
-            end_effector.x,
-            end_effector.y,
-            end_effector.z,
-        ));
+        self.end_effector_sphere
+            .set_local_translation(na::Translation3::new(
+                end_effector.x,
+                end_effector.y,
+                end_effector.z,
+            ));
         window.draw_line(&wrist, &end_effector, &self.color);
     }
 }
@@ -161,10 +189,12 @@ impl Drop for ArmRenderer {
     }
 }
 
-fn render_loop(current_arm_pose: Arc<Mutex<Option<ArmPositions>>>,
-        motion_plan: Arc<Mutex<Option<Vec<ArmPositions>>>>,
-        keep_running: Arc<AtomicBool>,
-        desired_end_point: Arc<Mutex<EndEffectorPose>>) {
+fn render_loop(
+    current_arm_pose: Arc<Mutex<Option<ArmPositions>>>,
+    motion_plan: Arc<Mutex<Option<Vec<ArmPositions>>>>,
+    keep_running: Arc<AtomicBool>,
+    desired_end_point: Arc<Mutex<EndEffectorPose>>,
+) {
     let white = Point3::new(1.0, 1.0, 1.0);
     let mut window = Window::new("Guppy");
     let mut frame_counter = Instant::now();
@@ -176,7 +206,11 @@ fn render_loop(current_arm_pose: Arc<Mutex<Option<ArmPositions>>>,
     window.set_background_color(0.5, 0.5, 0.5);
     window.set_framerate_limit(Some(120));
 
-    let mut primary_arm = ArmRenderer::new(&mut window, Point3::new(1.0, 0.0, 1.0), Point3::new(0.0, 1.0, 1.0));
+    let mut primary_arm = ArmRenderer::new(
+        &mut window,
+        Point3::new(1.0, 0.0, 1.0),
+        Point3::new(0.0, 1.0, 1.0),
+    );
 
     add_ground_plane(&mut window);
 
@@ -204,7 +238,11 @@ fn render_loop(current_arm_pose: Arc<Mutex<Option<ArmPositions>>>,
         let mut arm_renders = vec![];
         if let Some(motion_plan) = motion_plan_poses {
             for step in motion_plan {
-                let mut arm_render = ArmRenderer::new(&mut window, Point3::new(1.0, 0.0, 0.0), Point3::new(0.0, 1.0, 0.0));
+                let mut arm_render = ArmRenderer::new(
+                    &mut window,
+                    Point3::new(1.0, 0.0, 0.0),
+                    Point3::new(0.0, 1.0, 0.0),
+                );
                 arm_render.step(&mut window, &step);
                 arm_renders.push(arm_render);
             }

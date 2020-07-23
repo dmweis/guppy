@@ -8,13 +8,12 @@ use async_std::task::sleep;
 use std::time::Duration;
 use visualizer::VisualizerInterface;
 
+use crate::arm_controller::EndEffectorPose;
 use clap::Clap;
 use nalgebra as na;
 use std::path::Path;
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::{ Arc, Mutex };
-use crate::arm_controller::EndEffectorPose;
-
+use std::sync::{Arc, Mutex};
 
 #[derive(Clap)]
 #[clap()]
@@ -80,7 +79,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 async fn test_visualizer() -> Result<(), Box<dyn std::error::Error>> {
     let running = Arc::new(AtomicBool::new(true));
     let running_handle = running.clone();
-    let desired_point = Arc::new(Mutex::new(EndEffectorPose::new(na::Vector3::new(0., 0., 0.), 0.)));
+    let desired_point = Arc::new(Mutex::new(EndEffectorPose::new(
+        na::Vector3::new(0., 0., 0.),
+        0.,
+    )));
     let mut visualizer = VisualizerInterface::new(desired_point.clone());
 
     ctrlc::set_handler(move || {
@@ -116,7 +118,10 @@ async fn test_visualizer() -> Result<(), Box<dyn std::error::Error>> {
 async fn ik_run(args: GenericArgs) -> Result<(), Box<dyn std::error::Error>> {
     let running = Arc::new(AtomicBool::new(true));
     let running_handle = running.clone();
-    let desired_point = Arc::new(Mutex::new(EndEffectorPose::new(na::Vector3::new(0., 0., 0.), 0.)));
+    let desired_point = Arc::new(Mutex::new(EndEffectorPose::new(
+        na::Vector3::new(0., 0., 0.),
+        0.,
+    )));
     let mut visualizer = VisualizerInterface::new(desired_point.clone());
 
     ctrlc::set_handler(move || {
@@ -140,7 +145,9 @@ async fn ik_run(args: GenericArgs) -> Result<(), Box<dyn std::error::Error>> {
     while running.load(Ordering::Acquire) {
         if let Ok(positions) = arm_controller.read_position().await {
             visualizer.set_position(positions.clone());
-            let calculated_ik = arm_controller.calculate_ik(positions.end_effector, positions.end_effector_angle).await?;
+            let calculated_ik = arm_controller
+                .calculate_ik(positions.end_effector, positions.end_effector_angle)
+                .await?;
             let translated_fk = arm_controller.calculate_fk(calculated_ik).await?;
             visualizer.set_motion_plan(Some(vec![translated_fk]));
             sleep(Duration::from_micros(20)).await;
@@ -155,7 +162,10 @@ async fn ik_run(args: GenericArgs) -> Result<(), Box<dyn std::error::Error>> {
 async fn move_run(args: GenericArgs) -> Result<(), Box<dyn std::error::Error>> {
     let running = Arc::new(AtomicBool::new(true));
     let running_handle = running.clone();
-    let desired_point = Arc::new(Mutex::new(EndEffectorPose::new(na::Vector3::new(0.2, 0., 0.2), 0.)));
+    let desired_point = Arc::new(Mutex::new(EndEffectorPose::new(
+        na::Vector3::new(0.2, 0., 0.2),
+        0.,
+    )));
     let mut visualizer = VisualizerInterface::new(desired_point.clone());
 
     ctrlc::set_handler(move || {
@@ -182,7 +192,10 @@ async fn move_run(args: GenericArgs) -> Result<(), Box<dyn std::error::Error>> {
         // let y = temporal * 0.07;
         // let position = na::Vector3::new(0.2, 0.0 + y, 0.2 + z);
         let pose = desired_point.lock().unwrap().clone();
-        if let Ok(arm_positions) = arm_controller.move_to(pose.position, pose.end_effector_angle).await {
+        if let Ok(arm_positions) = arm_controller
+            .move_to(pose.position, pose.end_effector_angle)
+            .await
+        {
             let joint_positions = arm_controller.calculate_fk(arm_positions).await?;
             visualizer.set_position(joint_positions);
         } else {
@@ -191,7 +204,9 @@ async fn move_run(args: GenericArgs) -> Result<(), Box<dyn std::error::Error>> {
         sleep(Duration::from_micros(20)).await;
     }
     arm_controller.limp().await?;
-    arm_controller.set_color(lss_driver::LedColor::Yellow).await?;
+    arm_controller
+        .set_color(lss_driver::LedColor::Yellow)
+        .await?;
     sleep(Duration::from_secs_f32(0.5)).await;
     Ok(())
 }
