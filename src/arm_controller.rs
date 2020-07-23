@@ -78,28 +78,30 @@ impl ArmController for LssArmController {
         let reduced_horizontal_distance = horizontal_distance - effector_horizontal;
         let reduced_height = height - effector_vertical;
 
-        // make sure these are always positive
+        // TODO: make sure these are always positive
         let shoulder_length = self.config.elbow.magnitude();
         let forearm_length = self.config.wrist.magnitude();
-        let arm_distance = (reduced_height.powi(2) + reduced_horizontal_distance.powi(2)).sqrt();
+        let reduced_distance = (reduced_height.powi(2) + reduced_horizontal_distance.powi(2)).sqrt();
         // correct until here I think
         // this is angle between horizontal plane and shoulder/forearm triangle
         let shoulder_plane_target_angle = reduced_height.atan2(reduced_horizontal_distance);
-
-        let upper_shoulder_angle = ((arm_distance.powi(2) + forearm_length.powi(2) - shoulder_length.powi(2)) / (2.0 * arm_distance * forearm_length)).acos();
+        
+        let upper_shoulder_angle = ((reduced_distance.powi(2) + shoulder_length.powi(2) - forearm_length.powi(2)) / (2.0 * reduced_distance * shoulder_length)).acos();
         // don't forget about shoulder not being a straight line!
         let shoulder_offset_angle = (self.config.elbow.x/self.config.elbow.z).atan();
         let shoulder_angle = shoulder_plane_target_angle + upper_shoulder_angle + shoulder_offset_angle;
-        println!("{:?}", shoulder_angle.to_degrees());
+        
+        let elbow_angle = ((forearm_length.powi(2) + shoulder_length.powi(2) - reduced_distance.powi(2)) / (2.0 * forearm_length * shoulder_length)).acos();
+        let _wrist_angle = ((forearm_length.powi(2) + reduced_distance.powi(2) - shoulder_length.powi(2)) / (2.0 * forearm_length * reduced_distance)).acos();
 
-        let elbow_angle = ((forearm_length.powi(2) + shoulder_length.powi(2) - arm_distance.powi(2)) / 2.0 * forearm_length * shoulder_length).acos();
 
-
+        let offset_shoulder = 90_f32.to_radians() - shoulder_angle;
+        let offset_elbow_angle = 90_f32.to_radians() - elbow_angle + shoulder_offset_angle;
         Ok(JointPositions::new(
             base_angle.to_degrees(),
-            90.0 - shoulder_angle.to_degrees(),
-            -90.0 + elbow_angle.to_degrees(),
-            0.0
+            offset_shoulder.to_degrees(),
+            offset_elbow_angle.to_degrees(),
+            (-offset_elbow_angle - offset_shoulder + effector_angle).to_degrees(),
         ))
     }
 

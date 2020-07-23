@@ -15,9 +15,11 @@ fn add_ground_plane(window: &mut Window) {
         for j in 0..4 {
             let mut cube = window.add_cube(size, size, 0.001);
             if (i + j) % 2 == 0 {
-                cube.set_color(1.0, 0.3, 0.2);
+                // cube.set_color(1.0, 0.3, 0.2);
+                cube.set_color(0.0, 0.0, 0.0);
             } else {
-                cube.set_color(0.5, 0.04, 0.17);
+                // cube.set_color(0.5, 0.04, 0.17);
+                cube.set_color(1.0, 1.0, 1.0);
             }
             let distance = (1_f32.powi(2) + 1_f32.powi(2)).sqrt();
             let x_ind = j as f32 - distance;
@@ -93,45 +95,46 @@ struct ArmRenderer {
     elbow_sphere: SceneNode,
     wrist_sphere: SceneNode,
     end_effector_sphere: SceneNode,
+    color: Point3<f32>,
 }
 
 impl ArmRenderer {
-    fn new(window: &mut Window) -> ArmRenderer {
+    fn new(window: &mut Window, color: Point3<f32>, end_effector_color: Point3<f32>) -> ArmRenderer {
         let mut base_sphere = window.add_sphere(0.01);
-        base_sphere.set_color(1.0, 0.0, 1.0);
+        base_sphere.set_color(color.x, color.y, color.z);
         let mut shoulder_sphere = window.add_sphere(0.01);
-        shoulder_sphere.set_color(1.0, 0.0, 1.0);
+        shoulder_sphere.set_color(color.x, color.y, color.z);
         let mut elbow_sphere = window.add_sphere(0.01);
-        elbow_sphere.set_color(1.0, 0.0, 1.0);
+        elbow_sphere.set_color(color.x, color.y, color.z);
         let mut wrist_sphere = window.add_sphere(0.01);
-        wrist_sphere.set_color(1.0, 0.0, 1.0);
+        wrist_sphere.set_color(color.x, color.y, color.z);
         let mut end_effector_sphere = window.add_sphere(0.01);
-        end_effector_sphere.set_color(0.0, 1.0, 1.0);
+        end_effector_sphere.set_color(end_effector_color.x, end_effector_color.y, end_effector_color.z);
         ArmRenderer {
             base_sphere,
             shoulder_sphere,
             elbow_sphere,
             wrist_sphere,
             end_effector_sphere,
+            color,
         }
     }
 
     fn step(&mut self, window: &mut Window, arm_pose: &ArmPositions) {
-        let blue = Point3::new(1.0, 0.0, 1.0);
         let base = convert_coordinates(arm_pose.base);
         self.base_sphere.set_local_translation(na::Translation3::new(base.x, base.y, base.z));
 
         let shoulder = convert_coordinates(arm_pose.shoulder);
-        window.draw_line(&base, &shoulder, &blue);
+        window.draw_line(&base, &shoulder, &self.color);
         self.shoulder_sphere
             .set_local_translation(na::Translation3::new(shoulder.x, shoulder.y, shoulder.z));
 
         let elbow = convert_coordinates(arm_pose.elbow);
-        window.draw_line(&shoulder, &elbow, &blue);
+        window.draw_line(&shoulder, &elbow, &self.color);
         self.elbow_sphere.set_local_translation(na::Translation3::new(elbow.x, elbow.y, elbow.z));
 
         let wrist = convert_coordinates(arm_pose.wrist);
-        window.draw_line(&elbow, &wrist, &blue);
+        window.draw_line(&elbow, &wrist, &self.color);
         self.wrist_sphere.set_local_translation(na::Translation3::new(wrist.x, wrist.y, wrist.z));
 
         let end_effector = convert_coordinates(arm_pose.end_effector);
@@ -140,7 +143,7 @@ impl ArmRenderer {
             end_effector.y,
             end_effector.z,
         ));
-        window.draw_line(&wrist, &end_effector, &blue);
+        window.draw_line(&wrist, &end_effector, &self.color);
     }
 }
 
@@ -164,9 +167,9 @@ fn render_loop(current_arm_pose: Arc<Mutex<Option<ArmPositions>>>, motion_plan: 
     camera.set_zoom_modifier(10.0);
 
     window.set_background_color(0.5, 0.5, 0.5);
-    window.set_framerate_limit(Some(60));
+    window.set_framerate_limit(Some(120));
 
-    let mut primary_arm = ArmRenderer::new(&mut window);
+    let mut primary_arm = ArmRenderer::new(&mut window, Point3::new(1.0, 0.0, 1.0), Point3::new(0.0, 1.0, 1.0));
 
     add_ground_plane(&mut window);
 
@@ -177,10 +180,11 @@ fn render_loop(current_arm_pose: Arc<Mutex<Option<ArmPositions>>>, motion_plan: 
             primary_arm.step(&mut window, &arm_pose);
             window.draw_text(
                 &format!(
-                    "End effector:\n   x: {}\n   y: {}\n   z: {}\nCamera dist: {}\nframe time: {}ms",
+                    "End effector:\n   x: {}\n   y: {}\n   z: {}\n   angle: {}\nCamera dist: {}\nframe time: {}ms",
                     arm_pose.end_effector.x,
                     arm_pose.end_effector.y,
                     arm_pose.end_effector.z,
+                    arm_pose.end_effector_angle,
                     camera.dist(),
                     frame_counter.elapsed().as_millis(),
                 ),
@@ -194,7 +198,7 @@ fn render_loop(current_arm_pose: Arc<Mutex<Option<ArmPositions>>>, motion_plan: 
         let mut arm_renders = vec![];
         if let Some(motion_plan) = motion_plan_poses {
             for step in motion_plan {
-                let mut arm_render = ArmRenderer::new(&mut window);
+                let mut arm_render = ArmRenderer::new(&mut window, Point3::new(1.0, 0.0, 0.0), Point3::new(0.0, 1.0, 0.0));
                 arm_render.step(&mut window, &step);
                 arm_renders.push(arm_render);
             }
