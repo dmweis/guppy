@@ -151,7 +151,13 @@ async fn ik_run(args: GenericArgs) -> Result<(), Box<dyn std::error::Error>> {
     }
     while running.load(Ordering::Acquire) {
         if let Ok(positions) = arm_controller.read_position().await {
-            println!("Positions: {:?}", positions);
+            println!(
+                "end_effector:\n   x: {:.3}\n   y: {:.3}\n   z: {:.3}\n   angle: {:.3}\n",
+                positions.end_effector.x,
+                positions.end_effector.y,
+                positions.end_effector.z,
+                positions.end_effector_angle
+            );
             #[cfg(feature = "visualiser")]
             {
                 visualizer.set_position(positions.clone());
