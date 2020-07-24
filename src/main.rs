@@ -2,12 +2,12 @@ mod arm_config;
 mod arm_controller;
 mod arm_driver;
 mod speech_service;
-#[cfg(feature="visualiser")]
+#[cfg(feature = "visualiser")]
 mod visualizer;
 
 use async_std::task::sleep;
 use std::time::Duration;
-#[cfg(feature="visualiser")]
+#[cfg(feature = "visualiser")]
 use visualizer::VisualizerInterface;
 
 use crate::arm_controller::EndEffectorPose;
@@ -30,7 +30,7 @@ enum SubCommand {
     Ik(GenericArgs),
     Move(GenericArgs),
     Config(ConfigArgs),
-    #[cfg(feature="visualiser")]
+    #[cfg(feature = "visualiser")]
     Viz,
 }
 
@@ -74,13 +74,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         SubCommand::Move(args) => {
             move_run(args).await?;
         }
-        #[cfg(feature="visualiser")]
+        #[cfg(feature = "visualiser")]
         SubCommand::Viz => test_visualizer().await?,
     }
     Ok(())
 }
 
-#[cfg(feature="visualiser")]
+#[cfg(feature = "visualiser")]
 async fn test_visualizer() -> Result<(), Box<dyn std::error::Error>> {
     let running = Arc::new(AtomicBool::new(true));
     let running_handle = running.clone();
@@ -123,12 +123,12 @@ async fn test_visualizer() -> Result<(), Box<dyn std::error::Error>> {
 async fn ik_run(args: GenericArgs) -> Result<(), Box<dyn std::error::Error>> {
     let running = Arc::new(AtomicBool::new(true));
     let running_handle = running.clone();
-    #[cfg(feature="visualiser")]
+    #[cfg(feature = "visualiser")]
     let desired_point = Arc::new(Mutex::new(EndEffectorPose::new(
         na::Vector3::new(0., 0., 0.),
         0.,
     )));
-    #[cfg(feature="visualiser")]
+    #[cfg(feature = "visualiser")]
     let mut visualizer = VisualizerInterface::new(desired_point.clone());
 
     ctrlc::set_handler(move || {
@@ -152,7 +152,7 @@ async fn ik_run(args: GenericArgs) -> Result<(), Box<dyn std::error::Error>> {
     while running.load(Ordering::Acquire) {
         if let Ok(positions) = arm_controller.read_position().await {
             println!("Positions: {:?}", positions);
-            #[cfg(feature="visualiser")]
+            #[cfg(feature = "visualiser")]
             {
                 visualizer.set_position(positions.clone());
                 let calculated_ik = arm_controller
@@ -177,7 +177,7 @@ async fn move_run(args: GenericArgs) -> Result<(), Box<dyn std::error::Error>> {
         na::Vector3::new(0.2, 0., 0.2),
         0.,
     )));
-    #[cfg(feature="visualiser")]
+    #[cfg(feature = "visualiser")]
     let mut visualizer = VisualizerInterface::new(desired_point.clone());
 
     ctrlc::set_handler(move || {
@@ -208,7 +208,7 @@ async fn move_run(args: GenericArgs) -> Result<(), Box<dyn std::error::Error>> {
             .move_to(pose.position, pose.end_effector_angle)
             .await
         {
-            #[cfg(feature="visualiser")]
+            #[cfg(feature = "visualiser")]
             {
                 let joint_positions = arm_controller.calculate_fk(_arm_positions).await?;
                 visualizer.set_position(joint_positions);
