@@ -2,10 +2,12 @@ mod arm_config;
 mod arm_controller;
 mod arm_driver;
 mod speech_service;
+#[cfg(visualiser)]
 mod visualizer;
 
 use async_std::task::sleep;
 use std::time::Duration;
+#[cfg(visualiser)]
 use visualizer::VisualizerInterface;
 
 use crate::arm_controller::EndEffectorPose;
@@ -83,6 +85,7 @@ async fn test_visualizer() -> Result<(), Box<dyn std::error::Error>> {
         na::Vector3::new(0., 0., 0.),
         0.,
     )));
+    #[cfg(visualiser)]
     let mut visualizer = VisualizerInterface::new(desired_point.clone());
 
     ctrlc::set_handler(move || {
@@ -107,7 +110,9 @@ async fn test_visualizer() -> Result<(), Box<dyn std::error::Error>> {
             na::Vector3::new(0.2, 0.2, 0.5),
             0.0,
         );
+        #[cfg(visualiser)]
         visualizer.set_position(positions.clone());
+        #[cfg(visualiser)]
         visualizer.set_motion_plan(Some(vec![positions_2]));
         println!("{:?}", positions.end_effector);
         sleep(Duration::from_secs_f32(0.02)).await;
@@ -122,6 +127,7 @@ async fn ik_run(args: GenericArgs) -> Result<(), Box<dyn std::error::Error>> {
         na::Vector3::new(0., 0., 0.),
         0.,
     )));
+    #[cfg(visualiser)]
     let mut visualizer = VisualizerInterface::new(desired_point.clone());
 
     ctrlc::set_handler(move || {
@@ -144,11 +150,13 @@ async fn ik_run(args: GenericArgs) -> Result<(), Box<dyn std::error::Error>> {
     }
     while running.load(Ordering::Acquire) {
         if let Ok(positions) = arm_controller.read_position().await {
+            #[cfg(visualiser)]
             visualizer.set_position(positions.clone());
             let calculated_ik = arm_controller
                 .calculate_ik(positions.end_effector, positions.end_effector_angle)
                 .await?;
             let translated_fk = arm_controller.calculate_fk(calculated_ik).await?;
+            #[cfg(visualiser)]
             visualizer.set_motion_plan(Some(vec![translated_fk]));
             sleep(Duration::from_micros(20)).await;
         } else {
@@ -166,6 +174,7 @@ async fn move_run(args: GenericArgs) -> Result<(), Box<dyn std::error::Error>> {
         na::Vector3::new(0.2, 0., 0.2),
         0.,
     )));
+    #[cfg(visualiser)]
     let mut visualizer = VisualizerInterface::new(desired_point.clone());
 
     ctrlc::set_handler(move || {
@@ -197,6 +206,7 @@ async fn move_run(args: GenericArgs) -> Result<(), Box<dyn std::error::Error>> {
             .await
         {
             let joint_positions = arm_controller.calculate_fk(arm_positions).await?;
+            #[cfg(visualiser)]
             visualizer.set_position(joint_positions);
         } else {
             eprintln!("Message error");

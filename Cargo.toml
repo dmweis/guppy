@@ -6,6 +6,11 @@ edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[features]
+default = ["visualiser"]
+
+visualiser = ["kiss3d"]
+
 [dependencies]
 lss_driver = "0.1"
 reqwest = "0.10"
@@ -18,7 +23,7 @@ async-trait = "0.1"
 nalgebra = { version = "0.21", features = ["serde-serialize"] }
 async-std = "1.6"
 ctrlc = "3.1"
-kiss3d = { git = "https://github.com/dmweis/kiss3d", branch = "less-sensitive-camera" }
+kiss3d = { git = "https://github.com/dmweis/kiss3d", branch = "less-sensitive-camera", optional = true }
 
 [dev-dependencies]
 mockito = "0.25"
