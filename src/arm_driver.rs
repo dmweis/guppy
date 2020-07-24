@@ -26,8 +26,8 @@ impl Default for ServoControlSettings {
     fn default() -> Self {
         ServoControlSettings {
             motion_profile: Some(false),
-            angular_holding_stiffness: Some(-1),
-            angular_stiffness: Some(-1),
+            angular_holding_stiffness: Some(-4),
+            angular_stiffness: Some(-4),
             filter_position_count: Some(0),
             maximum_motor_duty: None,
             angular_acceleration: None,
