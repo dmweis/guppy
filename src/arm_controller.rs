@@ -98,7 +98,7 @@ impl ArmController for LssArmController {
         effector_angle: f32,
     ) -> Result<JointPositions, Box<dyn Error>> {
         let effector_angle = effector_angle.to_radians();
-        let base_angle = position.y.atan2(position.x);
+        let base_angle = (-position.y).atan2(position.x);
         let horizontal_distance = (position.x.powi(2) + position.y.powi(2)).sqrt();
         let height = position.z - self.config.shoulder.z;
         // end effector calc
@@ -148,7 +148,7 @@ impl ArmController for LssArmController {
     async fn calculate_fk(&self, joints: JointPositions) -> Result<ArmPositions, Box<dyn Error>> {
         let base = na::Vector3::new(0.0, 0.0, 0.0);
         let base_rotation =
-            na::Rotation3::from_axis_angle(&na::Vector3::z_axis(), joints.base.to_radians());
+            na::Rotation3::from_axis_angle(&na::Vector3::z_axis(), -joints.base.to_radians());
         let shoulder = base + self.config.shoulder;
         let shoulder_rotation =
             na::Rotation3::from_axis_angle(&na::Vector3::y_axis(), joints.shoulder.to_radians());

@@ -106,7 +106,7 @@ impl Drop for VisualizerInterface {
 }
 
 fn convert_coordinates(position: Vector3<f32>) -> Point3<f32> {
-    Point3::new(position.y, position.z, -position.x)
+    Point3::new(position.y, position.z, position.x)
 }
 
 struct ArmRenderer {
@@ -249,10 +249,10 @@ fn render_loop(
         }
         let mut pos_copy = desired_end_point.lock().unwrap().clone();
         if window.get_key(Key::D) == Action::Press {
-            pos_copy.position.y += frame_counter.elapsed().as_secs_f32() * 0.1;
+            pos_copy.position.y -= frame_counter.elapsed().as_secs_f32() * 0.1;
         }
         if window.get_key(Key::A) == Action::Press {
-            pos_copy.position.y -= frame_counter.elapsed().as_secs_f32() * 0.1;
+            pos_copy.position.y += frame_counter.elapsed().as_secs_f32() * 0.1;
         }
         if window.get_key(Key::W) == Action::Press {
             pos_copy.position.x += frame_counter.elapsed().as_secs_f32() * 0.1;
