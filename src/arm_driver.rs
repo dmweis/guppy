@@ -99,7 +99,9 @@ impl SerialArmDriver {
     ) -> Result<Box<dyn ArmDriver>, Box<dyn Error>> {
         let driver = lss_driver::LSSDriver::new(port)?;
         let mut arm_driver = SerialArmDriver { driver, config };
-        arm_driver.setup_motors(ArmControlSettings::default()).await?;
+        arm_driver
+            .setup_motors(ArmControlSettings::default())
+            .await?;
         Ok(Box::new(arm_driver))
     }
 }
@@ -114,31 +116,49 @@ impl ArmDriver for SerialArmDriver {
     }
 
     async fn setup_motors(&mut self, settings: ArmControlSettings) -> Result<(), Box<dyn Error>> {
-        async fn set_motor(driver: &mut lss_driver::LSSDriver, motor_id: u8, settings: &ServoControlSettings) -> Result<(), Box<dyn Error>> {
+        async fn set_motor(
+            driver: &mut lss_driver::LSSDriver,
+            motor_id: u8,
+            settings: &ServoControlSettings,
+        ) -> Result<(), Box<dyn Error>> {
             if let Some(motion_profile) = settings.motion_profile {
                 driver.set_motion_profile(motor_id, motion_profile).await?;
             }
             if let Some(angular_holding_stiffness) = settings.angular_holding_stiffness {
-                driver.set_angular_holding_stiffness(motor_id, angular_holding_stiffness).await?;
+                driver
+                    .set_angular_holding_stiffness(motor_id, angular_holding_stiffness)
+                    .await?;
             }
             if let Some(angular_stiffness) = settings.angular_stiffness {
-                driver.set_angular_stiffness(motor_id, angular_stiffness).await?;
+                driver
+                    .set_angular_stiffness(motor_id, angular_stiffness)
+                    .await?;
             }
             if let Some(filter_position_count) = settings.filter_position_count {
-                driver.set_filter_position_count(motor_id, filter_position_count).await?;
+                driver
+                    .set_filter_position_count(motor_id, filter_position_count)
+                    .await?;
             }
             if let Some(_) = settings.maximum_motor_duty {
-                unimplemented!("maximum_motor_duty is not yet supported in this version of the driver");
+                unimplemented!(
+                    "maximum_motor_duty is not yet supported in this version of the driver"
+                );
                 // driver.set_maximum_motor_duty(motor_id, maximum_motor_duty).await?;
             }
             if let Some(angular_acceleration) = settings.angular_acceleration {
-                driver.set_angular_acceleration(motor_id, angular_acceleration).await?;
+                driver
+                    .set_angular_acceleration(motor_id, angular_acceleration)
+                    .await?;
             }
             if let Some(angular_deceleration) = settings.angular_deceleration {
-                driver.set_angular_deceleration(motor_id, angular_deceleration).await?;
+                driver
+                    .set_angular_deceleration(motor_id, angular_deceleration)
+                    .await?;
             }
             if let Some(_) = settings.maximum_speed_degrees {
-                unimplemented!("maximum_speed_degrees is not yet supported in this version of the driver");
+                unimplemented!(
+                    "maximum_speed_degrees is not yet supported in this version of the driver"
+                );
                 // driver.set_maximum_speed_degrees(motor_id, maximum_speed_degrees).await?;
             }
             Ok(())
