@@ -5,7 +5,6 @@ mod speech_service;
 #[cfg(feature = "visualiser")]
 mod visualizer;
 
-
 use async_std::io;
 use async_std::task::sleep;
 use std::time::Duration;
@@ -19,7 +18,6 @@ use std::path::Path;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::Instant;
-
 
 #[derive(Clap)]
 #[clap()]
@@ -281,10 +279,7 @@ async fn move_config_run(args: GenericArgs) -> Result<(), Box<dyn std::error::Er
         let z = temporal * 0.07;
         let y = temporal * 0.07;
         let position = na::Vector3::new(0.2, 0.0 + y, 0.2 + z);
-        if let Ok(_arm_positions) = arm_controller
-            .move_to(position, 0.0)
-            .await
-        {
+        if let Ok(_arm_positions) = arm_controller.move_to(position, 0.0).await {
             #[cfg(feature = "visualiser")]
             {
                 let joint_positions = arm_controller.calculate_fk(_arm_positions).await?;
@@ -334,16 +329,20 @@ async fn teach_pendent(args: GenericArgs) -> Result<(), Box<dyn std::error::Erro
     if args.speak {
         speech_service::say(format!("Waking up arm. Connecting to {}", args.port)).await?;
     }
-    let driver = arm_driver::SerialArmDriver::new(&args.port, arm_config::ArmConfig::included()).await?;
-    let mut arm_controller = arm_controller::LssArmController::new(driver, arm_config::ArmConfig::included());
-        
+    let driver =
+        arm_driver::SerialArmDriver::new(&args.port, arm_config::ArmConfig::included()).await?;
+    let mut arm_controller =
+        arm_controller::LssArmController::new(driver, arm_config::ArmConfig::included());
+
     if args.speak {
         speech_service::say("Connected successfully!".to_owned()).await?;
     }
-        
+
     let mut history = vec![];
 
-    arm_controller.set_color(lss_driver::LedColor::Magenta).await?;
+    arm_controller
+        .set_color(lss_driver::LedColor::Magenta)
+        .await?;
     arm_controller.limp().await?;
 
     println!("Starting recording\npress Ctrl+C to exit record mode");
@@ -355,14 +354,16 @@ async fn teach_pendent(args: GenericArgs) -> Result<(), Box<dyn std::error::Erro
         #[cfg(feature = "visualiser")]
         visualizer.set_position(current_position);
     }
-    
+
     println!("Entering replay mode\npress Ctrl+c to exit");
     arm_controller.set_color(lss_driver::LedColor::Cyan).await?;
     running.store(true, Ordering::SeqCst);
 
     while running.load(Ordering::SeqCst) {
         for arm_pose in &history {
-            if let Ok(_arm_positions) = arm_controller.move_to(arm_pose.end_effector, arm_pose.end_effector_angle).await
+            if let Ok(_arm_positions) = arm_controller
+                .move_to(arm_pose.end_effector, arm_pose.end_effector_angle)
+                .await
             {
                 #[cfg(feature = "visualiser")]
                 {

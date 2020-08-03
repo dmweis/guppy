@@ -1,9 +1,8 @@
 use crate::arm_config;
 use async_trait::async_trait;
-use std::error::Error;
 use serde::{Deserialize, Serialize};
+use std::error::Error;
 use std::{fs, include_bytes, str};
-
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct ServoControlSettings {
@@ -62,7 +61,6 @@ pub struct ArmControlSettings {
 }
 
 impl ArmControlSettings {
-
     fn parse_json(json: &str) -> Result<ArmControlSettings, Box<dyn Error>> {
         let config = serde_json::from_str(json)?;
         Ok(config)
@@ -89,8 +87,6 @@ impl ArmControlSettings {
         ArmControlSettings::parse_json(json).unwrap()
     }
 }
-
-
 
 impl Default for ArmControlSettings {
     fn default() -> Self {

@@ -67,7 +67,10 @@ pub trait ArmController {
     ) -> Result<JointPositions, Box<dyn Error>>;
     async fn halt(&mut self) -> Result<(), Box<dyn Error>>;
     async fn limp(&mut self) -> Result<(), Box<dyn Error>>;
-    async fn setup_motors(&mut self, settings: arm_driver::ArmControlSettings) -> Result<(), Box<dyn Error>>;
+    async fn setup_motors(
+        &mut self,
+        settings: arm_driver::ArmControlSettings,
+    ) -> Result<(), Box<dyn Error>>;
 }
 
 pub struct LssArmController {
@@ -202,7 +205,10 @@ impl ArmController for LssArmController {
         Ok(())
     }
 
-    async fn setup_motors(&mut self, settings: arm_driver::ArmControlSettings) -> Result<(), Box<dyn Error>> {
+    async fn setup_motors(
+        &mut self,
+        settings: arm_driver::ArmControlSettings,
+    ) -> Result<(), Box<dyn Error>> {
         self.driver.setup_motors(settings).await?;
         Ok(())
     }
