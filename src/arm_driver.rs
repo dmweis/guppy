@@ -1,24 +1,35 @@
 use crate::arm_config;
 use async_trait::async_trait;
 use std::error::Error;
+use serde::{Deserialize, Serialize};
+use std::{fs, include_bytes, str};
 
-#[derive(Debug, Clone, PartialEq)]
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct ServoControlSettings {
     /// Settings for servo in arm
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub motion_profile: Option<bool>,
     /// useful for non interpolated mode
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub angular_holding_stiffness: Option<i32>,
     /// -10 to 10, usually -4 to 4
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub angular_stiffness: Option<i32>,
     /// -10 to 10, usually -4 to 4
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub filter_position_count: Option<u8>,
     /// I don't know how this works
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub maximum_motor_duty: Option<u32>,
     /// useful for compliance, 255 to 1023
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub angular_acceleration: Option<i32>,
     /// only when motion_profile is on
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub angular_deceleration: Option<i32>,
     /// only when motion_profile is on
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub maximum_speed_degrees: Option<u32>,
 }
 
@@ -37,23 +48,53 @@ impl Default for ServoControlSettings {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct ArmControlSettings {
     /// Settings for each servo in the arm
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub base: Option<ServoControlSettings>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub shoulder: Option<ServoControlSettings>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub elbow: Option<ServoControlSettings>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub wrist: Option<ServoControlSettings>,
 }
 
+impl ArmControlSettings {
+
+    fn parse_json(json: &str) -> Result<ArmControlSettings, Box<dyn Error>> {
+        let config = serde_json::from_str(json)?;
+        Ok(config)
+    }
+
+    pub fn load_json(path: &str) -> Result<ArmControlSettings, Box<dyn Error>> {
+        let text = fs::read_to_string(path)?;
+        let config = ArmControlSettings::parse_json(&text)?;
+        Ok(config)
+    }
+
+    pub fn save_json(&self, path: &str) -> Result<(), Box<dyn Error>> {
+        let json = serde_json::to_string_pretty(self)?;
+        fs::write(path, &json)?;
+        Ok(())
+    }
+
+    /// Guppy comes with an included config file.
+    ///
+    /// This file is packaged with the binary
+    /// This method retrieves this included version
+    pub fn included() -> ArmControlSettings {
+        let json = str::from_utf8(include_bytes!("../config/motor_settings.json")).unwrap();
+        ArmControlSettings::parse_json(json).unwrap()
+    }
+}
+
+
+
 impl Default for ArmControlSettings {
     fn default() -> Self {
-        ArmControlSettings {
-            base: Some(ServoControlSettings::default()),
-            shoulder: Some(ServoControlSettings::default()),
-            elbow: Some(ServoControlSettings::default()),
-            wrist: Some(ServoControlSettings::default()),
-        }
+        ArmControlSettings::included()
     }
 }
 
@@ -215,5 +256,15 @@ impl ArmDriver for SerialArmDriver {
             elbow_position,
             wrist_position,
         ))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn arm_driver_includes_default_config() {
+        ArmControlSettings::default();
     }
 }
