@@ -51,7 +51,7 @@ impl ArmPositions {
 }
 
 #[async_trait]
-pub trait ArmController {
+pub trait ArmController: Send + Sync {
     async fn set_color(&mut self, color: lss_driver::LedColor) -> Result<(), Box<dyn Error>>;
     async fn calculate_ik(
         &self,
