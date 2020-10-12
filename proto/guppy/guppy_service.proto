@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package guppy_service;
+import "google/protobuf/wrappers.proto";
+
+
+service GuppyConfigure {
+    rpc SetLed (SetLedRequest) returns (SetLedResponse) {}
+}
+
+message SetLedRequest {
+    google.protobuf.Int32Value led_color = 1;
+}
+
+
+message SetLedResponse {}

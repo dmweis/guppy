@@ -50,7 +50,7 @@ impl ArmPositions {
     }
 }
 
-#[async_trait(?Send)]
+#[async_trait]
 pub trait ArmController {
     async fn set_color(&mut self, color: lss_driver::LedColor) -> Result<(), Box<dyn Error>>;
     async fn calculate_ik(
@@ -87,7 +87,7 @@ impl LssArmController {
     }
 }
 
-#[async_trait(?Send)]
+#[async_trait]
 impl ArmController for LssArmController {
     async fn set_color(&mut self, color: lss_driver::LedColor) -> Result<(), Box<dyn Error>> {
         self.driver.set_color(color).await?;

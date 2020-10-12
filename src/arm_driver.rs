@@ -113,7 +113,7 @@ impl JointPositions {
     }
 }
 
-#[async_trait(?Send)]
+#[async_trait]
 pub trait ArmDriver {
     async fn set_color(&mut self, color: lss_driver::LedColor) -> Result<(), Box<dyn Error>>;
     async fn setup_motors(&mut self, settings: ArmControlSettings) -> Result<(), Box<dyn Error>>;
@@ -143,7 +143,7 @@ impl SerialArmDriver {
     }
 }
 
-#[async_trait(?Send)]
+#[async_trait]
 impl ArmDriver for SerialArmDriver {
     async fn set_color(&mut self, color: lss_driver::LedColor) -> Result<(), Box<dyn Error>> {
         self.driver
