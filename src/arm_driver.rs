@@ -176,11 +176,8 @@ impl ArmDriver for SerialArmDriver {
                     .set_filter_position_count(motor_id, filter_position_count)
                     .await?;
             }
-            if let Some(_) = settings.maximum_motor_duty {
-                unimplemented!(
-                    "maximum_motor_duty is not yet supported in this version of the driver"
-                );
-                // driver.set_maximum_motor_duty(motor_id, maximum_motor_duty).await?;
+            if let Some(maximum_motor_duty) = settings.maximum_motor_duty {
+                driver.set_maximum_motor_duty(motor_id, maximum_motor_duty as i32).await?;
             }
             if let Some(angular_acceleration) = settings.angular_acceleration {
                 driver
@@ -192,11 +189,8 @@ impl ArmDriver for SerialArmDriver {
                     .set_angular_deceleration(motor_id, angular_deceleration)
                     .await?;
             }
-            if let Some(_) = settings.maximum_speed_degrees {
-                unimplemented!(
-                    "maximum_speed_degrees is not yet supported in this version of the driver"
-                );
-                // driver.set_maximum_speed_degrees(motor_id, maximum_speed_degrees).await?;
+            if let Some(maximum_speed_degrees) = settings.maximum_speed_degrees {
+                driver.set_maximum_speed(motor_id, maximum_speed_degrees as f32).await?;
             }
             Ok(())
         }

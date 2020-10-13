@@ -3,9 +3,41 @@ syntax = "proto3";
 package guppy_service;
 import "google/protobuf/wrappers.proto";
 
+message ServoControlSettings {
+    /// Settings for servo in arm
+    google.protobuf.BoolValue motion_profile = 1;
+    /// useful for non interpolated mode
+    google.protobuf.Int32Value angular_holding_stiffness = 2;
+    /// -10 to 10, usually -4 to 4
+    google.protobuf.Int32Value angular_stiffness = 3;
+    /// -10 to 10, usually -4 to 4
+    google.protobuf.UInt32Value filter_position_count = 4;
+    /// I don't know how this works
+    google.protobuf.UInt32Value maximum_motor_duty = 5;
+    /// useful for compliance, 255 to 1023
+    google.protobuf.Int32Value angular_acceleration = 6;
+    /// only when motion_profile is on
+    google.protobuf.Int32Value angular_deceleration = 7;
+    /// only when motion_profile is on
+    google.protobuf.UInt32Value maximum_speed_degrees = 8;
+}
+
+message ArmControlSettings {
+    /// Settings for each servo in the arm
+    ServoControlSettings base = 1;
+    ServoControlSettings shoulder = 2;
+    ServoControlSettings elbow = 3;
+    ServoControlSettings wrist = 4;
+}
+
+message ConfigurationResponse {}
+message ConfigurationRequest {}
+
 
 service GuppyConfigure {
     rpc SetLed (SetLedRequest) returns (SetLedResponse) {}
+    rpc SetConfiguration (ArmControlSettings) returns (ConfigurationResponse) {}
+    rpc GetDefaultConfiguration (ConfigurationRequest) returns (ArmControlSettings) {}
 }
 
 message SetLedRequest {
