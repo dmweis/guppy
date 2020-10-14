@@ -33,7 +33,6 @@ message ArmControlSettings {
 message ConfigurationResponse {}
 message ConfigurationRequest {}
 
-
 service GuppyConfigure {
     rpc SetLed (SetLedRequest) returns (SetLedResponse) {}
     rpc SetConfiguration (ArmControlSettings) returns (ConfigurationResponse) {}
@@ -46,3 +45,34 @@ message SetLedRequest {
 
 
 message SetLedResponse {}
+
+message Vector {
+    float x = 1;
+    float y = 2;
+    float z = 3;
+}
+
+message JointPositions {
+    float base = 1;
+    float shoulder = 2;
+    float elbow = 3;
+    float wrist = 4;
+}
+
+message ArmPositions {
+    Vector base = 1;
+    Vector shoulder = 2;
+    Vector elbow = 3;
+    Vector wrist = 4;
+    Vector end_effector = 5;
+    float end_effector_angle = 6;
+}
+
+message MoveToCommand {
+    Vector position = 1;
+    float effector_angle = 2;
+}
+
+service GuppyController {
+    rpc MoveTo (MoveToCommand) returns (ArmPositions) {}
+}
