@@ -11,6 +11,10 @@ name = "cli"
 path = "src/cli.rs"
 
 [[bin]]
+name = "gui_remote"
+path = "src/gui_remote.rs"
+
+[[bin]]
 name = "grpc"
 path = "src/grpc.rs"
 
