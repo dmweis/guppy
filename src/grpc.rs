@@ -74,7 +74,10 @@ impl GuppyConfigure for GuppyConfigHandler {
     ) -> Result<Response<guppy_service::ConfigurationResponse>, Status> {
         let config_proto = request.into_inner();
         let mut driver = self.driver.lock().await;
-        driver.setup_motors(config_proto.into()).await.map_err(|_| Status::unimplemented("message"))?;
+        driver
+            .setup_motors(config_proto.into())
+            .await
+            .map_err(|_| Status::unimplemented("message"))?;
         Ok(Response::new(guppy_service::ConfigurationResponse {}))
     }
 
@@ -102,7 +105,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     Ok(())
 }
-
 
 impl From<guppy_service::ArmControlSettings> for arm_driver::ArmControlSettings {
     fn from(source: guppy_service::ArmControlSettings) -> Self {

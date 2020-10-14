@@ -177,7 +177,9 @@ impl ArmDriver for SerialArmDriver {
                     .await?;
             }
             if let Some(maximum_motor_duty) = settings.maximum_motor_duty {
-                driver.set_maximum_motor_duty(motor_id, maximum_motor_duty as i32).await?;
+                driver
+                    .set_maximum_motor_duty(motor_id, maximum_motor_duty as i32)
+                    .await?;
             }
             if let Some(angular_acceleration) = settings.angular_acceleration {
                 driver
@@ -190,7 +192,9 @@ impl ArmDriver for SerialArmDriver {
                     .await?;
             }
             if let Some(maximum_speed_degrees) = settings.maximum_speed_degrees {
-                driver.set_maximum_speed(motor_id, maximum_speed_degrees as f32).await?;
+                driver
+                    .set_maximum_speed(motor_id, maximum_speed_degrees as f32)
+                    .await?;
             }
             Ok(())
         }
