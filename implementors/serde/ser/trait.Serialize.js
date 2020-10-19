@@ -1,0 +1,6 @@
+(function() {var implementors = {};
+implementors["cli"] = [{"text":"impl Serialize for ArmConfig","synthetic":false,"types":[]},{"text":"impl Serialize for ServoControlSettings","synthetic":false,"types":[]},{"text":"impl Serialize for ArmControlSettings","synthetic":false,"types":[]}];
+implementors["grpc"] = [{"text":"impl Serialize for ArmConfig","synthetic":false,"types":[]},{"text":"impl Serialize for ServoControlSettings","synthetic":false,"types":[]},{"text":"impl Serialize for ArmControlSettings","synthetic":false,"types":[]}];
+implementors["gui_remote"] = [{"text":"impl Serialize for ArmConfig","synthetic":false,"types":[]},{"text":"impl Serialize for ServoControlSettings","synthetic":false,"types":[]},{"text":"impl Serialize for ArmControlSettings","synthetic":false,"types":[]}];
+implementors["guppy"] = [{"text":"impl Serialize for ArmConfig","synthetic":false,"types":[]},{"text":"impl Serialize for ServoControlSettings","synthetic":false,"types":[]},{"text":"impl Serialize for ArmControlSettings","synthetic":false,"types":[]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()
