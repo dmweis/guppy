@@ -71,6 +71,9 @@ pub trait ArmController: Send + Sync {
         &mut self,
         settings: arm_driver::ArmControlSettings,
     ) -> Result<(), Box<dyn Error>>;
+    async fn load_motor_settings(
+        &mut self,
+    ) -> Result<arm_driver::ArmControlSettings, Box<dyn Error>>;
 }
 
 pub struct LssArmController {
@@ -211,5 +214,11 @@ impl ArmController for LssArmController {
     ) -> Result<(), Box<dyn Error>> {
         self.driver.setup_motors(settings).await?;
         Ok(())
+    }
+
+    async fn load_motor_settings(
+        &mut self,
+    ) -> Result<arm_driver::ArmControlSettings, Box<dyn Error>> {
+        Ok(self.driver.load_motor_settings().await?)
     }
 }

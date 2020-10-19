@@ -10,6 +10,7 @@ use clap::Clap;
 use tonic::{transport::Server, Request, Response, Status};
 
 use guppy_service::guppy_configure_server::{GuppyConfigure, GuppyConfigureServer};
+use guppy_service::guppy_controller_server::{GuppyController, GuppyControllerServer};
 use std::sync::Arc;
 use tokio::sync::Mutex;
 
@@ -23,19 +24,22 @@ struct Args {
     port: String,
 }
 
+type ControllerWrapper = Arc<Mutex<std::boxed::Box<dyn arm_controller::ArmController>>>;
+
+async fn connect_to_arm(port: &str) -> Result<ControllerWrapper, Box<dyn std::error::Error>> {
+    let config = arm_config::ArmConfig::included();
+    let driver = arm_driver::SerialArmDriver::new(port, arm_config::ArmConfig::included()).await?;
+    let controller = arm_controller::LssArmController::new(driver, config);
+    Ok(Arc::new(Mutex::new(controller)))
+}
+
 struct GuppyConfigHandler {
-    driver: Arc<Mutex<std::boxed::Box<dyn arm_controller::ArmController>>>,
+    driver: ControllerWrapper,
 }
 
 impl GuppyConfigHandler {
-    async fn new(port: &str) -> Result<Self, Box<dyn std::error::Error>> {
-        let config = arm_config::ArmConfig::included();
-        let driver =
-            arm_driver::SerialArmDriver::new(port, arm_config::ArmConfig::included()).await?;
-        let controller = arm_controller::LssArmController::new(driver, config);
-        Ok(GuppyConfigHandler {
-            driver: Arc::new(Mutex::new(controller)),
-        })
+    fn new(driver: ControllerWrapper) -> Self {
+        GuppyConfigHandler { driver }
     }
 }
 
@@ -88,18 +92,66 @@ impl GuppyConfigure for GuppyConfigHandler {
         let default_config = arm_driver::ArmControlSettings::default().into();
         Ok(Response::new(default_config))
     }
+
+    async fn get_arm_configuration(
+        &self,
+        _: Request<guppy_service::ConfigurationRequest>,
+    ) -> Result<Response<guppy_service::ArmControlSettings>, Status> {
+        let mut driver = self.driver.lock().await;
+        let arm_settings = driver
+            .load_motor_settings()
+            .await
+            .map_err(|_| Status::internal("failed to read config from arm"))?;
+        Ok(Response::new(arm_settings.into()))
+    }
+}
+
+struct GuppyControllerHandler {
+    driver: ControllerWrapper,
+}
+
+impl GuppyControllerHandler {
+    fn new(driver: ControllerWrapper) -> Self {
+        GuppyControllerHandler { driver }
+    }
+}
+
+#[tonic::async_trait]
+impl GuppyController for GuppyControllerHandler {
+    async fn move_to(
+        &self,
+        request: Request<guppy_service::MoveToCommand>,
+    ) -> Result<Response<guppy_service::ArmPositions>, Status> {
+        let inner = request.into_inner();
+        let position = inner
+            .position
+            .ok_or(Status::invalid_argument("missing position"))?;
+        let mut driver = self.driver.lock().await;
+        let joint_positions = driver
+            .move_to(position.into(), inner.effector_angle)
+            .await
+            .map_err(|_| Status::internal("Failed to move"))?;
+        let arm_positions = driver
+            .calculate_fk(joint_positions)
+            .await
+            .map_err(|_| Status::internal("Failed to calculate FK"))?;
+        Ok(Response::new(arm_positions.into()))
+    }
 }
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = Args::parse();
     let address = "127.0.0.1:5002".parse().unwrap();
-    let handler = GuppyConfigHandler::new(&args.port).await?;
+    let driver = connect_to_arm(&args.port).await?;
+    let config_handler = GuppyConfigHandler::new(Arc::clone(&driver));
+    let controller_handler = GuppyControllerHandler::new(driver);
 
     println!("Starting service at {}", address);
 
     Server::builder()
-        .add_service(GuppyConfigureServer::new(handler))
+        .add_service(GuppyConfigureServer::new(config_handler))
+        .add_service(GuppyControllerServer::new(controller_handler))
         .serve(address)
         .await?;
 
@@ -154,6 +206,46 @@ impl From<arm_driver::ServoControlSettings> for guppy_service::ServoControlSetti
             angular_acceleration: source.angular_acceleration,
             angular_deceleration: source.angular_deceleration,
             maximum_speed_degrees: source.maximum_speed_degrees,
+        }
+    }
+}
+
+impl From<nalgebra::Vector3<f32>> for guppy_service::Vector {
+    fn from(source: nalgebra::Vector3<f32>) -> Self {
+        guppy_service::Vector {
+            x: source.x,
+            y: source.y,
+            z: source.z,
+        }
+    }
+}
+
+impl Into<nalgebra::Vector3<f32>> for guppy_service::Vector {
+    fn into(self) -> nalgebra::Vector3<f32> {
+        nalgebra::Vector3::new(self.x, self.y, self.z)
+    }
+}
+
+impl From<arm_driver::JointPositions> for guppy_service::JointPositions {
+    fn from(source: arm_driver::JointPositions) -> Self {
+        guppy_service::JointPositions {
+            base: source.base,
+            shoulder: source.shoulder,
+            elbow: source.elbow,
+            wrist: source.wrist,
+        }
+    }
+}
+
+impl From<arm_controller::ArmPositions> for guppy_service::ArmPositions {
+    fn from(source: arm_controller::ArmPositions) -> Self {
+        guppy_service::ArmPositions {
+            base: Some(source.base.into()),
+            shoulder: Some(source.shoulder.into()),
+            elbow: Some(source.elbow.into()),
+            wrist: Some(source.wrist.into()),
+            end_effector: Some(source.end_effector.into()),
+            end_effector_angle: source.end_effector_angle,
         }
     }
 }
