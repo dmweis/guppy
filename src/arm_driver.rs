@@ -1,7 +1,7 @@
 use crate::arm_config;
+use anyhow::Result;
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
-use std::error::Error;
 use std::{fs, include_bytes, str};
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -30,6 +30,30 @@ pub struct ServoControlSettings {
     /// only when motion_profile is on
     #[serde(skip_serializing_if = "Option::is_none")]
     pub maximum_speed_degrees: Option<u32>,
+}
+
+impl ServoControlSettings {
+    pub fn new(
+        motion_profile: Option<bool>,
+        angular_holding_stiffness: Option<i32>,
+        angular_stiffness: Option<i32>,
+        filter_position_count: Option<u8>,
+        maximum_motor_duty: Option<u32>,
+        angular_acceleration: Option<i32>,
+        angular_deceleration: Option<i32>,
+        maximum_speed_degrees: Option<u32>,
+    ) -> ServoControlSettings {
+        ServoControlSettings {
+            motion_profile,
+            angular_holding_stiffness,
+            angular_stiffness,
+            filter_position_count,
+            maximum_motor_duty,
+            angular_acceleration,
+            angular_deceleration,
+            maximum_speed_degrees,
+        }
+    }
 }
 
 impl Default for ServoControlSettings {
@@ -61,18 +85,18 @@ pub struct ArmControlSettings {
 }
 
 impl ArmControlSettings {
-    fn parse_json(json: &str) -> Result<ArmControlSettings, Box<dyn Error>> {
+    fn parse_json(json: &str) -> Result<ArmControlSettings> {
         let config = serde_json::from_str(json)?;
         Ok(config)
     }
 
-    pub fn load_json(path: &str) -> Result<ArmControlSettings, Box<dyn Error>> {
+    pub fn load_json(path: &str) -> Result<ArmControlSettings> {
         let text = fs::read_to_string(path)?;
         let config = ArmControlSettings::parse_json(&text)?;
         Ok(config)
     }
 
-    pub fn save_json(&self, path: &str) -> Result<(), Box<dyn Error>> {
+    pub fn save_json(&self, path: &str) -> Result<()> {
         let json = serde_json::to_string_pretty(self)?;
         fs::write(path, &json)?;
         Ok(())
@@ -115,12 +139,13 @@ impl JointPositions {
 
 #[async_trait]
 pub trait ArmDriver: Send + Sync {
-    async fn set_color(&mut self, color: lss_driver::LedColor) -> Result<(), Box<dyn Error>>;
-    async fn setup_motors(&mut self, settings: ArmControlSettings) -> Result<(), Box<dyn Error>>;
-    async fn halt(&mut self) -> Result<(), Box<dyn Error>>;
-    async fn limp(&mut self) -> Result<(), Box<dyn Error>>;
-    async fn move_to(&mut self, position: JointPositions) -> Result<(), Box<dyn Error>>;
-    async fn read_position(&mut self) -> Result<JointPositions, Box<dyn Error>>;
+    async fn set_color(&mut self, color: lss_driver::LedColor) -> Result<()>;
+    async fn setup_motors(&mut self, settings: ArmControlSettings) -> Result<()>;
+    async fn load_motor_settings(&mut self) -> Result<ArmControlSettings>;
+    async fn halt(&mut self) -> Result<()>;
+    async fn limp(&mut self) -> Result<()>;
+    async fn move_to(&mut self, position: JointPositions) -> Result<()>;
+    async fn read_position(&mut self) -> Result<JointPositions>;
 }
 
 pub struct SerialArmDriver {
@@ -130,10 +155,7 @@ pub struct SerialArmDriver {
 
 impl SerialArmDriver {
     #[allow(clippy::new_ret_no_self)]
-    pub async fn new(
-        port: &str,
-        config: arm_config::ArmConfig,
-    ) -> Result<Box<dyn ArmDriver>, Box<dyn Error>> {
+    pub async fn new(port: &str, config: arm_config::ArmConfig) -> Result<Box<dyn ArmDriver>> {
         let driver = lss_driver::LSSDriver::new(port)?;
         let mut arm_driver = SerialArmDriver { driver, config };
         arm_driver
@@ -145,19 +167,19 @@ impl SerialArmDriver {
 
 #[async_trait]
 impl ArmDriver for SerialArmDriver {
-    async fn set_color(&mut self, color: lss_driver::LedColor) -> Result<(), Box<dyn Error>> {
+    async fn set_color(&mut self, color: lss_driver::LedColor) -> Result<()> {
         self.driver
             .set_color(lss_driver::BROADCAST_ID, color)
             .await?;
         Ok(())
     }
 
-    async fn setup_motors(&mut self, settings: ArmControlSettings) -> Result<(), Box<dyn Error>> {
+    async fn setup_motors(&mut self, settings: ArmControlSettings) -> Result<()> {
         async fn set_motor(
             driver: &mut lss_driver::LSSDriver,
             motor_id: u8,
             settings: &ServoControlSettings,
-        ) -> Result<(), Box<dyn Error>> {
+        ) -> Result<()> {
             if let Some(motion_profile) = settings.motion_profile {
                 driver.set_motion_profile(motor_id, motion_profile).await?;
             }
@@ -213,17 +235,41 @@ impl ArmDriver for SerialArmDriver {
         Ok(())
     }
 
-    async fn halt(&mut self) -> Result<(), Box<dyn Error>> {
+    async fn load_motor_settings(&mut self) -> Result<ArmControlSettings> {
+        async fn read_motor_config(
+            driver: &mut lss_driver::LSSDriver,
+            motor_id: u8,
+        ) -> Result<ServoControlSettings> {
+            Ok(ServoControlSettings::new(
+                Some(driver.query_motion_profile(motor_id).await?),
+                Some(driver.query_angular_holding_stiffness(motor_id).await?),
+                Some(driver.query_angular_stiffness(motor_id).await?),
+                Some(driver.query_filter_position_count(motor_id).await?),
+                Some(driver.query_maximum_motor_duty(motor_id).await? as u32),
+                Some(driver.query_angular_acceleration(motor_id).await?),
+                Some(driver.query_angular_deceleration(motor_id).await?),
+                Some(driver.query_maximum_speed(motor_id).await? as u32),
+            ))
+        }
+        Ok(ArmControlSettings {
+            base: Some(read_motor_config(&mut self.driver, self.config.base_id).await?),
+            shoulder: Some(read_motor_config(&mut self.driver, self.config.shoulder_id).await?),
+            elbow: Some(read_motor_config(&mut self.driver, self.config.elbow_id).await?),
+            wrist: Some(read_motor_config(&mut self.driver, self.config.wrist_id).await?),
+        })
+    }
+
+    async fn halt(&mut self) -> Result<()> {
         self.driver.halt_hold(lss_driver::BROADCAST_ID).await?;
         Ok(())
     }
 
-    async fn limp(&mut self) -> Result<(), Box<dyn Error>> {
+    async fn limp(&mut self) -> Result<()> {
         self.driver.limp(lss_driver::BROADCAST_ID).await?;
         Ok(())
     }
 
-    async fn move_to(&mut self, position: JointPositions) -> Result<(), Box<dyn Error>> {
+    async fn move_to(&mut self, position: JointPositions) -> Result<()> {
         self.driver
             .move_to_position(self.config.base_id, position.base)
             .await?;
@@ -239,7 +285,7 @@ impl ArmDriver for SerialArmDriver {
         Ok(())
     }
 
-    async fn read_position(&mut self) -> Result<JointPositions, Box<dyn Error>> {
+    async fn read_position(&mut self) -> Result<JointPositions> {
         let base_position = self.driver.query_position(self.config.base_id).await?;
         let shoulder_position = self.driver.query_position(self.config.shoulder_id).await?;
         let elbow_position = self.driver.query_position(self.config.elbow_id).await?;

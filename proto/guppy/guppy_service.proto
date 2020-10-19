@@ -37,6 +37,7 @@ service GuppyConfigure {
     rpc SetLed (SetLedRequest) returns (SetLedResponse) {}
     rpc SetConfiguration (ArmControlSettings) returns (ConfigurationResponse) {}
     rpc GetDefaultConfiguration (ConfigurationRequest) returns (ArmControlSettings) {}
+    rpc GetArmConfiguration (ConfigurationRequest) returns (ArmControlSettings) {}
 }
 
 message SetLedRequest {

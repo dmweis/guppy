@@ -92,6 +92,18 @@ impl GuppyConfigure for GuppyConfigHandler {
         let default_config = arm_driver::ArmControlSettings::default().into();
         Ok(Response::new(default_config))
     }
+
+    async fn get_arm_configuration(
+        &self,
+        _: Request<guppy_service::ConfigurationRequest>,
+    ) -> Result<Response<guppy_service::ArmControlSettings>, Status> {
+        let mut driver = self.driver.lock().await;
+        let arm_settings = driver
+            .load_motor_settings()
+            .await
+            .map_err(|_| Status::internal("failed to read config from arm"))?;
+        Ok(Response::new(arm_settings.into()))
+    }
 }
 
 struct GuppyControllerHandler {

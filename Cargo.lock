@@ -925,6 +925,7 @@ dependencies = [
 name = "guppy"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "async-std",
  "async-trait",
  "clap",
@@ -1273,9 +1274,9 @@ dependencies = [
 
 [[package]]
 name = "lss_driver"
-version = "0.2.0"
+version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8da68a7776a98b04e89516d2b53a654fcfa3da451fcf84541a6118e3d8ccacb6"
+checksum = "2acf633842f7bbd8a2053236d6e49d86e9d8086191a51976f951756eb6584744"
 dependencies = [
  "async-trait",
  "bytes",
