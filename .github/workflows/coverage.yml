@@ -1,37 +1,39 @@
-name: Coverage
+name: Tarpaulin coverage
+
 
 on:
   push:
     branches: [ master ]
-
-env:
-  CARGO_TERM_COLOR: always
+  pull_request:
+    branches: [ master ]
 
 jobs:
-  build:
-
-    runs-on: ubuntu-20.04
-
+  check:
+    name: Rust project
+    runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-    - name: Install toolchain
-      uses: actions-rs/toolchain@v1
-      with:
-        toolchain: nightly
-        override: true
-    - name: Test
-      uses: actions-rs/cargo@v1
-      with:
-        command: test
-        args: --no-default-features --no-fail-fast
-      env:
-        CARGO_INCREMENTAL: '0'
-        RUSTFLAGS: '-Zprofile -Ccodegen-units=1 -Cinline-threshold=0 -Clink-dead-code -Coverflow-checks=off -Cpanic=abort -Zpanic_abort_tests'
-        RUSTDOCFLAGS: '-Zprofile -Ccodegen-units=1 -Cinline-threshold=0 -Clink-dead-code -Coverflow-checks=off -Cpanic=abort -Zpanic_abort_tests'
-    - id: coverage
-      name: Gather coverage
-      uses: actions-rs/grcov@v0.1
-    - name: Publish to Codecov
-      uses: codecov/codecov-action@v1.0.7
-      with:
-        file: ${{ steps.coverage.outputs.report }}
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Install stable toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+
+      - name: Run cargo-tarpaulin
+        uses: actions-rs/tarpaulin@v0.1
+        with:
+          version: '0.9.0'
+          args: '-- --test-threads 1 --no-default-features'
+
+      - name: Upload to codecov.io
+        uses: codecov/codecov-action@v1.0.7
+        with:
+          file: ${{ steps.coverage.outputs.report }}
+
+      - name: Archive code coverage results
+        uses: actions/upload-artifact@v1
+        with:
+          name: code-coverage-report
+          path: cobertura.xml
