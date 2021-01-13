@@ -200,7 +200,7 @@ fn render_loop(
 
     let mut camera =
         kiss3d::camera::ArcBall::new(Point3::new(1.0, 1.0, 1.0), Point3::new(0.0, 0.0, 0.0));
-    camera.set_zoom_modifier(10.0);
+    camera.set_dist_step(10.0);
 
     window.set_background_color(0.5, 0.5, 0.5);
     window.set_framerate_limit(Some(120));
