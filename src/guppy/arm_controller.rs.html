@@ -222,9 +222,6 @@
 <span id="219">219</span>
 <span id="220">220</span>
 <span id="221">221</span>
-<span id="222">222</span>
-<span id="223">223</span>
-<span id="224">224</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">arm_config</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">arm_driver</span>;
@@ -310,10 +307,7 @@
 }
 
 <span class="kw">impl</span> <span class="ident">LssArmController</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(
-        <span class="ident">driver</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">dyn</span> <span class="ident">arm_driver</span>::<span class="ident">ArmDriver</span><span class="op">&gt;</span>,
-        <span class="ident">config</span>: <span class="ident">arm_config</span>::<span class="ident">ArmConfig</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">dyn</span> <span class="ident">ArmController</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">driver</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">dyn</span> <span class="ident">arm_driver</span>::<span class="ident">ArmDriver</span><span class="op">&gt;</span>, <span class="ident">config</span>: <span class="ident">arm_config</span>::<span class="ident">ArmConfig</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Box</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
         <span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">LssArmController</span> { <span class="ident">driver</span>, <span class="ident">config</span> })
     }
 }

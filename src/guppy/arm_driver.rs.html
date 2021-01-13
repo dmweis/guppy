@@ -311,6 +311,20 @@
 <span id="308">308</span>
 <span id="309">309</span>
 <span id="310">310</span>
+<span id="311">311</span>
+<span id="312">312</span>
+<span id="313">313</span>
+<span id="314">314</span>
+<span id="315">315</span>
+<span id="316">316</span>
+<span id="317">317</span>
+<span id="318">318</span>
+<span id="319">319</span>
+<span id="320">320</span>
+<span id="321">321</span>
+<span id="322">322</span>
+<span id="323">323</span>
+<span id="324">324</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">arm_config</span>;
 <span class="kw">use</span> <span class="ident">anyhow</span>::<span class="prelude-ty">Result</span>;
@@ -347,6 +361,7 @@
 }
 
 <span class="kw">impl</span> <span class="ident">ServoControlSettings</span> {
+    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">too_many_arguments</span>)]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(
         <span class="ident">motion_profile</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span>,
         <span class="ident">angular_holding_stiffness</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">i32</span><span class="op">&gt;</span>,
@@ -554,22 +569,35 @@
             <span class="ident">driver</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">lss_driver</span>::<span class="ident">LSSDriver</span>,
             <span class="ident">motor_id</span>: <span class="ident">u8</span>,
         ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ServoControlSettings</span><span class="op">&gt;</span> {
+            <span class="kw">let</span> <span class="ident">motion_profile</span> <span class="op">=</span> <span class="ident">driver</span>.<span class="ident">query_motion_profile</span>(<span class="ident">motor_id</span>).<span class="ident">await</span><span class="question-mark">?</span>;
+            <span class="kw">let</span> <span class="ident">angular_holding_stiffness</span> <span class="op">=</span>
+                <span class="ident">driver</span>.<span class="ident">query_angular_holding_stiffness</span>(<span class="ident">motor_id</span>).<span class="ident">await</span><span class="question-mark">?</span>;
+            <span class="kw">let</span> <span class="ident">angular_stiffness</span> <span class="op">=</span> <span class="ident">driver</span>.<span class="ident">query_angular_stiffness</span>(<span class="ident">motor_id</span>).<span class="ident">await</span><span class="question-mark">?</span>;
+            <span class="kw">let</span> <span class="ident">filter_position_count</span> <span class="op">=</span> <span class="ident">driver</span>.<span class="ident">query_filter_position_count</span>(<span class="ident">motor_id</span>).<span class="ident">await</span><span class="question-mark">?</span>;
+            <span class="kw">let</span> <span class="ident">maximum_motor_duty</span> <span class="op">=</span> <span class="ident">driver</span>.<span class="ident">query_maximum_motor_duty</span>(<span class="ident">motor_id</span>).<span class="ident">await</span><span class="question-mark">?</span> <span class="kw">as</span> <span class="ident">u32</span>;
+            <span class="kw">let</span> <span class="ident">angular_acceleration</span> <span class="op">=</span> <span class="ident">driver</span>.<span class="ident">query_angular_acceleration</span>(<span class="ident">motor_id</span>).<span class="ident">await</span><span class="question-mark">?</span>;
+            <span class="kw">let</span> <span class="ident">angular_deceleration</span> <span class="op">=</span> <span class="ident">driver</span>.<span class="ident">query_angular_deceleration</span>(<span class="ident">motor_id</span>).<span class="ident">await</span><span class="question-mark">?</span>;
+            <span class="kw">let</span> <span class="ident">maximum_speed_degrees</span> <span class="op">=</span> <span class="ident">driver</span>.<span class="ident">query_maximum_speed</span>(<span class="ident">motor_id</span>).<span class="ident">await</span><span class="question-mark">?</span> <span class="kw">as</span> <span class="ident">u32</span>;
             <span class="prelude-val">Ok</span>(<span class="ident">ServoControlSettings</span>::<span class="ident">new</span>(
-                <span class="prelude-val">Some</span>(<span class="ident">driver</span>.<span class="ident">query_motion_profile</span>(<span class="ident">motor_id</span>).<span class="ident">await</span><span class="question-mark">?</span>),
-                <span class="prelude-val">Some</span>(<span class="ident">driver</span>.<span class="ident">query_angular_holding_stiffness</span>(<span class="ident">motor_id</span>).<span class="ident">await</span><span class="question-mark">?</span>),
-                <span class="prelude-val">Some</span>(<span class="ident">driver</span>.<span class="ident">query_angular_stiffness</span>(<span class="ident">motor_id</span>).<span class="ident">await</span><span class="question-mark">?</span>),
-                <span class="prelude-val">Some</span>(<span class="ident">driver</span>.<span class="ident">query_filter_position_count</span>(<span class="ident">motor_id</span>).<span class="ident">await</span><span class="question-mark">?</span>),
-                <span class="prelude-val">Some</span>(<span class="ident">driver</span>.<span class="ident">query_maximum_motor_duty</span>(<span class="ident">motor_id</span>).<span class="ident">await</span><span class="question-mark">?</span> <span class="kw">as</span> <span class="ident">u32</span>),
-                <span class="prelude-val">Some</span>(<span class="ident">driver</span>.<span class="ident">query_angular_acceleration</span>(<span class="ident">motor_id</span>).<span class="ident">await</span><span class="question-mark">?</span>),
-                <span class="prelude-val">Some</span>(<span class="ident">driver</span>.<span class="ident">query_angular_deceleration</span>(<span class="ident">motor_id</span>).<span class="ident">await</span><span class="question-mark">?</span>),
-                <span class="prelude-val">Some</span>(<span class="ident">driver</span>.<span class="ident">query_maximum_speed</span>(<span class="ident">motor_id</span>).<span class="ident">await</span><span class="question-mark">?</span> <span class="kw">as</span> <span class="ident">u32</span>),
+                <span class="prelude-val">Some</span>(<span class="ident">motion_profile</span>),
+                <span class="prelude-val">Some</span>(<span class="ident">angular_holding_stiffness</span>),
+                <span class="prelude-val">Some</span>(<span class="ident">angular_stiffness</span>),
+                <span class="prelude-val">Some</span>(<span class="ident">filter_position_count</span>),
+                <span class="prelude-val">Some</span>(<span class="ident">maximum_motor_duty</span>),
+                <span class="prelude-val">Some</span>(<span class="ident">angular_acceleration</span>),
+                <span class="prelude-val">Some</span>(<span class="ident">angular_deceleration</span>),
+                <span class="prelude-val">Some</span>(<span class="ident">maximum_speed_degrees</span>),
             ))
         }
+        <span class="kw">let</span> <span class="ident">base</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">read_motor_config</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">driver</span>, <span class="self">self</span>.<span class="ident">config</span>.<span class="ident">base_id</span>).<span class="ident">await</span><span class="question-mark">?</span>);
+        <span class="kw">let</span> <span class="ident">shoulder</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">read_motor_config</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">driver</span>, <span class="self">self</span>.<span class="ident">config</span>.<span class="ident">shoulder_id</span>).<span class="ident">await</span><span class="question-mark">?</span>);
+        <span class="kw">let</span> <span class="ident">elbow</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">read_motor_config</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">driver</span>, <span class="self">self</span>.<span class="ident">config</span>.<span class="ident">elbow_id</span>).<span class="ident">await</span><span class="question-mark">?</span>);
+        <span class="kw">let</span> <span class="ident">wrist</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">read_motor_config</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">driver</span>, <span class="self">self</span>.<span class="ident">config</span>.<span class="ident">wrist_id</span>).<span class="ident">await</span><span class="question-mark">?</span>);
         <span class="prelude-val">Ok</span>(<span class="ident">ArmControlSettings</span> {
-            <span class="ident">base</span>: <span class="prelude-val">Some</span>(<span class="ident">read_motor_config</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">driver</span>, <span class="self">self</span>.<span class="ident">config</span>.<span class="ident">base_id</span>).<span class="ident">await</span><span class="question-mark">?</span>),
-            <span class="ident">shoulder</span>: <span class="prelude-val">Some</span>(<span class="ident">read_motor_config</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">driver</span>, <span class="self">self</span>.<span class="ident">config</span>.<span class="ident">shoulder_id</span>).<span class="ident">await</span><span class="question-mark">?</span>),
-            <span class="ident">elbow</span>: <span class="prelude-val">Some</span>(<span class="ident">read_motor_config</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">driver</span>, <span class="self">self</span>.<span class="ident">config</span>.<span class="ident">elbow_id</span>).<span class="ident">await</span><span class="question-mark">?</span>),
-            <span class="ident">wrist</span>: <span class="prelude-val">Some</span>(<span class="ident">read_motor_config</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">driver</span>, <span class="self">self</span>.<span class="ident">config</span>.<span class="ident">wrist_id</span>).<span class="ident">await</span><span class="question-mark">?</span>),
+            <span class="ident">base</span>,
+            <span class="ident">shoulder</span>,
+            <span class="ident">elbow</span>,
+            <span class="ident">wrist</span>,
         })
     }
 
