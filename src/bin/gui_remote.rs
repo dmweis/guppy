@@ -1,7 +1,4 @@
-use guppy::arm_config;
 use guppy::arm_controller;
-use guppy::arm_driver;
-use guppy::speech_service;
 #[cfg(feature = "visualiser")]
 use guppy::visualizer;
 
@@ -13,19 +10,15 @@ pub mod guppy_service {
     tonic::include_proto!("guppy_service");
 }
 
-use async_std::io;
 use async_std::task::sleep;
 use std::time::Duration;
 #[cfg(feature = "visualiser")]
 use visualizer::VisualizerInterface;
 
 use crate::arm_controller::EndEffectorPose;
-use clap::Clap;
 use nalgebra as na;
-use std::path::Path;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
-use std::time::Instant;
 
 impl From<nalgebra::Vector3<f32>> for guppy_service::Vector {
     fn from(source: nalgebra::Vector3<f32>) -> Self {

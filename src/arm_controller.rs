@@ -82,10 +82,7 @@ pub struct LssArmController {
 }
 
 impl LssArmController {
-    pub fn new(
-        driver: Box<dyn arm_driver::ArmDriver>,
-        config: arm_config::ArmConfig,
-    ) -> Box<dyn ArmController> {
+    pub fn new(driver: Box<dyn arm_driver::ArmDriver>, config: arm_config::ArmConfig) -> Box<Self> {
         Box::new(LssArmController { driver, config })
     }
 }

@@ -3,7 +3,7 @@ use async_std::task::sleep;
 use clap::Clap;
 use guppy::arm_config;
 use guppy::arm_controller;
-use guppy::arm_controller::EndEffectorPose;
+use guppy::arm_controller::{ArmController, EndEffectorPose};
 use guppy::arm_driver;
 use guppy::speech_service;
 #[cfg(feature = "visualiser")]

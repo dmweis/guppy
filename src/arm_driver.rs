@@ -33,6 +33,7 @@ pub struct ServoControlSettings {
 }
 
 impl ServoControlSettings {
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         motion_profile: Option<bool>,
         angular_holding_stiffness: Option<i32>,
@@ -240,22 +241,35 @@ impl ArmDriver for SerialArmDriver {
             driver: &mut lss_driver::LSSDriver,
             motor_id: u8,
         ) -> Result<ServoControlSettings> {
+            let motion_profile = driver.query_motion_profile(motor_id).await?;
+            let angular_holding_stiffness =
+                driver.query_angular_holding_stiffness(motor_id).await?;
+            let angular_stiffness = driver.query_angular_stiffness(motor_id).await?;
+            let filter_position_count = driver.query_filter_position_count(motor_id).await?;
+            let maximum_motor_duty = driver.query_maximum_motor_duty(motor_id).await? as u32;
+            let angular_acceleration = driver.query_angular_acceleration(motor_id).await?;
+            let angular_deceleration = driver.query_angular_deceleration(motor_id).await?;
+            let maximum_speed_degrees = driver.query_maximum_speed(motor_id).await? as u32;
             Ok(ServoControlSettings::new(
-                Some(driver.query_motion_profile(motor_id).await?),
-                Some(driver.query_angular_holding_stiffness(motor_id).await?),
-                Some(driver.query_angular_stiffness(motor_id).await?),
-                Some(driver.query_filter_position_count(motor_id).await?),
-                Some(driver.query_maximum_motor_duty(motor_id).await? as u32),
-                Some(driver.query_angular_acceleration(motor_id).await?),
-                Some(driver.query_angular_deceleration(motor_id).await?),
-                Some(driver.query_maximum_speed(motor_id).await? as u32),
+                Some(motion_profile),
+                Some(angular_holding_stiffness),
+                Some(angular_stiffness),
+                Some(filter_position_count),
+                Some(maximum_motor_duty),
+                Some(angular_acceleration),
+                Some(angular_deceleration),
+                Some(maximum_speed_degrees),
             ))
         }
+        let base = Some(read_motor_config(&mut self.driver, self.config.base_id).await?);
+        let shoulder = Some(read_motor_config(&mut self.driver, self.config.shoulder_id).await?);
+        let elbow = Some(read_motor_config(&mut self.driver, self.config.elbow_id).await?);
+        let wrist = Some(read_motor_config(&mut self.driver, self.config.wrist_id).await?);
         Ok(ArmControlSettings {
-            base: Some(read_motor_config(&mut self.driver, self.config.base_id).await?),
-            shoulder: Some(read_motor_config(&mut self.driver, self.config.shoulder_id).await?),
-            elbow: Some(read_motor_config(&mut self.driver, self.config.elbow_id).await?),
-            wrist: Some(read_motor_config(&mut self.driver, self.config.wrist_id).await?),
+            base,
+            shoulder,
+            elbow,
+            wrist,
         })
     }
 

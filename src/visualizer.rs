@@ -1,6 +1,5 @@
 use crate::arm_controller::ArmPositions;
 use crate::arm_controller::EndEffectorPose;
-use kiss3d;
 use kiss3d::event::Action;
 use kiss3d::event::Key;
 use kiss3d::scene::SceneNode;
