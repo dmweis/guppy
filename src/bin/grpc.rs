@@ -1,9 +1,6 @@
-#[allow(dead_code)]
-mod arm_config;
-#[allow(dead_code)]
-mod arm_controller;
-#[allow(dead_code)]
-mod arm_driver;
+use guppy::arm_config;
+use guppy::arm_controller;
+use guppy::arm_driver;
 
 use clap::Clap;
 

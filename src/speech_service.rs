@@ -1,6 +1,6 @@
 use reqwest;
 
-pub(crate) async fn say(text: String) -> Result<(), Box<dyn std::error::Error>> {
+pub async fn say(text: String) -> Result<(), Box<dyn std::error::Error>> {
     #[cfg(not(test))]
     let url = "http://pi4.local:3000/say";
     #[cfg(test)]

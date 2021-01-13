@@ -8,20 +8,17 @@ edition = "2018"
 
 [[bin]]
 name = "cli"
-path = "src/cli.rs"
 
 [[bin]]
 name = "gui_remote"
-path = "src/gui_remote.rs"
 
 [[bin]]
 name = "grpc"
-path = "src/grpc.rs"
 
 [features]
 default = ["visualiser"]
 
-visualiser = ["kiss3d"]
+visualiser = ["kiss3d", "iced"]
 
 [dependencies]
 lss_driver = "0.3"
@@ -36,6 +33,7 @@ nalgebra = { version = "0.21", features = ["serde-serialize"] }
 async-std = "1.6"
 ctrlc = "3.1"
 kiss3d = { git = "https://github.com/dmweis/kiss3d", branch = "less-sensitive-camera", optional = true }
+iced = { version = "^0.1", features = ["debug", "tokio"], optional = true }
 tonic = "0.3"
 prost = "0.6"
 anyhow = "^1.0"

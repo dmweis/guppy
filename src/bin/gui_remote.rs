@@ -1,9 +1,9 @@
-mod arm_config;
-mod arm_controller;
-mod arm_driver;
-mod speech_service;
+use guppy::arm_config;
+use guppy::arm_controller;
+use guppy::arm_driver;
+use guppy::speech_service;
 #[cfg(feature = "visualiser")]
-mod visualizer;
+use guppy::visualizer;
 
 use guppy_service::guppy_controller_client::GuppyControllerClient;
 

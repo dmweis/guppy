@@ -1,22 +1,18 @@
-mod arm_config;
-mod arm_controller;
-mod arm_driver;
-mod speech_service;
-#[cfg(feature = "visualiser")]
-mod visualizer;
-
 use async_std::io;
 use async_std::task::sleep;
-use std::time::Duration;
-#[cfg(feature = "visualiser")]
-use visualizer::VisualizerInterface;
-
-use crate::arm_controller::EndEffectorPose;
 use clap::Clap;
+use guppy::arm_config;
+use guppy::arm_controller;
+use guppy::arm_controller::EndEffectorPose;
+use guppy::arm_driver;
+use guppy::speech_service;
+#[cfg(feature = "visualiser")]
+use guppy::visualizer::VisualizerInterface;
 use nalgebra as na;
 use std::path::Path;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
+use std::time::Duration;
 use std::time::Instant;
 
 #[derive(Clap)]
