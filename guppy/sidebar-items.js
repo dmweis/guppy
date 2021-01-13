@@ -1,1 +1,1 @@
-initSidebarItems({"mod":[["arm_config",""],["arm_controller",""],["arm_driver",""],["speech_service",""],["visualizer",""]]});
+initSidebarItems({"mod":[["arm_config",""],["arm_controller",""],["arm_driver",""],["speech_service",""]]});
