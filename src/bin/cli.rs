@@ -6,7 +6,6 @@ use guppy::arm_controller;
 use guppy::arm_controller::{ArmController, EndEffectorPose};
 use guppy::arm_driver;
 use guppy::speech_service;
-#[cfg(feature = "visualiser")]
 use guppy::visualizer::VisualizerInterface;
 use nalgebra as na;
 use std::path::Path;
@@ -30,7 +29,6 @@ enum SubCommand {
     MoveConfig(GenericArgs),
     TeachPendent(GenericArgs),
     Config(ConfigArgs),
-    #[cfg(feature = "visualiser")]
     Viz,
 }
 
@@ -80,13 +78,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         SubCommand::MoveConfig(args) => {
             move_config_run(args).await?;
         }
-        #[cfg(feature = "visualiser")]
         SubCommand::Viz => test_visualizer().await?,
     }
     Ok(())
 }
 
-#[cfg(feature = "visualiser")]
 async fn test_visualizer() -> Result<(), Box<dyn std::error::Error>> {
     let running = Arc::new(AtomicBool::new(true));
     let running_handle = running.clone();
@@ -129,12 +125,10 @@ async fn test_visualizer() -> Result<(), Box<dyn std::error::Error>> {
 async fn ik_run(args: GenericArgs) -> Result<(), Box<dyn std::error::Error>> {
     let running = Arc::new(AtomicBool::new(true));
     let running_handle = running.clone();
-    #[cfg(feature = "visualiser")]
     let desired_point = Arc::new(Mutex::new(EndEffectorPose::new(
         na::Vector3::new(0., 0., 0.),
         0.,
     )));
-    #[cfg(feature = "visualiser")]
     let mut visualizer = VisualizerInterface::new(desired_point.clone());
 
     ctrlc::set_handler(move || {
@@ -164,15 +158,12 @@ async fn ik_run(args: GenericArgs) -> Result<(), Box<dyn std::error::Error>> {
                 positions.end_effector.z,
                 positions.end_effector_angle
             );
-            #[cfg(feature = "visualiser")]
-            {
-                visualizer.set_position(positions.clone());
-                let calculated_ik = arm_controller
-                    .calculate_ik(positions.end_effector, positions.end_effector_angle)
-                    .await?;
-                let translated_fk = arm_controller.calculate_fk(calculated_ik).await?;
-                visualizer.set_motion_plan(Some(vec![translated_fk]));
-            }
+            visualizer.set_position(positions.clone());
+            let calculated_ik = arm_controller
+                .calculate_ik(positions.end_effector, positions.end_effector_angle)
+                .await?;
+            let translated_fk = arm_controller.calculate_fk(calculated_ik).await?;
+            visualizer.set_motion_plan(Some(vec![translated_fk]));
             sleep(Duration::from_millis(20)).await;
         } else {
             eprintln!("Message error");
@@ -189,7 +180,6 @@ async fn move_run(args: GenericArgs) -> Result<(), Box<dyn std::error::Error>> {
         na::Vector3::new(0.2, 0., 0.2),
         0.,
     )));
-    #[cfg(feature = "visualiser")]
     let mut visualizer = VisualizerInterface::new(desired_point.clone());
 
     ctrlc::set_handler(move || {
@@ -220,11 +210,8 @@ async fn move_run(args: GenericArgs) -> Result<(), Box<dyn std::error::Error>> {
             .move_to(pose.position, pose.end_effector_angle)
             .await
         {
-            #[cfg(feature = "visualiser")]
-            {
-                let joint_positions = arm_controller.calculate_fk(_arm_positions).await?;
-                visualizer.set_position(joint_positions);
-            }
+            let joint_positions = arm_controller.calculate_fk(_arm_positions).await?;
+            visualizer.set_position(joint_positions);
         } else {
             eprintln!("Message error");
         }
@@ -245,7 +232,6 @@ async fn move_config_run(args: GenericArgs) -> Result<(), Box<dyn std::error::Er
         na::Vector3::new(0.2, 0., 0.2),
         0.,
     )));
-    #[cfg(feature = "visualiser")]
     let mut visualizer = VisualizerInterface::new(desired_point.clone());
 
     let mut settings = arm_driver::ArmControlSettings::default();
@@ -276,11 +262,8 @@ async fn move_config_run(args: GenericArgs) -> Result<(), Box<dyn std::error::Er
         let y = temporal * 0.07;
         let position = na::Vector3::new(0.2, 0.0 + y, 0.2 + z);
         if let Ok(_arm_positions) = arm_controller.move_to(position, 0.0).await {
-            #[cfg(feature = "visualiser")]
-            {
-                let joint_positions = arm_controller.calculate_fk(_arm_positions).await?;
-                visualizer.set_position(joint_positions);
-            }
+            let joint_positions = arm_controller.calculate_fk(_arm_positions).await?;
+            visualizer.set_position(joint_positions);
         } else {
             eprintln!("Message error");
         }
@@ -314,7 +297,6 @@ async fn teach_pendent(args: GenericArgs) -> Result<(), Box<dyn std::error::Erro
         na::Vector3::new(0.2, 0., 0.2),
         0.,
     )));
-    #[cfg(feature = "visualiser")]
     let mut visualizer = VisualizerInterface::new(desired_point.clone());
 
     ctrlc::set_handler(move || {
@@ -347,7 +329,6 @@ async fn teach_pendent(args: GenericArgs) -> Result<(), Box<dyn std::error::Erro
         wait_for_enter().await?;
         let current_position = arm_controller.read_position().await?;
         history.push(current_position.clone());
-        #[cfg(feature = "visualiser")]
         visualizer.set_position(current_position);
     }
 
@@ -361,11 +342,8 @@ async fn teach_pendent(args: GenericArgs) -> Result<(), Box<dyn std::error::Erro
                 .move_to(arm_pose.end_effector, arm_pose.end_effector_angle)
                 .await
             {
-                #[cfg(feature = "visualiser")]
-                {
-                    let joint_positions = arm_controller.calculate_fk(_arm_positions).await?;
-                    visualizer.set_position(joint_positions);
-                }
+                let joint_positions = arm_controller.calculate_fk(_arm_positions).await?;
+                visualizer.set_position(joint_positions);
             } else {
                 eprintln!("Message error");
             }

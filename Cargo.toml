@@ -15,11 +15,6 @@ name = "gui_remote"
 [[bin]]
 name = "grpc"
 
-[features]
-default = ["visualiser"]
-
-visualiser = ["kiss3d"]
-
 [dependencies]
 lss_driver = "0.3"
 reqwest = "0.10"
@@ -32,7 +27,7 @@ async-trait = "0.1"
 nalgebra = { version = "0.24", features = ["serde-serialize"] }
 async-std = "1.6"
 ctrlc = "3.1"
-kiss3d = { version = "0.29", optional = true }
+kiss3d = "0.29"
 tonic = "0.3"
 prost = "0.6"
 anyhow = "^1.0"

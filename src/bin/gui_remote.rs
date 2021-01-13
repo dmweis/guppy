@@ -1,5 +1,4 @@
 use guppy::arm_controller;
-#[cfg(feature = "visualiser")]
 use guppy::visualizer;
 
 use guppy_service::guppy_controller_client::GuppyControllerClient;
@@ -12,7 +11,6 @@ pub mod guppy_service {
 
 use async_std::task::sleep;
 use std::time::Duration;
-#[cfg(feature = "visualiser")]
 use visualizer::VisualizerInterface;
 
 use crate::arm_controller::EndEffectorPose;
@@ -62,7 +60,6 @@ async fn move_run() -> Result<(), Box<dyn std::error::Error>> {
         na::Vector3::new(0.2, 0., 0.2),
         0.,
     )));
-    #[cfg(feature = "visualiser")]
     let mut visualizer = VisualizerInterface::new(desired_point.clone());
 
     ctrlc::set_handler(move || {
@@ -86,10 +83,7 @@ async fn move_run() -> Result<(), Box<dyn std::error::Error>> {
             }))
             .await
         {
-            #[cfg(feature = "visualiser")]
-            {
-                visualizer.set_position(joint_positions.into_inner().into());
-            }
+            visualizer.set_position(joint_positions.into_inner().into());
         } else {
             eprintln!("Message error");
         }
