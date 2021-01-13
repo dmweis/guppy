@@ -122,7 +122,7 @@ impl GuppyController for GuppyControllerHandler {
         let inner = request.into_inner();
         let position = inner
             .position
-            .ok_or(Status::invalid_argument("missing position"))?;
+            .ok_or_else(|| Status::invalid_argument("missing position"))?;
         let mut driver = self.driver.lock().await;
         let joint_positions = driver
             .move_to(position.into(), inner.effector_angle)
