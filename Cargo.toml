@@ -16,9 +16,9 @@ name = "gui_remote"
 name = "grpc"
 
 [features]
-default = ["visualiser"]
+default = []
 
-visualiser = ["kiss3d", "iced"]
+visualiser = ["kiss3d"]
 
 [dependencies]
 lss_driver = "0.3"
@@ -33,7 +33,6 @@ nalgebra = { version = "0.21", features = ["serde-serialize"] }
 async-std = "1.6"
 ctrlc = "3.1"
 kiss3d = { git = "https://github.com/dmweis/kiss3d", branch = "less-sensitive-camera", optional = true }
-iced = { version = "^0.1", features = ["debug", "tokio"], optional = true }
 tonic = "0.3"
 prost = "0.6"
 anyhow = "^1.0"
