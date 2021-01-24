@@ -139,7 +139,7 @@ impl GuppyController for GuppyControllerHandler {
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = Args::parse();
-    let address = "127.0.0.1:5002".parse().unwrap();
+    let address = "0.0.0.0:5002".parse().unwrap();
     let driver = connect_to_arm(&args.port).await?;
     let config_handler = GuppyConfigHandler::new(Arc::clone(&driver));
     let controller_handler = GuppyControllerHandler::new(driver);
