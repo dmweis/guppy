@@ -33,7 +33,7 @@ prost = "0.7"
 anyhow = "^1.0"
 
 [dev-dependencies]
-mockito = "^0.27"
+mockito = "^0.29"
 
 [build-dependencies]
 tonic-build = { version = "0.4", features = ["prost"] }
