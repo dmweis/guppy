@@ -4,7 +4,7 @@ use clap::Clap;
 use guppy::arm_config;
 use guppy::arm_controller;
 use guppy::arm_controller::{ArmController, EndEffectorPose};
-use guppy::arm_driver;
+use guppy::arm_driver::{self, ArmDriver};
 use guppy::speech_service;
 use guppy::visualizer::VisualizerInterface;
 use nalgebra as na;

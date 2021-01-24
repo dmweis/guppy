@@ -155,8 +155,7 @@ pub struct SerialArmDriver {
 }
 
 impl SerialArmDriver {
-    #[allow(clippy::new_ret_no_self)]
-    pub async fn new(port: &str, config: arm_config::ArmConfig) -> Result<Box<dyn ArmDriver>> {
+    pub async fn new(port: &str, config: arm_config::ArmConfig) -> Result<Box<Self>> {
         let driver = lss_driver::LSSDriver::new(port)?;
         let mut arm_driver = SerialArmDriver { driver, config };
         arm_driver
