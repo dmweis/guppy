@@ -1,1 +1,1 @@
-initSidebarItems({"struct":[["ArmControlSettings",""],["JointPositions",""],["SerialArmDriver",""],["ServoControlSettings",""]],"trait":[["ArmDriver",""]]});
+initSidebarItems({"struct":[["ArmControlSettings",""],["JointPositions",""],["SerialArmDriver",""],["ServoControlSettings",""],["SharedSerialArmDriver",""]],"trait":[["ArmDriver",""]]});
