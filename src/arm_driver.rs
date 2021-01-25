@@ -1,8 +1,10 @@
 use crate::arm_config;
 use anyhow::Result;
 use async_trait::async_trait;
+use lss_driver::LSSDriver;
 use serde::{Deserialize, Serialize};
-use std::{fs, include_bytes, str};
+use std::{fs, include_bytes, str, sync::Arc};
+use tokio::sync::Mutex;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct ServoControlSettings {
@@ -303,6 +305,185 @@ impl ArmDriver for SerialArmDriver {
         let shoulder_position = self.driver.query_position(self.config.shoulder_id).await?;
         let elbow_position = self.driver.query_position(self.config.elbow_id).await?;
         let wrist_position = self.driver.query_position(self.config.wrist_id).await?;
+        Ok(JointPositions::new(
+            base_position,
+            shoulder_position,
+            elbow_position,
+            wrist_position,
+        ))
+    }
+}
+
+pub struct SharedSerialArmDriver {
+    driver: Arc<Mutex<LSSDriver>>,
+    config: arm_config::ArmConfig,
+}
+
+impl SharedSerialArmDriver {
+    pub async fn new(
+        driver: Arc<Mutex<LSSDriver>>,
+        config: arm_config::ArmConfig,
+    ) -> Result<Box<Self>> {
+        let mut arm_driver = Self { driver, config };
+        arm_driver
+            .setup_motors(ArmControlSettings::default())
+            .await?;
+        Ok(Box::new(arm_driver))
+    }
+}
+
+#[async_trait]
+impl ArmDriver for SharedSerialArmDriver {
+    async fn set_color(&mut self, color: lss_driver::LedColor) -> Result<()> {
+        self.driver
+            .lock()
+            .await
+            .set_color(lss_driver::BROADCAST_ID, color)
+            .await?;
+        Ok(())
+    }
+
+    async fn setup_motors(&mut self, settings: ArmControlSettings) -> Result<()> {
+        async fn set_motor(
+            driver: &mut lss_driver::LSSDriver,
+            motor_id: u8,
+            settings: &ServoControlSettings,
+        ) -> Result<()> {
+            if let Some(motion_profile) = settings.motion_profile {
+                driver.set_motion_profile(motor_id, motion_profile).await?;
+            }
+            if let Some(angular_holding_stiffness) = settings.angular_holding_stiffness {
+                driver
+                    .set_angular_holding_stiffness(motor_id, angular_holding_stiffness)
+                    .await?;
+            }
+            if let Some(angular_stiffness) = settings.angular_stiffness {
+                driver
+                    .set_angular_stiffness(motor_id, angular_stiffness)
+                    .await?;
+            }
+            if let Some(filter_position_count) = settings.filter_position_count {
+                driver
+                    .set_filter_position_count(motor_id, filter_position_count)
+                    .await?;
+            }
+            if let Some(maximum_motor_duty) = settings.maximum_motor_duty {
+                driver
+                    .set_maximum_motor_duty(motor_id, maximum_motor_duty as i32)
+                    .await?;
+            }
+            if let Some(angular_acceleration) = settings.angular_acceleration {
+                driver
+                    .set_angular_acceleration(motor_id, angular_acceleration)
+                    .await?;
+            }
+            if let Some(angular_deceleration) = settings.angular_deceleration {
+                driver
+                    .set_angular_deceleration(motor_id, angular_deceleration)
+                    .await?;
+            }
+            if let Some(maximum_speed_degrees) = settings.maximum_speed_degrees {
+                driver
+                    .set_maximum_speed(motor_id, maximum_speed_degrees as f32)
+                    .await?;
+            }
+            Ok(())
+        }
+        let mut driver = self.driver.lock().await;
+        if let Some(base_settings) = &settings.base {
+            set_motor(&mut driver, self.config.base_id, base_settings).await?;
+        }
+        if let Some(shoulder_settings) = &settings.shoulder {
+            set_motor(&mut driver, self.config.shoulder_id, shoulder_settings).await?;
+        }
+        if let Some(elbow_settings) = &settings.elbow {
+            set_motor(&mut driver, self.config.elbow_id, elbow_settings).await?;
+        }
+        if let Some(wrist_settings) = &settings.wrist {
+            set_motor(&mut driver, self.config.wrist_id, wrist_settings).await?;
+        }
+        Ok(())
+    }
+
+    async fn load_motor_settings(&mut self) -> Result<ArmControlSettings> {
+        async fn read_motor_config(
+            driver: &mut lss_driver::LSSDriver,
+            motor_id: u8,
+        ) -> Result<ServoControlSettings> {
+            let motion_profile = driver.query_motion_profile(motor_id).await?;
+            let angular_holding_stiffness =
+                driver.query_angular_holding_stiffness(motor_id).await?;
+            let angular_stiffness = driver.query_angular_stiffness(motor_id).await?;
+            let filter_position_count = driver.query_filter_position_count(motor_id).await?;
+            let maximum_motor_duty = driver.query_maximum_motor_duty(motor_id).await? as u32;
+            let angular_acceleration = driver.query_angular_acceleration(motor_id).await?;
+            let angular_deceleration = driver.query_angular_deceleration(motor_id).await?;
+            let maximum_speed_degrees = driver.query_maximum_speed(motor_id).await? as u32;
+            Ok(ServoControlSettings::new(
+                Some(motion_profile),
+                Some(angular_holding_stiffness),
+                Some(angular_stiffness),
+                Some(filter_position_count),
+                Some(maximum_motor_duty),
+                Some(angular_acceleration),
+                Some(angular_deceleration),
+                Some(maximum_speed_degrees),
+            ))
+        }
+        let mut driver = self.driver.lock().await;
+        let base = Some(read_motor_config(&mut driver, self.config.base_id).await?);
+        let shoulder = Some(read_motor_config(&mut driver, self.config.shoulder_id).await?);
+        let elbow = Some(read_motor_config(&mut driver, self.config.elbow_id).await?);
+        let wrist = Some(read_motor_config(&mut driver, self.config.wrist_id).await?);
+        Ok(ArmControlSettings {
+            base,
+            shoulder,
+            elbow,
+            wrist,
+        })
+    }
+
+    async fn halt(&mut self) -> Result<()> {
+        self.driver
+            .lock()
+            .await
+            .halt_hold(lss_driver::BROADCAST_ID)
+            .await?;
+        Ok(())
+    }
+
+    async fn limp(&mut self) -> Result<()> {
+        self.driver
+            .lock()
+            .await
+            .limp(lss_driver::BROADCAST_ID)
+            .await?;
+        Ok(())
+    }
+
+    async fn move_to(&mut self, position: JointPositions) -> Result<()> {
+        let mut driver = self.driver.lock().await;
+        driver
+            .move_to_position(self.config.base_id, position.base)
+            .await?;
+        driver
+            .move_to_position(self.config.shoulder_id, position.shoulder)
+            .await?;
+        driver
+            .move_to_position(self.config.elbow_id, position.elbow)
+            .await?;
+        driver
+            .move_to_position(self.config.wrist_id, position.wrist)
+            .await?;
+        Ok(())
+    }
+
+    async fn read_position(&mut self) -> Result<JointPositions> {
+        let mut driver = self.driver.lock().await;
+        let base_position = driver.query_position(self.config.base_id).await?;
+        let shoulder_position = driver.query_position(self.config.shoulder_id).await?;
+        let elbow_position = driver.query_position(self.config.elbow_id).await?;
+        let wrist_position = driver.query_position(self.config.wrist_id).await?;
         Ok(JointPositions::new(
             base_position,
             shoulder_position,
