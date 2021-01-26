@@ -279,7 +279,7 @@ fn render_loop(
         if window.get_key(Key::B) == Action::Press {
             gripper_state.store(true, Ordering::Release);
         }
-        if window.get_key(Key::C) == Action::Press {
+        if window.get_key(Key::V) == Action::Press {
             gripper_state.store(false, Ordering::Release);
         }
         if window.get_key(Key::Return) == Action::Press {
