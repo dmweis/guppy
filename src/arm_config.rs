@@ -89,7 +89,7 @@ impl ArmConfig {
 mod tests {
     use super::*;
 
-    const DEFAULT_JSON: &str = "{\"base_id\":1,\"shoulder_id\":3,\"elbow_id\":2,\"wrist_id\":4,\"shoulder\":[0,0,0.0],\"elbow\":[0.0,0,0.0],\"wrist\":[0.0,0,0],\"end_effector\":[0,0,0.0]}";
+    const DEFAULT_JSON: &str = "{\"base_id\":1,\"shoulder_id\":2,\"elbow_id\":3,\"wrist_id\":4,\"shoulder\":[0,0,0.0],\"elbow\":[0.0,0,0.0],\"wrist\":[0.0,0,0],\"end_effector\":[0,0,0.0]}";
 
     #[test]
     fn parse_from_json() {
