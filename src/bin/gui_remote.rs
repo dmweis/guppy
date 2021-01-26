@@ -67,7 +67,7 @@ async fn move_run() -> Result<(), Box<dyn std::error::Error>> {
         println!("Caught interrupt\nExiting...");
     })?;
 
-    let mut client = GuppyControllerClient::connect("http://127.0.0.1:5002").await?;
+    let mut client = GuppyControllerClient::connect("http://pi42.local:5002").await?;
 
     // let start = Instant::now();
     while running.load(Ordering::Acquire) {
