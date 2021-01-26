@@ -15,7 +15,7 @@ pub type ControllerWrapper = Arc<Mutex<std::boxed::Box<dyn arm_controller::ArmCo
 
 pub async fn connect_to_arm(port: &str) -> Result<ControllerWrapper, Box<dyn std::error::Error>> {
     let config = arm_config::ArmConfig::included();
-    let driver = arm_driver::SerialArmDriver::new(port, arm_config::ArmConfig::included()).await?;
+    let driver = arm_driver::SerialArmDriver::new(port, config.clone()).await?;
     let controller = arm_controller::LssArmController::new(driver, config);
     Ok(Arc::new(Mutex::new(controller)))
 }
