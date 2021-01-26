@@ -170,9 +170,9 @@ impl SerialArmDriver {
 #[async_trait]
 impl ArmDriver for SerialArmDriver {
     async fn set_color(&mut self, color: lss_driver::LedColor) -> Result<()> {
-        self.driver
-            .set_color(lss_driver::BROADCAST_ID, color)
-            .await?;
+        for id in self.config.get_ids().iter() {
+            self.driver.set_color(*id, color).await?;
+        }
         Ok(())
     }
 
@@ -275,12 +275,16 @@ impl ArmDriver for SerialArmDriver {
     }
 
     async fn halt(&mut self) -> Result<()> {
-        self.driver.halt_hold(lss_driver::BROADCAST_ID).await?;
+        for id in self.config.get_ids().iter() {
+            self.driver.halt_hold(*id).await?;
+        }
         Ok(())
     }
 
     async fn limp(&mut self) -> Result<()> {
-        self.driver.limp(lss_driver::BROADCAST_ID).await?;
+        for id in self.config.get_ids().iter() {
+            self.driver.limp(*id).await?;
+        }
         Ok(())
     }
 
@@ -335,11 +339,10 @@ impl SharedSerialArmDriver {
 #[async_trait]
 impl ArmDriver for SharedSerialArmDriver {
     async fn set_color(&mut self, color: lss_driver::LedColor) -> Result<()> {
-        self.driver
-            .lock()
-            .await
-            .set_color(lss_driver::BROADCAST_ID, color)
-            .await?;
+        let mut driver = self.driver.lock().await;
+        for id in self.config.get_ids().iter() {
+            driver.set_color(*id, color).await?;
+        }
         Ok(())
     }
 
@@ -444,20 +447,18 @@ impl ArmDriver for SharedSerialArmDriver {
     }
 
     async fn halt(&mut self) -> Result<()> {
-        self.driver
-            .lock()
-            .await
-            .halt_hold(lss_driver::BROADCAST_ID)
-            .await?;
+        let mut driver = self.driver.lock().await;
+        for id in self.config.get_ids().iter() {
+            driver.halt_hold(*id).await?;
+        }
         Ok(())
     }
 
     async fn limp(&mut self) -> Result<()> {
-        self.driver
-            .lock()
-            .await
-            .limp(lss_driver::BROADCAST_ID)
-            .await?;
+        let mut driver = self.driver.lock().await;
+        for id in self.config.get_ids().iter() {
+            driver.limp(*id).await?;
+        }
         Ok(())
     }
 
