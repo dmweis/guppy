@@ -53,6 +53,7 @@ impl ArmPositions {
 #[async_trait]
 pub trait ArmController: Send + Sync {
     async fn set_color(&mut self, color: lss_driver::LedColor) -> Result<(), Box<dyn Error>>;
+    async fn move_gripper(&mut self, closed: f32) -> Result<(), Box<dyn Error>>;
     async fn calculate_ik(
         &self,
         position: na::Vector3<f32>,
@@ -91,6 +92,11 @@ impl LssArmController {
 impl ArmController for LssArmController {
     async fn set_color(&mut self, color: lss_driver::LedColor) -> Result<(), Box<dyn Error>> {
         self.driver.set_color(color).await?;
+        Ok(())
+    }
+
+    async fn move_gripper(&mut self, closed: f32) -> Result<(), Box<dyn Error>> {
+        self.driver.move_gripper(closed).await?;
         Ok(())
     }
 

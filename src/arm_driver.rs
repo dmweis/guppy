@@ -149,6 +149,7 @@ pub trait ArmDriver: Send + Sync {
     async fn limp(&mut self) -> Result<()>;
     async fn move_to(&mut self, position: JointPositions) -> Result<()>;
     async fn read_position(&mut self) -> Result<JointPositions>;
+    async fn move_gripper(&mut self, closed: f32) -> Result<()>;
 }
 
 pub struct SerialArmDriver {
@@ -315,6 +316,17 @@ impl ArmDriver for SerialArmDriver {
             elbow_position,
             wrist_position,
         ))
+    }
+
+    /// Set how open the gripper is
+    /// 0.0 is fully open
+    /// 1.0 is fully closed
+    async fn move_gripper(&mut self, closed: f32) -> Result<()> {
+        let desired_position = calc_gripper(closed);
+        self.driver
+            .move_to_position(self.config.gripper_id, desired_position)
+            .await?;
+        Ok(())
     }
 }
 
@@ -492,14 +504,57 @@ impl ArmDriver for SharedSerialArmDriver {
             wrist_position,
         ))
     }
+
+    /// Set how open the gripper is
+    /// 0.0 is fully open
+    /// 1.0 is fully closed
+    async fn move_gripper(&mut self, closed: f32) -> Result<()> {
+        let desired_position = calc_gripper(closed);
+        self.driver
+            .lock()
+            .await
+            .move_to_position(self.config.gripper_id, desired_position)
+            .await?;
+        Ok(())
+    }
+}
+
+fn calc_gripper(open: f32) -> f32 {
+    let val = open.min(1.0).max(0.0);
+    -1.0 * (1.0 - val) * 90.0
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use approx::assert_relative_eq;
 
     #[test]
     fn arm_driver_includes_default_config() {
         ArmControlSettings::default();
+    }
+
+    #[test]
+    fn test_closed_gripper() {
+        let res = calc_gripper(1.0);
+        assert_relative_eq!(res, 0.0)
+    }
+
+    #[test]
+    fn test_opened_gripper() {
+        let res = calc_gripper(0.0);
+        assert_relative_eq!(res, -90.0)
+    }
+
+    #[test]
+    fn gripper_clamps_opened() {
+        let res = calc_gripper(-2.0);
+        assert_relative_eq!(res, -90.0)
+    }
+
+    #[test]
+    fn gripper_clamps_closed() {
+        let res = calc_gripper(20.0);
+        assert_relative_eq!(res, 0.0)
     }
 }

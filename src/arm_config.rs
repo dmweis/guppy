@@ -8,6 +8,7 @@ pub struct ArmConfig {
     pub shoulder_id: u8,
     pub elbow_id: u8,
     pub wrist_id: u8,
+    pub gripper_id: u8,
     pub shoulder: Vector3<f32>,
     pub elbow: Vector3<f32>,
     pub wrist: Vector3<f32>,
@@ -22,6 +23,7 @@ impl ArmConfig {
             shoulder_id: 2,
             elbow_id: 3,
             wrist_id: 4,
+            gripper_id: 5,
             shoulder: Vector3::new(0.0, 0.0, 0.0),
             elbow: Vector3::new(0.0, 0.0, 0.0),
             wrist: Vector3::new(0.0, 0.0, 0.0),
@@ -29,8 +31,14 @@ impl ArmConfig {
         }
     }
 
-    pub fn get_ids(&self) -> [u8; 4] {
-        [self.base_id, self.shoulder_id, self.elbow_id, self.wrist_id]
+    pub fn get_ids(&self) -> [u8; 5] {
+        [
+            self.base_id,
+            self.shoulder_id,
+            self.elbow_id,
+            self.wrist_id,
+            self.gripper_id,
+        ]
     }
 
     /// Guppy comes with an included config file.
@@ -89,7 +97,7 @@ impl ArmConfig {
 mod tests {
     use super::*;
 
-    const DEFAULT_JSON: &str = "{\"base_id\":1,\"shoulder_id\":2,\"elbow_id\":3,\"wrist_id\":4,\"shoulder\":[0,0,0.0],\"elbow\":[0.0,0,0.0],\"wrist\":[0.0,0,0],\"end_effector\":[0,0,0.0]}";
+    const DEFAULT_JSON: &str = "{\"base_id\":1,\"shoulder_id\":2,\"elbow_id\":3,\"wrist_id\":4,\"gripper_id\":5,\"shoulder\":[0,0,0.0],\"elbow\":[0.0,0,0.0],\"wrist\":[0.0,0,0],\"end_effector\":[0,0,0.0]}";
 
     #[test]
     fn parse_from_json() {

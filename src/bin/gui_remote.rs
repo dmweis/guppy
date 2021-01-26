@@ -60,14 +60,16 @@ async fn move_run() -> Result<(), Box<dyn std::error::Error>> {
         na::Vector3::new(0.2, 0., 0.2),
         0.,
     )));
-    let mut visualizer = VisualizerInterface::new(desired_point.clone());
+    let gripper_state = Arc::new(AtomicBool::new(false));
+    let mut visualizer =
+        VisualizerInterface::new(desired_point.clone(), Arc::clone(&gripper_state));
 
     ctrlc::set_handler(move || {
         running_handle.store(false, Ordering::Release);
         println!("Caught interrupt\nExiting...");
     })?;
 
-    let mut client = GuppyControllerClient::connect("http://pi42.local:5002").await?;
+    let mut client = GuppyControllerClient::connect("http://pi42.local:5001").await?;
 
     // let start = Instant::now();
     while running.load(Ordering::Acquire) {
@@ -86,6 +88,20 @@ async fn move_run() -> Result<(), Box<dyn std::error::Error>> {
             visualizer.set_position(joint_positions.into_inner().into());
         } else {
             eprintln!("Message error");
+        }
+        let gripper_closed = gripper_state.load(Ordering::Acquire);
+        if gripper_closed {
+            client
+                .set_gripper(Request::new(guppy_service::SetGripperRequest {
+                    gripper: 1.0,
+                }))
+                .await?;
+        } else {
+            client
+                .set_gripper(Request::new(guppy_service::SetGripperRequest {
+                    gripper: 0.0,
+                }))
+                .await?;
         }
         sleep(Duration::from_millis(20)).await;
     }

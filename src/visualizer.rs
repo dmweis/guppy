@@ -44,7 +44,10 @@ pub struct VisualizerInterface {
 }
 
 impl VisualizerInterface {
-    pub fn new(desired_end_point: Arc<Mutex<EndEffectorPose>>) -> VisualizerInterface {
+    pub fn new(
+        desired_end_point: Arc<Mutex<EndEffectorPose>>,
+        gripper_state: Arc<AtomicBool>,
+    ) -> VisualizerInterface {
         let current_arm_pose = Arc::new(Mutex::new(None));
         let motion_plan = Arc::new(Mutex::new(None));
         let keep_running = Arc::new(AtomicBool::new(true));
@@ -58,6 +61,7 @@ impl VisualizerInterface {
                 motion_plan_clone,
                 keep_running_clone,
                 desired_end_point,
+                gripper_state,
             );
         });
         VisualizerInterface {
@@ -193,6 +197,7 @@ fn render_loop(
     motion_plan: Arc<Mutex<Option<Vec<ArmPositions>>>>,
     keep_running: Arc<AtomicBool>,
     desired_end_point: Arc<Mutex<EndEffectorPose>>,
+    gripper_state: Arc<AtomicBool>,
 ) {
     let white = Point3::new(1.0, 1.0, 1.0);
     let mut window = Window::new("Guppy");
@@ -270,6 +275,12 @@ fn render_loop(
         }
         if window.get_key(Key::F) == Action::Press {
             pos_copy.end_effector_angle += frame_counter.elapsed().as_secs_f32() * 20.;
+        }
+        if window.get_key(Key::B) == Action::Press {
+            gripper_state.store(true, Ordering::Release);
+        }
+        if window.get_key(Key::C) == Action::Press {
+            gripper_state.store(false, Ordering::Release);
         }
         if window.get_key(Key::Return) == Action::Press {
             pos_copy.end_effector_angle = 0.0;

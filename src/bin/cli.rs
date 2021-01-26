@@ -90,7 +90,8 @@ async fn test_visualizer() -> Result<(), Box<dyn std::error::Error>> {
         na::Vector3::new(0., 0., 0.),
         0.,
     )));
-    let mut visualizer = VisualizerInterface::new(desired_point.clone());
+    let mut visualizer =
+        VisualizerInterface::new(desired_point.clone(), Arc::new(AtomicBool::new(true)));
 
     ctrlc::set_handler(move || {
         running_handle.store(false, Ordering::Release);
@@ -129,7 +130,8 @@ async fn ik_run(args: GenericArgs) -> Result<(), Box<dyn std::error::Error>> {
         na::Vector3::new(0., 0., 0.),
         0.,
     )));
-    let mut visualizer = VisualizerInterface::new(desired_point.clone());
+    let mut visualizer =
+        VisualizerInterface::new(desired_point.clone(), Arc::new(AtomicBool::new(true)));
 
     ctrlc::set_handler(move || {
         running_handle.store(false, Ordering::Release);
@@ -180,7 +182,8 @@ async fn move_run(args: GenericArgs) -> Result<(), Box<dyn std::error::Error>> {
         na::Vector3::new(0.2, 0., 0.2),
         0.,
     )));
-    let mut visualizer = VisualizerInterface::new(desired_point.clone());
+    let mut visualizer =
+        VisualizerInterface::new(desired_point.clone(), Arc::new(AtomicBool::new(true)));
 
     ctrlc::set_handler(move || {
         running_handle.store(false, Ordering::Release);
@@ -232,7 +235,8 @@ async fn move_config_run(args: GenericArgs) -> Result<(), Box<dyn std::error::Er
         na::Vector3::new(0.2, 0., 0.2),
         0.,
     )));
-    let mut visualizer = VisualizerInterface::new(desired_point.clone());
+    let mut visualizer =
+        VisualizerInterface::new(desired_point.clone(), Arc::new(AtomicBool::new(true)));
 
     let mut settings = arm_driver::ArmControlSettings::default();
     settings.save_json("./motor_settings.json")?;
@@ -297,7 +301,8 @@ async fn teach_pendent(args: GenericArgs) -> Result<(), Box<dyn std::error::Erro
         na::Vector3::new(0.2, 0., 0.2),
         0.,
     )));
-    let mut visualizer = VisualizerInterface::new(desired_point.clone());
+    let mut visualizer =
+        VisualizerInterface::new(desired_point.clone(), Arc::new(AtomicBool::new(true)));
 
     ctrlc::set_handler(move || {
         running_handle.store(false, Ordering::SeqCst);

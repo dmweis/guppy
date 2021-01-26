@@ -124,6 +124,19 @@ impl GuppyController for GuppyControllerHandler {
             .map_err(|_| Status::internal("Failed to calculate FK"))?;
         Ok(Response::new(arm_positions.into()))
     }
+
+    async fn set_gripper(
+        &self,
+        request: Request<guppy_service::SetGripperRequest>,
+    ) -> Result<Response<guppy_service::SetGripperResponse>, Status> {
+        let gripper_position = request.into_inner();
+        let mut driver = self.driver.lock().await;
+        driver
+            .move_gripper(gripper_position.gripper)
+            .await
+            .map_err(|_| Status::internal("failed to move gripper"))?;
+        Ok(Response::new(guppy_service::SetGripperResponse {}))
+    }
 }
 
 impl From<guppy_service::ArmControlSettings> for arm_driver::ArmControlSettings {

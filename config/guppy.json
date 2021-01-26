@@ -3,6 +3,7 @@
   "shoulder_id": 2,
   "elbow_id": 3,
   "wrist_id": 4,
+  "gripper_id": 5,
   "shoulder": [
     0.0,
     0.0,

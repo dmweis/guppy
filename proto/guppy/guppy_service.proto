@@ -44,6 +44,11 @@ message SetLedRequest {
     google.protobuf.Int32Value led_color = 1;
 }
 
+message SetGripperRequest {
+    float gripper = 1;
+}
+
+message SetGripperResponse {}
 
 message SetLedResponse {}
 
@@ -75,5 +80,6 @@ message MoveToCommand {
 }
 
 service GuppyController {
+    rpc SetGripper (SetGripperRequest) returns (SetGripperResponse) {}
     rpc MoveTo (MoveToCommand) returns (ArmPositions) {}
 }
