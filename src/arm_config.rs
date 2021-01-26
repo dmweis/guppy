@@ -19,8 +19,8 @@ impl ArmConfig {
     pub fn default() -> ArmConfig {
         ArmConfig {
             base_id: 1,
-            shoulder_id: 3,
-            elbow_id: 2,
+            shoulder_id: 2,
+            elbow_id: 3,
             wrist_id: 4,
             shoulder: Vector3::new(0.0, 0.0, 0.0),
             elbow: Vector3::new(0.0, 0.0, 0.0),
