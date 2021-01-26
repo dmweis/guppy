@@ -451,6 +451,11 @@
 <span id="448">448</span>
 <span id="449">449</span>
 <span id="450">450</span>
+<span id="451">451</span>
+<span id="452">452</span>
+<span id="453">453</span>
+<span id="454">454</span>
+<span id="455">455</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">async_std</span>::<span class="ident">io</span>;
 <span class="kw">use</span> <span class="ident">async_std</span>::<span class="ident">task</span>::<span class="ident">sleep</span>;
@@ -544,7 +549,8 @@
         <span class="ident">na</span>::<span class="ident">Vector3</span>::<span class="ident">new</span>(<span class="number">0.</span>, <span class="number">0.</span>, <span class="number">0.</span>),
         <span class="number">0.</span>,
     )));
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">visualizer</span> <span class="op">=</span> <span class="ident">VisualizerInterface</span>::<span class="ident">new</span>(<span class="ident">desired_point</span>.<span class="ident">clone</span>());
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">visualizer</span> <span class="op">=</span>
+        <span class="ident">VisualizerInterface</span>::<span class="ident">new</span>(<span class="ident">desired_point</span>.<span class="ident">clone</span>(), <span class="ident">Arc</span>::<span class="ident">new</span>(<span class="ident">AtomicBool</span>::<span class="ident">new</span>(<span class="bool-val">true</span>)));
 
     <span class="ident">ctrlc</span>::<span class="ident">set_handler</span>(<span class="kw">move</span> <span class="op">|</span><span class="op">|</span> {
         <span class="ident">running_handle</span>.<span class="ident">store</span>(<span class="bool-val">false</span>, <span class="ident">Ordering</span>::<span class="ident">Release</span>);
@@ -583,7 +589,8 @@
         <span class="ident">na</span>::<span class="ident">Vector3</span>::<span class="ident">new</span>(<span class="number">0.</span>, <span class="number">0.</span>, <span class="number">0.</span>),
         <span class="number">0.</span>,
     )));
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">visualizer</span> <span class="op">=</span> <span class="ident">VisualizerInterface</span>::<span class="ident">new</span>(<span class="ident">desired_point</span>.<span class="ident">clone</span>());
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">visualizer</span> <span class="op">=</span>
+        <span class="ident">VisualizerInterface</span>::<span class="ident">new</span>(<span class="ident">desired_point</span>.<span class="ident">clone</span>(), <span class="ident">Arc</span>::<span class="ident">new</span>(<span class="ident">AtomicBool</span>::<span class="ident">new</span>(<span class="bool-val">true</span>)));
 
     <span class="ident">ctrlc</span>::<span class="ident">set_handler</span>(<span class="kw">move</span> <span class="op">|</span><span class="op">|</span> {
         <span class="ident">running_handle</span>.<span class="ident">store</span>(<span class="bool-val">false</span>, <span class="ident">Ordering</span>::<span class="ident">Release</span>);
@@ -634,7 +641,8 @@
         <span class="ident">na</span>::<span class="ident">Vector3</span>::<span class="ident">new</span>(<span class="number">0.2</span>, <span class="number">0.</span>, <span class="number">0.2</span>),
         <span class="number">0.</span>,
     )));
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">visualizer</span> <span class="op">=</span> <span class="ident">VisualizerInterface</span>::<span class="ident">new</span>(<span class="ident">desired_point</span>.<span class="ident">clone</span>());
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">visualizer</span> <span class="op">=</span>
+        <span class="ident">VisualizerInterface</span>::<span class="ident">new</span>(<span class="ident">desired_point</span>.<span class="ident">clone</span>(), <span class="ident">Arc</span>::<span class="ident">new</span>(<span class="ident">AtomicBool</span>::<span class="ident">new</span>(<span class="bool-val">true</span>)));
 
     <span class="ident">ctrlc</span>::<span class="ident">set_handler</span>(<span class="kw">move</span> <span class="op">|</span><span class="op">|</span> {
         <span class="ident">running_handle</span>.<span class="ident">store</span>(<span class="bool-val">false</span>, <span class="ident">Ordering</span>::<span class="ident">Release</span>);
@@ -686,7 +694,8 @@
         <span class="ident">na</span>::<span class="ident">Vector3</span>::<span class="ident">new</span>(<span class="number">0.2</span>, <span class="number">0.</span>, <span class="number">0.2</span>),
         <span class="number">0.</span>,
     )));
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">visualizer</span> <span class="op">=</span> <span class="ident">VisualizerInterface</span>::<span class="ident">new</span>(<span class="ident">desired_point</span>.<span class="ident">clone</span>());
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">visualizer</span> <span class="op">=</span>
+        <span class="ident">VisualizerInterface</span>::<span class="ident">new</span>(<span class="ident">desired_point</span>.<span class="ident">clone</span>(), <span class="ident">Arc</span>::<span class="ident">new</span>(<span class="ident">AtomicBool</span>::<span class="ident">new</span>(<span class="bool-val">true</span>)));
 
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">settings</span> <span class="op">=</span> <span class="ident">arm_driver</span>::<span class="ident">ArmControlSettings</span>::<span class="ident">default</span>();
     <span class="ident">settings</span>.<span class="ident">save_json</span>(<span class="string">&quot;./motor_settings.json&quot;</span>)<span class="question-mark">?</span>;
@@ -751,7 +760,8 @@
         <span class="ident">na</span>::<span class="ident">Vector3</span>::<span class="ident">new</span>(<span class="number">0.2</span>, <span class="number">0.</span>, <span class="number">0.2</span>),
         <span class="number">0.</span>,
     )));
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">visualizer</span> <span class="op">=</span> <span class="ident">VisualizerInterface</span>::<span class="ident">new</span>(<span class="ident">desired_point</span>.<span class="ident">clone</span>());
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">visualizer</span> <span class="op">=</span>
+        <span class="ident">VisualizerInterface</span>::<span class="ident">new</span>(<span class="ident">desired_point</span>.<span class="ident">clone</span>(), <span class="ident">Arc</span>::<span class="ident">new</span>(<span class="ident">AtomicBool</span>::<span class="ident">new</span>(<span class="bool-val">true</span>)));
 
     <span class="ident">ctrlc</span>::<span class="ident">set_handler</span>(<span class="kw">move</span> <span class="op">|</span><span class="op">|</span> {
         <span class="ident">running_handle</span>.<span class="ident">store</span>(<span class="bool-val">false</span>, <span class="ident">Ordering</span>::<span class="ident">SeqCst</span>);

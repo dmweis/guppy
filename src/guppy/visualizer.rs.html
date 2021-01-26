@@ -286,6 +286,17 @@
 <span id="283">283</span>
 <span id="284">284</span>
 <span id="285">285</span>
+<span id="286">286</span>
+<span id="287">287</span>
+<span id="288">288</span>
+<span id="289">289</span>
+<span id="290">290</span>
+<span id="291">291</span>
+<span id="292">292</span>
+<span id="293">293</span>
+<span id="294">294</span>
+<span id="295">295</span>
+<span id="296">296</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">arm_controller</span>::<span class="ident">ArmPositions</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">arm_controller</span>::<span class="ident">EndEffectorPose</span>;
@@ -333,7 +344,10 @@
 }
 
 <span class="kw">impl</span> <span class="ident">VisualizerInterface</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">desired_end_point</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">EndEffectorPose</span><span class="op">&gt;</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">VisualizerInterface</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(
+        <span class="ident">desired_end_point</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">EndEffectorPose</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+        <span class="ident">gripper_state</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">AtomicBool</span><span class="op">&gt;</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">VisualizerInterface</span> {
         <span class="kw">let</span> <span class="ident">current_arm_pose</span> <span class="op">=</span> <span class="ident">Arc</span>::<span class="ident">new</span>(<span class="ident">Mutex</span>::<span class="ident">new</span>(<span class="prelude-val">None</span>));
         <span class="kw">let</span> <span class="ident">motion_plan</span> <span class="op">=</span> <span class="ident">Arc</span>::<span class="ident">new</span>(<span class="ident">Mutex</span>::<span class="ident">new</span>(<span class="prelude-val">None</span>));
         <span class="kw">let</span> <span class="ident">keep_running</span> <span class="op">=</span> <span class="ident">Arc</span>::<span class="ident">new</span>(<span class="ident">AtomicBool</span>::<span class="ident">new</span>(<span class="bool-val">true</span>));
@@ -347,6 +361,7 @@
                 <span class="ident">motion_plan_clone</span>,
                 <span class="ident">keep_running_clone</span>,
                 <span class="ident">desired_end_point</span>,
+                <span class="ident">gripper_state</span>,
             );
         });
         <span class="ident">VisualizerInterface</span> {
@@ -482,6 +497,7 @@
     <span class="ident">motion_plan</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Mutex</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">ArmPositions</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="ident">keep_running</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">AtomicBool</span><span class="op">&gt;</span>,
     <span class="ident">desired_end_point</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">EndEffectorPose</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="ident">gripper_state</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">AtomicBool</span><span class="op">&gt;</span>,
 ) {
     <span class="kw">let</span> <span class="ident">white</span> <span class="op">=</span> <span class="ident">Point3</span>::<span class="ident">new</span>(<span class="number">1.0</span>, <span class="number">1.0</span>, <span class="number">1.0</span>);
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">window</span> <span class="op">=</span> <span class="ident">Window</span>::<span class="ident">new</span>(<span class="string">&quot;Guppy&quot;</span>);
@@ -559,6 +575,12 @@
         }
         <span class="kw">if</span> <span class="ident">window</span>.<span class="ident">get_key</span>(<span class="ident">Key</span>::<span class="ident">F</span>) <span class="op">=</span><span class="op">=</span> <span class="ident">Action</span>::<span class="ident">Press</span> {
             <span class="ident">pos_copy</span>.<span class="ident">end_effector_angle</span> <span class="op">+</span><span class="op">=</span> <span class="ident">frame_counter</span>.<span class="ident">elapsed</span>().<span class="ident">as_secs_f32</span>() <span class="op">*</span> <span class="number">20.</span>;
+        }
+        <span class="kw">if</span> <span class="ident">window</span>.<span class="ident">get_key</span>(<span class="ident">Key</span>::<span class="ident">B</span>) <span class="op">=</span><span class="op">=</span> <span class="ident">Action</span>::<span class="ident">Press</span> {
+            <span class="ident">gripper_state</span>.<span class="ident">store</span>(<span class="bool-val">true</span>, <span class="ident">Ordering</span>::<span class="ident">Release</span>);
+        }
+        <span class="kw">if</span> <span class="ident">window</span>.<span class="ident">get_key</span>(<span class="ident">Key</span>::<span class="ident">C</span>) <span class="op">=</span><span class="op">=</span> <span class="ident">Action</span>::<span class="ident">Press</span> {
+            <span class="ident">gripper_state</span>.<span class="ident">store</span>(<span class="bool-val">false</span>, <span class="ident">Ordering</span>::<span class="ident">Release</span>);
         }
         <span class="kw">if</span> <span class="ident">window</span>.<span class="ident">get_key</span>(<span class="ident">Key</span>::<span class="ident">Return</span>) <span class="op">=</span><span class="op">=</span> <span class="ident">Action</span>::<span class="ident">Press</span> {
             <span class="ident">pos_copy</span>.<span class="ident">end_effector_angle</span> <span class="op">=</span> <span class="number">0.0</span>;
