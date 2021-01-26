@@ -1,1 +1,1 @@
-initSidebarItems({"fn":[["connect_to_arm",""],["main",""]],"mod":[["guppy_service",""]],"struct":[["Args",""],["GuppyConfigHandler",""],["GuppyControllerHandler",""]],"type":[["ControllerWrapper",""]]});
+initSidebarItems({"fn":[["main",""]],"struct":[["Args",""]]});

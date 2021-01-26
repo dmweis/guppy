@@ -1,4 +1,4 @@
 (function() {var implementors = {};
-implementors["grpc"] = [{"text":"impl&lt;T:&nbsp;GuppyConfigure&gt; NamedService for GuppyConfigureServer&lt;T&gt;","synthetic":false,"types":[]},{"text":"impl&lt;T:&nbsp;GuppyController&gt; NamedService for GuppyControllerServer&lt;T&gt;","synthetic":false,"types":[]}];
 implementors["gui_remote"] = [{"text":"impl&lt;T:&nbsp;GuppyConfigure&gt; NamedService for GuppyConfigureServer&lt;T&gt;","synthetic":false,"types":[]},{"text":"impl&lt;T:&nbsp;GuppyController&gt; NamedService for GuppyControllerServer&lt;T&gt;","synthetic":false,"types":[]}];
+implementors["guppy"] = [{"text":"impl&lt;T:&nbsp;GuppyConfigure&gt; NamedService for GuppyConfigureServer&lt;T&gt;","synthetic":false,"types":[]},{"text":"impl&lt;T:&nbsp;GuppyController&gt; NamedService for GuppyControllerServer&lt;T&gt;","synthetic":false,"types":[]}];
 if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

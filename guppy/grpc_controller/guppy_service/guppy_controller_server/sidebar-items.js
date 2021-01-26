@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["GuppyControllerServer",""]],"trait":[["GuppyController","Generated trait containing gRPC methods that should be implemented for use with GuppyControllerServer."]]});
