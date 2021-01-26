@@ -29,6 +29,10 @@ impl ArmConfig {
         }
     }
 
+    pub fn get_ids(&self) -> [u8; 4] {
+        [self.base_id, self.shoulder_id, self.elbow_id, self.wrist_id]
+    }
+
     /// Guppy comes with an included config file.
     ///
     /// This file is packaged with the binary
