@@ -8,7 +8,6 @@ use guppy::arm_driver::{self, ArmDriver};
 use guppy::speech_service;
 use guppy::visualizer::VisualizerInterface;
 use nalgebra as na;
-use std::path::Path;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
@@ -28,16 +27,7 @@ enum SubCommand {
     Move(GenericArgs),
     MoveConfig(GenericArgs),
     TeachPendent(GenericArgs),
-    Config(ConfigArgs),
     Viz,
-}
-
-#[derive(Clap)]
-struct ConfigArgs {
-    #[clap(short, long)]
-    input: Option<String>,
-    #[clap(short, long)]
-    output: Option<String>,
 }
 
 #[derive(Clap)]
@@ -62,9 +52,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     match args.command {
         SubCommand::DisplayPositions(args) => {
             display_positions(args).await?;
-        }
-        SubCommand::Config(args) => {
-            config(args)?;
         }
         SubCommand::Ik(args) => {
             ik_run(args).await?;
@@ -394,62 +381,5 @@ async fn display_positions(args: DisplayPositionsArgs) -> Result<(), Box<dyn std
     }
     driver.set_color(lss_driver::LedColor::Magenta).await?;
     sleep(Duration::from_secs_f32(0.2)).await;
-    Ok(())
-}
-
-fn config(args: ConfigArgs) -> Result<(), Box<dyn std::error::Error>> {
-    if let Some(input) = args.input {
-        let input_file_ext = Path::new(&input)
-            .extension()
-            .ok_or("Failed to extract extension")?
-            .to_str()
-            .ok_or("Failed to convert to string")?
-            .to_ascii_lowercase();
-        match &input_file_ext[..] {
-            "json" => {
-                let config = arm_config::ArmConfig::load_json(&input)?;
-                println!("Config parsed successfully\n\n{:?}", config);
-                if let Some(output) = args.output {
-                    config.save_yaml(&output)?;
-                    println!("Config written as yaml");
-                }
-            }
-            "yaml" => {
-                let config = arm_config::ArmConfig::load_yaml(&input)?;
-                println!("Config parsed successfully\n\n{:?}", config);
-                if let Some(output) = args.output {
-                    config.save_json(&output)?;
-                    println!("Config written as json");
-                }
-            }
-            _ => {
-                println!(
-                    "Unknown config extension {}\nParsing as yaml",
-                    input_file_ext
-                );
-                let config = arm_config::ArmConfig::load_yaml(&input)?;
-                println!("Config parsed successfully\n\n{:?}", config);
-            }
-        }
-    } else if let Some(output) = args.output {
-        println!("Writing included config");
-        let input_file_ext = Path::new(&output)
-            .extension()
-            .ok_or("Failed to extract extension")?
-            .to_str()
-            .ok_or("Failed to convert to string")?
-            .to_ascii_lowercase();
-        let included = arm_config::ArmConfig::included();
-        match &input_file_ext[..] {
-            "json" => {
-                println!("Saving as json");
-                included.save_json(&output)?;
-            }
-            _ => {
-                println!("Saving as yaml");
-                included.save_yaml(&output)?;
-            }
-        }
-    }
     Ok(())
 }
