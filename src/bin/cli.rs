@@ -5,7 +5,6 @@ use guppy::arm_config;
 use guppy::arm_controller;
 use guppy::arm_controller::{ArmController, EndEffectorPose};
 use guppy::arm_driver::{self, ArmDriver};
-use guppy::speech_service;
 use guppy::visualizer::VisualizerInterface;
 use nalgebra as na;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -34,16 +33,12 @@ enum SubCommand {
 struct DisplayPositionsArgs {
     #[clap(about = "Serial port to use")]
     port: String,
-    #[clap(short, long)]
-    speak: bool,
 }
 
 #[derive(Clap)]
 struct GenericArgs {
     #[clap(about = "Serial port to use")]
     port: String,
-    #[clap(short, long)]
-    speak: bool,
 }
 
 #[tokio::main]
@@ -125,9 +120,6 @@ async fn ik_run(args: GenericArgs) -> Result<(), Box<dyn std::error::Error>> {
         println!("Caught interrupt\nExiting...");
     })?;
 
-    if args.speak {
-        speech_service::say(format!("Waking up arm. Connecting to {}", args.port)).await?;
-    }
     let mut driver =
         arm_driver::SerialArmDriver::new(&args.port, arm_config::ArmConfig::included()).await?;
     driver.limp().await?;
@@ -135,9 +127,6 @@ async fn ik_run(args: GenericArgs) -> Result<(), Box<dyn std::error::Error>> {
     let mut arm_controller =
         arm_controller::LssArmController::new(driver, arm_config::ArmConfig::included());
 
-    if args.speak {
-        speech_service::say("Connected successfully!".to_owned()).await?;
-    }
     while running.load(Ordering::Acquire) {
         if let Ok(positions) = arm_controller.read_position().await {
             println!(
@@ -177,18 +166,12 @@ async fn move_run(args: GenericArgs) -> Result<(), Box<dyn std::error::Error>> {
         println!("Caught interrupt\nExiting...");
     })?;
 
-    if args.speak {
-        speech_service::say(format!("Waking up arm. Connecting to {}", args.port)).await?;
-    }
     let mut driver =
         arm_driver::SerialArmDriver::new(&args.port, arm_config::ArmConfig::included()).await?;
     driver.set_color(lss_driver::LedColor::Magenta).await?;
     let mut arm_controller =
         arm_controller::LssArmController::new(driver, arm_config::ArmConfig::included());
 
-    if args.speak {
-        speech_service::say("Connected successfully!".to_owned()).await?;
-    }
     // let start = Instant::now();
     while running.load(Ordering::Acquire) {
         // let temporal = (start.elapsed().as_secs_f32() * 2.).sin();
@@ -233,18 +216,12 @@ async fn move_config_run(args: GenericArgs) -> Result<(), Box<dyn std::error::Er
         println!("Caught interrupt\nExiting...");
     })?;
 
-    if args.speak {
-        speech_service::say(format!("Waking up arm. Connecting to {}", args.port)).await?;
-    }
     let mut driver =
         arm_driver::SerialArmDriver::new(&args.port, arm_config::ArmConfig::included()).await?;
     driver.set_color(lss_driver::LedColor::Magenta).await?;
     let mut arm_controller =
         arm_controller::LssArmController::new(driver, arm_config::ArmConfig::included());
 
-    if args.speak {
-        speech_service::say("Connected successfully!".to_owned()).await?;
-    }
     let start = Instant::now();
     let mut last_reload = Instant::now();
     while running.load(Ordering::Acquire) {
@@ -296,17 +273,10 @@ async fn teach_pendent(args: GenericArgs) -> Result<(), Box<dyn std::error::Erro
         println!("Caught interrupt\nExiting...");
     })?;
 
-    if args.speak {
-        speech_service::say(format!("Waking up arm. Connecting to {}", args.port)).await?;
-    }
     let driver =
         arm_driver::SerialArmDriver::new(&args.port, arm_config::ArmConfig::included()).await?;
     let mut arm_controller =
         arm_controller::LssArmController::new(driver, arm_config::ArmConfig::included());
-
-    if args.speak {
-        speech_service::say("Connected successfully!".to_owned()).await?;
-    }
 
     let mut history = vec![];
 
@@ -363,15 +333,9 @@ async fn display_positions(args: DisplayPositionsArgs) -> Result<(), Box<dyn std
         println!("Caught interrupt\nExiting...");
     })?;
 
-    if args.speak {
-        speech_service::say(format!("Waking up arm. Connecting to {}", args.port)).await?;
-    }
     let mut driver =
         arm_driver::SerialArmDriver::new(&args.port, arm_config::ArmConfig::default()).await?;
     driver.set_color(lss_driver::LedColor::Cyan).await?;
-    if args.speak {
-        speech_service::say("Connected successfully!".to_owned()).await?;
-    }
     driver.limp().await?;
     driver.set_color(lss_driver::LedColor::White).await?;
     while running.load(Ordering::Acquire) {

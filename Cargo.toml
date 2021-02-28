@@ -17,7 +17,6 @@ name = "grpc"
 
 [dependencies]
 lss_driver = { git = "https://github.com/dmweis/lss_driver", branch = "tokio-1.0" }
-reqwest = "0.11"
 tokio = { version = "1.0", features = ["macros", "time", "rt-multi-thread"] }
 clap = "3.0.0-beta.1"
 serde = { version = "1.0", features = ["derive"] }
@@ -33,7 +32,6 @@ prost = "0.7"
 anyhow = "^1.0"
 
 [dev-dependencies]
-mockito = "^0.29"
 approx = "0.4"
 
 [build-dependencies]
