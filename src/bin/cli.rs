@@ -21,18 +21,12 @@ struct Args {
 
 #[derive(Clap)]
 enum SubCommand {
-    DisplayPositions(DisplayPositionsArgs),
+    DisplayPositions(GenericArgs),
     Ik(GenericArgs),
     Move(GenericArgs),
     MoveConfig(GenericArgs),
     TeachPendent(GenericArgs),
     Viz,
-}
-
-#[derive(Clap)]
-struct DisplayPositionsArgs {
-    #[clap(about = "Serial port to use")]
-    port: String,
 }
 
 #[derive(Clap)]
@@ -324,7 +318,7 @@ async fn teach_pendent(args: GenericArgs) -> Result<(), Box<dyn std::error::Erro
     Ok(())
 }
 
-async fn display_positions(args: DisplayPositionsArgs) -> Result<(), Box<dyn std::error::Error>> {
+async fn display_positions(args: GenericArgs) -> Result<(), Box<dyn std::error::Error>> {
     let running = Arc::new(AtomicBool::new(true));
     let running_handle = running.clone();
 
