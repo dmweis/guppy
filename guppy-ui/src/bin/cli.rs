@@ -1,11 +1,11 @@
 use async_std::io;
 use async_std::task::sleep;
 use clap::Clap;
-use guppy::arm_config;
-use guppy::arm_controller;
-use guppy::arm_controller::ArmController;
-use guppy::arm_driver::{self, ArmDriver};
-use guppy::visualizer::VisualizerInterface;
+use guppy_controller::arm_config;
+use guppy_controller::arm_controller;
+use guppy_controller::arm_controller::ArmController;
+use guppy_controller::arm_driver::{self, ArmDriver, LedColor};
+use guppy_ui::visualizer::VisualizerInterface;
 use nalgebra as na;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
@@ -105,7 +105,7 @@ async fn ik_run(args: GenericArgs) -> Result<(), Box<dyn std::error::Error>> {
     let mut driver =
         arm_driver::SerialArmDriver::new(&args.port, arm_config::ArmConfig::included()).await?;
     driver.limp().await?;
-    driver.set_color(lss_driver::LedColor::Cyan).await?;
+    driver.set_color(LedColor::Cyan).await?;
     let mut arm_controller =
         arm_controller::LssArmController::new(driver, arm_config::ArmConfig::included());
 
@@ -145,7 +145,7 @@ async fn move_run(args: GenericArgs) -> Result<(), Box<dyn std::error::Error>> {
 
     let mut driver =
         arm_driver::SerialArmDriver::new(&args.port, arm_config::ArmConfig::included()).await?;
-    driver.set_color(lss_driver::LedColor::Magenta).await?;
+    driver.set_color(LedColor::Magenta).await?;
     let mut arm_controller =
         arm_controller::LssArmController::new(driver, arm_config::ArmConfig::included());
 
@@ -168,9 +168,7 @@ async fn move_run(args: GenericArgs) -> Result<(), Box<dyn std::error::Error>> {
         sleep(Duration::from_millis(20)).await;
     }
     arm_controller.limp().await?;
-    arm_controller
-        .set_color(lss_driver::LedColor::Yellow)
-        .await?;
+    arm_controller.set_color(LedColor::Yellow).await?;
     sleep(Duration::from_secs_f32(0.5)).await;
     Ok(())
 }
@@ -201,9 +199,7 @@ async fn teach_pendent(args: GenericArgs) -> Result<(), Box<dyn std::error::Erro
 
     let mut history = vec![];
 
-    arm_controller
-        .set_color(lss_driver::LedColor::Magenta)
-        .await?;
+    arm_controller.set_color(LedColor::Magenta).await?;
     arm_controller.limp().await?;
 
     println!("Starting recording\npress Ctrl+C to exit record mode");
@@ -216,7 +212,7 @@ async fn teach_pendent(args: GenericArgs) -> Result<(), Box<dyn std::error::Erro
     }
 
     println!("Entering replay mode\npress Ctrl+c to exit");
-    arm_controller.set_color(lss_driver::LedColor::Cyan).await?;
+    arm_controller.set_color(LedColor::Cyan).await?;
     running.store(true, Ordering::SeqCst);
 
     while running.load(Ordering::SeqCst) {
@@ -239,7 +235,7 @@ async fn teach_pendent(args: GenericArgs) -> Result<(), Box<dyn std::error::Erro
             break;
         }
     }
-    arm_controller.set_color(lss_driver::LedColor::Red).await?;
+    arm_controller.set_color(LedColor::Red).await?;
     arm_controller.limp().await?;
     sleep(Duration::from_secs_f32(0.5)).await;
     Ok(())
@@ -256,15 +252,15 @@ async fn display_positions(args: GenericArgs) -> Result<(), Box<dyn std::error::
 
     let mut driver =
         arm_driver::SerialArmDriver::new(&args.port, arm_config::ArmConfig::default()).await?;
-    driver.set_color(lss_driver::LedColor::Cyan).await?;
+    driver.set_color(LedColor::Cyan).await?;
     driver.limp().await?;
-    driver.set_color(lss_driver::LedColor::White).await?;
+    driver.set_color(LedColor::White).await?;
     while running.load(Ordering::Acquire) {
         let positions = driver.read_position().await?;
         println!("{:?}", positions);
         sleep(Duration::from_secs_f32(0.2)).await;
     }
-    driver.set_color(lss_driver::LedColor::Magenta).await?;
+    driver.set_color(LedColor::Magenta).await?;
     sleep(Duration::from_secs_f32(0.2)).await;
     Ok(())
 }

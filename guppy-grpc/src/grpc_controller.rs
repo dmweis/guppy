@@ -1,6 +1,6 @@
-use crate::arm_config;
-use crate::arm_controller;
-use crate::arm_driver;
+use guppy_controller::arm_config;
+use guppy_controller::arm_controller;
+use guppy_controller::arm_driver;
 pub use guppy_service::guppy_configure_server::{GuppyConfigure, GuppyConfigureServer};
 pub use guppy_service::guppy_controller_server::{GuppyController, GuppyControllerServer};
 use std::sync::Arc;

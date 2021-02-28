@@ -2,6 +2,7 @@ use crate::arm_config;
 use anyhow::Result;
 use async_trait::async_trait;
 use lss_driver::LSSDriver;
+pub use lss_driver::LedColor;
 use serde::{Deserialize, Serialize};
 use std::{fs, include_bytes, str, sync::Arc};
 use tokio::sync::Mutex;

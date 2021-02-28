@@ -1,5 +1,5 @@
-use guppy::arm_controller;
-use guppy::visualizer;
+use guppy_controller::arm_controller;
+use guppy_ui::visualizer;
 
 use guppy_service::guppy_controller_client::GuppyControllerClient;
 
