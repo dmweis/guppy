@@ -75,12 +75,16 @@ pub trait ArmController: Send + Sync {
 
 pub struct LssArmController {
     driver: Box<dyn arm_driver::ArmDriver>,
-    config: arm_config::ArmConfig,
+    kinematic_solver: KinematicSolver,
 }
 
 impl LssArmController {
     pub fn new(driver: Box<dyn arm_driver::ArmDriver>, config: arm_config::ArmConfig) -> Box<Self> {
-        Box::new(LssArmController { driver, config })
+        let kinematic_solver = KinematicSolver::new(config);
+        Box::new(LssArmController {
+            driver,
+            kinematic_solver,
+        })
     }
 }
 
@@ -99,6 +103,60 @@ impl ArmController for LssArmController {
     /// calculate Ik
     /// This method expects a point translated from arm base
     fn calculate_ik(&self, pose: EndEffectorPose) -> Result<JointPositions, Box<dyn Error>> {
+        self.kinematic_solver.calculate_ik(pose)
+    }
+
+    fn calculate_fk(&self, joints: JointPositions) -> Result<ArmPositions, Box<dyn Error>> {
+        self.kinematic_solver.calculate_fk(joints)
+    }
+
+    async fn read_position(&mut self) -> Result<ArmPositions, Box<dyn Error>> {
+        let motor_positions = self.driver.read_position().await?;
+        let arm_positions = self.calculate_fk(motor_positions)?;
+        Ok(arm_positions)
+    }
+
+    async fn move_to(&mut self, pose: EndEffectorPose) -> Result<JointPositions, Box<dyn Error>> {
+        let joint_positions = self.calculate_ik(pose)?;
+        self.driver.move_to(joint_positions.clone()).await?;
+        Ok(joint_positions)
+    }
+
+    async fn halt(&mut self) -> Result<(), Box<dyn Error>> {
+        self.driver.halt().await?;
+        Ok(())
+    }
+
+    async fn limp(&mut self) -> Result<(), Box<dyn Error>> {
+        self.driver.limp().await?;
+        Ok(())
+    }
+
+    async fn setup_motors(
+        &mut self,
+        settings: arm_driver::ArmControlSettings,
+    ) -> Result<(), Box<dyn Error>> {
+        self.driver.setup_motors(settings).await?;
+        Ok(())
+    }
+
+    async fn load_motor_settings(
+        &mut self,
+    ) -> Result<arm_driver::ArmControlSettings, Box<dyn Error>> {
+        Ok(self.driver.load_motor_settings().await?)
+    }
+}
+
+pub struct KinematicSolver {
+    config: arm_config::ArmConfig,
+}
+
+impl KinematicSolver {
+    pub fn new(config: arm_config::ArmConfig) -> Self {
+        KinematicSolver { config }
+    }
+
+    pub fn calculate_ik(&self, pose: EndEffectorPose) -> Result<JointPositions, Box<dyn Error>> {
         let effector_angle = pose.end_effector_angle.to_radians();
         let base_angle = (-pose.position.y).atan2(pose.position.x);
         let horizontal_distance = (pose.position.x.powi(2) + pose.position.y.powi(2)).sqrt();
@@ -147,7 +205,7 @@ impl ArmController for LssArmController {
         ))
     }
 
-    fn calculate_fk(&self, joints: JointPositions) -> Result<ArmPositions, Box<dyn Error>> {
+    pub fn calculate_fk(&self, joints: JointPositions) -> Result<ArmPositions, Box<dyn Error>> {
         let base = na::Vector3::new(0.0, 0.0, 0.0);
         let base_rotation =
             na::Rotation3::from_axis_angle(&na::Vector3::z_axis(), -joints.base.to_radians());
@@ -175,41 +233,5 @@ impl ArmController for LssArmController {
             joints.elbow + joints.shoulder + joints.wrist,
         );
         Ok(arm_positions)
-    }
-
-    async fn read_position(&mut self) -> Result<ArmPositions, Box<dyn Error>> {
-        let motor_positions = self.driver.read_position().await?;
-        let arm_positions = self.calculate_fk(motor_positions)?;
-        Ok(arm_positions)
-    }
-
-    async fn move_to(&mut self, pose: EndEffectorPose) -> Result<JointPositions, Box<dyn Error>> {
-        let joint_positions = self.calculate_ik(pose)?;
-        self.driver.move_to(joint_positions.clone()).await?;
-        Ok(joint_positions)
-    }
-
-    async fn halt(&mut self) -> Result<(), Box<dyn Error>> {
-        self.driver.halt().await?;
-        Ok(())
-    }
-
-    async fn limp(&mut self) -> Result<(), Box<dyn Error>> {
-        self.driver.limp().await?;
-        Ok(())
-    }
-
-    async fn setup_motors(
-        &mut self,
-        settings: arm_driver::ArmControlSettings,
-    ) -> Result<(), Box<dyn Error>> {
-        self.driver.setup_motors(settings).await?;
-        Ok(())
-    }
-
-    async fn load_motor_settings(
-        &mut self,
-    ) -> Result<arm_driver::ArmControlSettings, Box<dyn Error>> {
-        Ok(self.driver.load_motor_settings().await?)
     }
 }
