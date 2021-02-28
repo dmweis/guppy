@@ -35,12 +35,12 @@
 <span id="32">32</span>
 <span id="33">33</span>
 </pre><div class="example-wrap"><pre class="rust ">
+<span class="kw">use</span> <span class="ident">anyhow</span>::<span class="prelude-ty">Result</span>;
+<span class="kw">use</span> <span class="ident">clap</span>::<span class="ident">Clap</span>;
 <span class="kw">use</span> <span class="ident">guppy_grpc</span>::<span class="ident">grpc_controller</span>::{
     <span class="ident">connect_to_arm</span>, <span class="ident">GuppyConfigHandler</span>, <span class="ident">GuppyConfigureServer</span>, <span class="ident">GuppyControllerHandler</span>,
     <span class="ident">GuppyControllerServer</span>,
 };
-
-<span class="kw">use</span> <span class="ident">clap</span>::<span class="ident">Clap</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">sync</span>::<span class="ident">Arc</span>;
 <span class="kw">use</span> <span class="ident">tonic</span>::<span class="ident">transport</span>::<span class="ident">Server</span>;
 
@@ -51,7 +51,7 @@
 }
 
 <span class="attribute">#[<span class="ident">tokio</span>::<span class="ident">main</span>]</span>
-<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">main</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">std</span>::<span class="ident">error</span>::<span class="ident">Error</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">main</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">args</span> <span class="op">=</span> <span class="ident">Args</span>::<span class="ident">parse</span>();
     <span class="kw">let</span> <span class="ident">address</span> <span class="op">=</span> <span class="string">&quot;0.0.0.0:5002&quot;</span>.<span class="ident">parse</span>().<span class="ident">unwrap</span>();
     <span class="kw">let</span> <span class="ident">driver</span> <span class="op">=</span> <span class="ident">connect_to_arm</span>(<span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">port</span>).<span class="kw">await</span><span class="question-mark">?</span>;
