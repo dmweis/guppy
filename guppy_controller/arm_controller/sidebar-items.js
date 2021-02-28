@@ -1,1 +1,1 @@
-initSidebarItems({"struct":[["ArmPositions",""],["EndEffectorPose",""],["LssArmController",""]],"trait":[["ArmController",""]]});
+initSidebarItems({"struct":[["ArmPositions",""],["EndEffectorPose",""],["KinematicSolver",""],["LssArmController",""]],"trait":[["ArmController",""]]});
