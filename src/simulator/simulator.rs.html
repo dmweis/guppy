@@ -40,17 +40,31 @@
 <span id="37">37</span>
 <span id="38">38</span>
 <span id="39">39</span>
+<span id="40">40</span>
+<span id="41">41</span>
+<span id="42">42</span>
+<span id="43">43</span>
+<span id="44">44</span>
+<span id="45">45</span>
+<span id="46">46</span>
+<span id="47">47</span>
+<span id="48">48</span>
+<span id="49">49</span>
+<span id="50">50</span>
+<span id="51">51</span>
+<span id="52">52</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">anyhow</span>::<span class="prelude-ty">Result</span>;
 <span class="kw">use</span> <span class="ident">guppy_controller</span>::<span class="ident">arm_config</span>;
 <span class="kw">use</span> <span class="ident">guppy_controller</span>::<span class="ident">arm_controller</span>::{<span class="ident">EndEffectorPose</span>, <span class="ident">KinematicSolver</span>};
+<span class="kw">use</span> <span class="ident">guppy_controller</span>::<span class="ident">motion_planner</span>::<span class="ident">LinearMotion</span>;
 <span class="kw">use</span> <span class="ident">guppy_ui</span>::<span class="ident">visualizer</span>::<span class="ident">VisualizerInterface</span>;
 <span class="kw">use</span> <span class="ident">nalgebra</span> <span class="kw">as</span> <span class="ident">na</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">sync</span>::{
     <span class="ident">atomic</span>::{<span class="ident">AtomicBool</span>, <span class="ident">Ordering</span>},
     <span class="ident">Arc</span>,
 };
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">time</span>::{<span class="ident">Duration</span>, <span class="ident">Instant</span>};
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">time</span>::<span class="ident">Duration</span>;
 <span class="kw">use</span> <span class="ident">tokio</span>::<span class="ident">time</span>::<span class="ident">sleep</span>;
 
 <span class="attribute">#[<span class="ident">tokio</span>::<span class="ident">main</span>]</span>
@@ -66,17 +80,29 @@
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">visualizer</span> <span class="op">=</span> <span class="ident">VisualizerInterface</span>::<span class="ident">default</span>();
     <span class="kw">let</span> <span class="ident">config</span> <span class="op">=</span> <span class="ident">arm_config</span>::<span class="ident">ArmConfig</span>::<span class="ident">included</span>();
     <span class="kw">let</span> <span class="ident">kinematic_solver</span> <span class="op">=</span> <span class="ident">KinematicSolver</span>::<span class="ident">new</span>(<span class="ident">config</span>);
-    <span class="kw">let</span> <span class="ident">start</span> <span class="op">=</span> <span class="ident">Instant</span>::<span class="ident">now</span>();
 
     <span class="kw">while</span> <span class="ident">running</span>.<span class="ident">load</span>(<span class="ident">Ordering</span>::<span class="ident">Acquire</span>) {
-        <span class="kw">let</span> <span class="ident">temporal</span> <span class="op">=</span> (<span class="ident">start</span>.<span class="ident">elapsed</span>().<span class="ident">as_secs_f32</span>() <span class="op">*</span> <span class="number">2.</span>).<span class="ident">sin</span>();
-        <span class="kw">let</span> <span class="ident">z</span> <span class="op">=</span> <span class="ident">temporal</span> <span class="op">*</span> <span class="number">0.07</span>;
-        <span class="kw">let</span> <span class="ident">y</span> <span class="op">=</span> <span class="ident">temporal</span> <span class="op">*</span> <span class="number">0.07</span>;
-        <span class="kw">let</span> <span class="ident">position</span> <span class="op">=</span> <span class="ident">na</span>::<span class="ident">Vector3</span>::<span class="ident">new</span>(<span class="number">0.2</span>, <span class="number">0.0</span> <span class="op">+</span> <span class="ident">y</span>, <span class="number">0.2</span> <span class="op">+</span> <span class="ident">z</span>);
-        <span class="kw">let</span> <span class="ident">joint_pose</span> <span class="op">=</span> <span class="ident">kinematic_solver</span>.<span class="ident">calculate_ik</span>(<span class="ident">EndEffectorPose</span>::<span class="ident">new</span>(<span class="ident">position</span>, <span class="number">0.0</span>))<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">arm_pose</span> <span class="op">=</span> <span class="ident">kinematic_solver</span>.<span class="ident">calculate_fk</span>(<span class="ident">joint_pose</span>)<span class="question-mark">?</span>;
-        <span class="ident">visualizer</span>.<span class="ident">set_position</span>(<span class="ident">arm_pose</span>);
-        <span class="ident">sleep</span>(<span class="ident">Duration</span>::<span class="ident">from_millis</span>(<span class="number">10</span>)).<span class="kw">await</span>;
+        <span class="kw">let</span> <span class="ident">start</span> <span class="op">=</span> <span class="ident">na</span>::<span class="ident">Vector3</span>::<span class="ident">new</span>(<span class="number">0.24</span>, <span class="number">0.07</span>, <span class="number">0.12</span>);
+        <span class="kw">let</span> <span class="ident">end</span> <span class="op">=</span> <span class="ident">na</span>::<span class="ident">Vector3</span>::<span class="ident">new</span>(<span class="number">0.16</span>, <span class="op">-</span><span class="number">0.07</span>, <span class="number">0.28</span>);
+
+        <span class="kw">for</span> <span class="ident">position</span> <span class="kw">in</span> <span class="ident">LinearMotion</span>::<span class="ident">new</span>(<span class="ident">start</span>, <span class="ident">end</span>, <span class="number">0.001</span>) {
+            <span class="kw">if</span> <span class="op">!</span><span class="ident">running</span>.<span class="ident">load</span>(<span class="ident">Ordering</span>::<span class="ident">Acquire</span>) {
+                <span class="kw">break</span>;
+            }
+            <span class="kw">let</span> <span class="ident">joint_pose</span> <span class="op">=</span> <span class="ident">kinematic_solver</span>.<span class="ident">calculate_ik</span>(<span class="ident">EndEffectorPose</span>::<span class="ident">new</span>(<span class="ident">position</span>, <span class="number">0.0</span>))<span class="question-mark">?</span>;
+            <span class="kw">let</span> <span class="ident">arm_pose</span> <span class="op">=</span> <span class="ident">kinematic_solver</span>.<span class="ident">calculate_fk</span>(<span class="ident">joint_pose</span>)<span class="question-mark">?</span>;
+            <span class="ident">visualizer</span>.<span class="ident">set_position</span>(<span class="ident">arm_pose</span>);
+            <span class="ident">sleep</span>(<span class="ident">Duration</span>::<span class="ident">from_millis</span>(<span class="number">10</span>)).<span class="kw">await</span>;
+        }
+        <span class="kw">for</span> <span class="ident">position</span> <span class="kw">in</span> <span class="ident">LinearMotion</span>::<span class="ident">new</span>(<span class="ident">end</span>, <span class="ident">start</span>, <span class="number">0.001</span>) {
+            <span class="kw">if</span> <span class="op">!</span><span class="ident">running</span>.<span class="ident">load</span>(<span class="ident">Ordering</span>::<span class="ident">Acquire</span>) {
+                <span class="kw">break</span>;
+            }
+            <span class="kw">let</span> <span class="ident">joint_pose</span> <span class="op">=</span> <span class="ident">kinematic_solver</span>.<span class="ident">calculate_ik</span>(<span class="ident">EndEffectorPose</span>::<span class="ident">new</span>(<span class="ident">position</span>, <span class="number">0.0</span>))<span class="question-mark">?</span>;
+            <span class="kw">let</span> <span class="ident">arm_pose</span> <span class="op">=</span> <span class="ident">kinematic_solver</span>.<span class="ident">calculate_fk</span>(<span class="ident">joint_pose</span>)<span class="question-mark">?</span>;
+            <span class="ident">visualizer</span>.<span class="ident">set_position</span>(<span class="ident">arm_pose</span>);
+            <span class="ident">sleep</span>(<span class="ident">Duration</span>::<span class="ident">from_millis</span>(<span class="number">10</span>)).<span class="kw">await</span>;
+        }
     }
     <span class="prelude-val">Ok</span>(())
 }
