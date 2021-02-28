@@ -115,12 +115,14 @@ impl GuppyController for GuppyControllerHandler {
             .ok_or_else(|| Status::invalid_argument("missing position"))?;
         let mut driver = self.driver.lock().await;
         let joint_positions = driver
-            .move_to(position.into(), inner.effector_angle)
+            .move_to(arm_controller::EndEffectorPose::new(
+                position.into(),
+                inner.effector_angle,
+            ))
             .await
             .map_err(|_| Status::internal("Failed to move"))?;
         let arm_positions = driver
             .calculate_fk(joint_positions)
-            .await
             .map_err(|_| Status::internal("Failed to calculate FK"))?;
         Ok(Response::new(arm_positions.into()))
     }

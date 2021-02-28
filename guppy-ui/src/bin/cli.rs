@@ -119,10 +119,8 @@ async fn ik_run(args: GenericArgs) -> Result<(), Box<dyn std::error::Error>> {
                 positions.end_effector_angle
             );
             visualizer.set_position(positions.clone());
-            let calculated_ik = arm_controller
-                .calculate_ik(positions.end_effector, positions.end_effector_angle)
-                .await?;
-            let translated_fk = arm_controller.calculate_fk(calculated_ik).await?;
+            let calculated_ik = arm_controller.calculate_ik(positions.get_end_effector_pose())?;
+            let translated_fk = arm_controller.calculate_fk(calculated_ik)?;
             visualizer.set_motion_plan(Some(vec![translated_fk]));
             sleep(Duration::from_millis(20)).await;
         } else {
@@ -156,11 +154,8 @@ async fn move_run(args: GenericArgs) -> Result<(), Box<dyn std::error::Error>> {
         // let y = temporal * 0.07;
         // let position = na::Vector3::new(0.2, 0.0 + y, 0.2 + z);
         let pose = visualizer.get_desired_state().pose().clone();
-        if let Ok(_arm_positions) = arm_controller
-            .move_to(pose.position, pose.end_effector_angle)
-            .await
-        {
-            let joint_positions = arm_controller.calculate_fk(_arm_positions).await?;
+        if let Ok(_arm_positions) = arm_controller.move_to(pose).await {
+            let joint_positions = arm_controller.calculate_fk(_arm_positions)?;
             visualizer.set_position(joint_positions);
         } else {
             eprintln!("Message error");
@@ -218,10 +213,10 @@ async fn teach_pendent(args: GenericArgs) -> Result<(), Box<dyn std::error::Erro
     while running.load(Ordering::SeqCst) {
         for arm_pose in &history {
             if let Ok(_arm_positions) = arm_controller
-                .move_to(arm_pose.end_effector, arm_pose.end_effector_angle)
+                .move_to(arm_pose.get_end_effector_pose())
                 .await
             {
-                let joint_positions = arm_controller.calculate_fk(_arm_positions).await?;
+                let joint_positions = arm_controller.calculate_fk(_arm_positions)?;
                 visualizer.set_position(joint_positions);
             } else {
                 eprintln!("Message error");
