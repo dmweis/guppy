@@ -1078,6 +1078,7 @@ dependencies = [
 name = "guppy-ui"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "async-std",
  "clap",
  "ctrlc",
