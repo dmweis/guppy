@@ -9,10 +9,10 @@ pub mod guppy_service {
     tonic::include_proto!("guppy_service");
 }
 
-use async_std::task::sleep;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::time::Duration;
+use tokio::time::sleep;
 use visualizer::VisualizerInterface;
 
 impl From<nalgebra::Vector3<f32>> for guppy_service::Vector {
