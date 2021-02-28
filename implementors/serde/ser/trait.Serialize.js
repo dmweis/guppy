@@ -1,3 +1,3 @@
 (function() {var implementors = {};
-implementors["guppy"] = [{"text":"impl Serialize for ArmConfig","synthetic":false,"types":[]},{"text":"impl Serialize for ServoControlSettings","synthetic":false,"types":[]},{"text":"impl Serialize for ArmControlSettings","synthetic":false,"types":[]}];
+implementors["guppy_controller"] = [{"text":"impl Serialize for ArmConfig","synthetic":false,"types":[]},{"text":"impl Serialize for ServoControlSettings","synthetic":false,"types":[]},{"text":"impl Serialize for ArmControlSettings","synthetic":false,"types":[]}];
 if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()
