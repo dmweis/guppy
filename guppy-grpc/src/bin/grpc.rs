@@ -1,4 +1,4 @@
-use guppy::grpc_controller::{
+use guppy_grpc::grpc_controller::{
     connect_to_arm, GuppyConfigHandler, GuppyConfigureServer, GuppyControllerHandler,
     GuppyControllerServer,
 };

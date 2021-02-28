@@ -3,4 +3,5 @@
 members = [
     "guppy-controller",
     "guppy-ui",
+    "guppy-grpc",
 ]

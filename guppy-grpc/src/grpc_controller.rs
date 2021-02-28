@@ -40,14 +40,14 @@ impl GuppyConfigure for GuppyConfigHandler {
         let mut driver = self.driver.lock().await;
         if let Some(color_id) = inner_request.led_color {
             let color = match color_id {
-                1 => lss_driver::LedColor::Red,
-                2 => lss_driver::LedColor::Green,
-                3 => lss_driver::LedColor::Blue,
-                4 => lss_driver::LedColor::Yellow,
-                5 => lss_driver::LedColor::Cyan,
-                6 => lss_driver::LedColor::Magenta,
-                7 => lss_driver::LedColor::White,
-                _ => lss_driver::LedColor::Off,
+                1 => arm_driver::LedColor::Red,
+                2 => arm_driver::LedColor::Green,
+                3 => arm_driver::LedColor::Blue,
+                4 => arm_driver::LedColor::Yellow,
+                5 => arm_driver::LedColor::Cyan,
+                6 => arm_driver::LedColor::Magenta,
+                7 => arm_driver::LedColor::White,
+                _ => arm_driver::LedColor::Off,
             };
             driver
                 .set_color(color)
