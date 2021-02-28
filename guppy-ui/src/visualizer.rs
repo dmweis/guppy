@@ -233,7 +233,7 @@ fn render_loop(
     camera.set_dist_step(10.0);
 
     window.set_background_color(0.5, 0.5, 0.5);
-    window.set_framerate_limit(Some(120));
+    window.set_framerate_limit(Some(240));
 
     let mut primary_arm = ArmRenderer::new(
         &mut window,

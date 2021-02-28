@@ -16,6 +16,7 @@ async-trait = "0.1"
 nalgebra = { version = "0.24", features = ["serde-serialize"] }
 async-std = "1.6"
 anyhow = "^1.0"
+parry3d = "0.1"
 
 [dev-dependencies]
 approx = "0.4"
