@@ -1,1 +1,1 @@
-initSidebarItems({"struct":[["VisualizerInterface",""]]});
+initSidebarItems({"struct":[["DesiredState",""],["VisualizerInterface",""]]});
