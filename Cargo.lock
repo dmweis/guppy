@@ -1084,8 +1084,6 @@ dependencies = [
 name = "guppy-ui"
 version = "0.1.0"
 dependencies = [
- "anyhow",
- "approx 0.4.0",
  "async-std",
  "async-trait",
  "clap",
@@ -1093,12 +1091,7 @@ dependencies = [
  "guppy-controller",
  "kiss3d",
  "nalgebra",
- "prost",
- "serde",
- "serde_json",
- "serde_yaml",
  "tokio",
- "tonic",
 ]
 
 [[package]]
