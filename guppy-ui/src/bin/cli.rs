@@ -1,3 +1,4 @@
+use anyhow::Result;
 use async_std::io;
 use clap::Clap;
 use guppy_controller::arm_config;
@@ -34,7 +35,7 @@ struct GenericArgs {
 }
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+async fn main() -> Result<()> {
     let args: Args = Args::parse();
     match args.command {
         SubCommand::DisplayPositions(args) => {
@@ -54,7 +55,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-async fn test_visualizer() -> Result<(), Box<dyn std::error::Error>> {
+async fn test_visualizer() -> Result<()> {
     let running = Arc::new(AtomicBool::new(true));
     let running_handle = running.clone();
 
@@ -91,7 +92,7 @@ async fn test_visualizer() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Monitor pose in loop and display
-async fn ik_run(args: GenericArgs) -> Result<(), Box<dyn std::error::Error>> {
+async fn ik_run(args: GenericArgs) -> Result<()> {
     let running = Arc::new(AtomicBool::new(true));
     let running_handle = running.clone();
 
@@ -131,7 +132,7 @@ async fn ik_run(args: GenericArgs) -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-async fn move_run(args: GenericArgs) -> Result<(), Box<dyn std::error::Error>> {
+async fn move_run(args: GenericArgs) -> Result<()> {
     let running = Arc::new(AtomicBool::new(true));
     let running_handle = running.clone();
     let mut visualizer = VisualizerInterface::default();
@@ -168,7 +169,7 @@ async fn move_run(args: GenericArgs) -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-async fn wait_for_enter() -> Result<(), Box<dyn std::error::Error>> {
+async fn wait_for_enter() -> Result<()> {
     let stdin = io::stdin();
     let mut line = String::new();
     stdin.read_line(&mut line).await?;
@@ -176,7 +177,7 @@ async fn wait_for_enter() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// read pose for a bit and then repeat poses
-async fn teach_pendent(args: GenericArgs) -> Result<(), Box<dyn std::error::Error>> {
+async fn teach_pendent(args: GenericArgs) -> Result<()> {
     let running = Arc::new(AtomicBool::new(true));
     let running_handle = running.clone();
 
@@ -236,7 +237,7 @@ async fn teach_pendent(args: GenericArgs) -> Result<(), Box<dyn std::error::Erro
     Ok(())
 }
 
-async fn display_positions(args: GenericArgs) -> Result<(), Box<dyn std::error::Error>> {
+async fn display_positions(args: GenericArgs) -> Result<()> {
     let running = Arc::new(AtomicBool::new(true));
     let running_handle = running.clone();
 

@@ -1,3 +1,4 @@
+use anyhow::Result;
 use guppy_controller::arm_config;
 use guppy_controller::arm_controller;
 use guppy_controller::arm_driver;
@@ -13,7 +14,7 @@ pub mod guppy_service {
 
 pub type ControllerWrapper = Arc<Mutex<std::boxed::Box<dyn arm_controller::ArmController>>>;
 
-pub async fn connect_to_arm(port: &str) -> Result<ControllerWrapper, Box<dyn std::error::Error>> {
+pub async fn connect_to_arm(port: &str) -> Result<ControllerWrapper> {
     let config = arm_config::ArmConfig::included();
     let driver = arm_driver::SerialArmDriver::new(port, config.clone()).await?;
     let controller = arm_controller::LssArmController::new(driver, config);

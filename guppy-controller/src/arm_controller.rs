@@ -1,9 +1,9 @@
 use crate::arm_config;
 use crate::arm_driver;
 use crate::arm_driver::JointPositions;
+use anyhow::Result;
 use async_trait::async_trait;
 use nalgebra as na;
-use std::error::Error;
 
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct EndEffectorPose {
@@ -56,21 +56,16 @@ impl ArmPositions {
 
 #[async_trait]
 pub trait ArmController: Send + Sync {
-    async fn set_color(&mut self, color: lss_driver::LedColor) -> Result<(), Box<dyn Error>>;
-    async fn move_gripper(&mut self, closed: f32) -> Result<(), Box<dyn Error>>;
-    fn calculate_ik(&self, pose: EndEffectorPose) -> Result<JointPositions, Box<dyn Error>>;
-    fn calculate_fk(&self, joints: JointPositions) -> Result<ArmPositions, Box<dyn Error>>;
-    async fn read_position(&mut self) -> Result<ArmPositions, Box<dyn Error>>;
-    async fn move_to(&mut self, pose: EndEffectorPose) -> Result<JointPositions, Box<dyn Error>>;
-    async fn halt(&mut self) -> Result<(), Box<dyn Error>>;
-    async fn limp(&mut self) -> Result<(), Box<dyn Error>>;
-    async fn setup_motors(
-        &mut self,
-        settings: arm_driver::ArmControlSettings,
-    ) -> Result<(), Box<dyn Error>>;
-    async fn load_motor_settings(
-        &mut self,
-    ) -> Result<arm_driver::ArmControlSettings, Box<dyn Error>>;
+    async fn set_color(&mut self, color: lss_driver::LedColor) -> Result<()>;
+    async fn move_gripper(&mut self, closed: f32) -> Result<()>;
+    fn calculate_ik(&self, pose: EndEffectorPose) -> Result<JointPositions>;
+    fn calculate_fk(&self, joints: JointPositions) -> Result<ArmPositions>;
+    async fn read_position(&mut self) -> Result<ArmPositions>;
+    async fn move_to(&mut self, pose: EndEffectorPose) -> Result<JointPositions>;
+    async fn halt(&mut self) -> Result<()>;
+    async fn limp(&mut self) -> Result<()>;
+    async fn setup_motors(&mut self, settings: arm_driver::ArmControlSettings) -> Result<()>;
+    async fn load_motor_settings(&mut self) -> Result<arm_driver::ArmControlSettings>;
 }
 
 pub struct LssArmController {
@@ -90,59 +85,54 @@ impl LssArmController {
 
 #[async_trait]
 impl ArmController for LssArmController {
-    async fn set_color(&mut self, color: lss_driver::LedColor) -> Result<(), Box<dyn Error>> {
+    async fn set_color(&mut self, color: lss_driver::LedColor) -> Result<()> {
         self.driver.set_color(color).await?;
         Ok(())
     }
 
-    async fn move_gripper(&mut self, closed: f32) -> Result<(), Box<dyn Error>> {
+    async fn move_gripper(&mut self, closed: f32) -> Result<()> {
         self.driver.move_gripper(closed).await?;
         Ok(())
     }
 
     /// calculate Ik
     /// This method expects a point translated from arm base
-    fn calculate_ik(&self, pose: EndEffectorPose) -> Result<JointPositions, Box<dyn Error>> {
+    fn calculate_ik(&self, pose: EndEffectorPose) -> Result<JointPositions> {
         self.kinematic_solver.calculate_ik(pose)
     }
 
-    fn calculate_fk(&self, joints: JointPositions) -> Result<ArmPositions, Box<dyn Error>> {
+    fn calculate_fk(&self, joints: JointPositions) -> Result<ArmPositions> {
         self.kinematic_solver.calculate_fk(joints)
     }
 
-    async fn read_position(&mut self) -> Result<ArmPositions, Box<dyn Error>> {
+    async fn read_position(&mut self) -> Result<ArmPositions> {
         let motor_positions = self.driver.read_position().await?;
         let arm_positions = self.calculate_fk(motor_positions)?;
         Ok(arm_positions)
     }
 
-    async fn move_to(&mut self, pose: EndEffectorPose) -> Result<JointPositions, Box<dyn Error>> {
+    async fn move_to(&mut self, pose: EndEffectorPose) -> Result<JointPositions> {
         let joint_positions = self.calculate_ik(pose)?;
         self.driver.move_to(joint_positions.clone()).await?;
         Ok(joint_positions)
     }
 
-    async fn halt(&mut self) -> Result<(), Box<dyn Error>> {
+    async fn halt(&mut self) -> Result<()> {
         self.driver.halt().await?;
         Ok(())
     }
 
-    async fn limp(&mut self) -> Result<(), Box<dyn Error>> {
+    async fn limp(&mut self) -> Result<()> {
         self.driver.limp().await?;
         Ok(())
     }
 
-    async fn setup_motors(
-        &mut self,
-        settings: arm_driver::ArmControlSettings,
-    ) -> Result<(), Box<dyn Error>> {
+    async fn setup_motors(&mut self, settings: arm_driver::ArmControlSettings) -> Result<()> {
         self.driver.setup_motors(settings).await?;
         Ok(())
     }
 
-    async fn load_motor_settings(
-        &mut self,
-    ) -> Result<arm_driver::ArmControlSettings, Box<dyn Error>> {
+    async fn load_motor_settings(&mut self) -> Result<arm_driver::ArmControlSettings> {
         Ok(self.driver.load_motor_settings().await?)
     }
 }
@@ -156,7 +146,7 @@ impl KinematicSolver {
         KinematicSolver { config }
     }
 
-    pub fn calculate_ik(&self, pose: EndEffectorPose) -> Result<JointPositions, Box<dyn Error>> {
+    pub fn calculate_ik(&self, pose: EndEffectorPose) -> Result<JointPositions> {
         let effector_angle = pose.end_effector_angle.to_radians();
         let base_angle = (-pose.position.y).atan2(pose.position.x);
         let horizontal_distance = (pose.position.x.powi(2) + pose.position.y.powi(2)).sqrt();
@@ -205,7 +195,7 @@ impl KinematicSolver {
         ))
     }
 
-    pub fn calculate_fk(&self, joints: JointPositions) -> Result<ArmPositions, Box<dyn Error>> {
+    pub fn calculate_fk(&self, joints: JointPositions) -> Result<ArmPositions> {
         let base = na::Vector3::new(0.0, 0.0, 0.0);
         let base_rotation =
             na::Rotation3::from_axis_angle(&na::Vector3::z_axis(), -joints.base.to_radians());

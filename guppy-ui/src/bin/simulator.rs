@@ -1,3 +1,4 @@
+use anyhow::Result;
 use guppy_controller::arm_config;
 use guppy_controller::arm_controller::{EndEffectorPose, KinematicSolver};
 use guppy_ui::visualizer::VisualizerInterface;
@@ -10,7 +11,7 @@ use std::time::{Duration, Instant};
 use tokio::time::sleep;
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+async fn main() -> Result<()> {
     let running = Arc::new(AtomicBool::new(true));
     let running_handle = running.clone();
 

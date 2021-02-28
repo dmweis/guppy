@@ -1,9 +1,9 @@
+use anyhow::Result;
+use clap::Clap;
 use guppy_grpc::grpc_controller::{
     connect_to_arm, GuppyConfigHandler, GuppyConfigureServer, GuppyControllerHandler,
     GuppyControllerServer,
 };
-
-use clap::Clap;
 use std::sync::Arc;
 use tonic::transport::Server;
 
@@ -14,7 +14,7 @@ struct Args {
 }
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+async fn main() -> Result<()> {
     let args = Args::parse();
     let address = "0.0.0.0:5002".parse().unwrap();
     let driver = connect_to_arm(&args.port).await?;

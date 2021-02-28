@@ -1,3 +1,4 @@
+use anyhow::Result;
 use nalgebra::Vector3;
 use serde::{Deserialize, Serialize};
 use std::{fs, include_bytes, str};
@@ -50,43 +51,43 @@ impl ArmConfig {
         ArmConfig::parse_json(json).unwrap()
     }
 
-    pub fn parse_json(text: &str) -> Result<ArmConfig, Box<dyn std::error::Error>> {
+    pub fn parse_json(text: &str) -> Result<ArmConfig> {
         let config: ArmConfig = serde_json::from_str(&text)?;
         Ok(config)
     }
 
-    pub fn parse_yaml(text: &str) -> Result<ArmConfig, Box<dyn std::error::Error>> {
+    pub fn parse_yaml(text: &str) -> Result<ArmConfig> {
         let config: ArmConfig = serde_yaml::from_str(&text)?;
         Ok(config)
     }
 
-    pub fn serialize_to_json(&self) -> Result<String, Box<dyn std::error::Error>> {
+    pub fn serialize_to_json(&self) -> Result<String> {
         let json = serde_json::to_string_pretty(self)?;
         Ok(json)
     }
 
-    pub fn serialize_to_yaml(&self) -> Result<String, Box<dyn std::error::Error>> {
+    pub fn serialize_to_yaml(&self) -> Result<String> {
         let yaml = serde_yaml::to_string(self)?;
         Ok(yaml)
     }
 
-    pub fn save_json(&self, path: &str) -> Result<(), Box<dyn std::error::Error>> {
+    pub fn save_json(&self, path: &str) -> Result<()> {
         fs::write(path, &self.serialize_to_json()?)?;
         Ok(())
     }
 
-    pub fn save_yaml(&self, path: &str) -> Result<(), Box<dyn std::error::Error>> {
+    pub fn save_yaml(&self, path: &str) -> Result<()> {
         fs::write(path, &self.serialize_to_yaml()?)?;
         Ok(())
     }
 
-    pub fn load_json(path: &str) -> Result<ArmConfig, Box<dyn std::error::Error>> {
+    pub fn load_json(path: &str) -> Result<ArmConfig> {
         let text = fs::read_to_string(path)?;
         let config = ArmConfig::parse_json(&text)?;
         Ok(config)
     }
 
-    pub fn load_yaml(path: &str) -> Result<ArmConfig, Box<dyn std::error::Error>> {
+    pub fn load_yaml(path: &str) -> Result<ArmConfig> {
         let text = fs::read_to_string(path)?;
         let config = ArmConfig::parse_yaml(&text)?;
         Ok(config)

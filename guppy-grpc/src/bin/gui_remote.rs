@@ -1,19 +1,17 @@
+use anyhow::Result;
 use guppy_controller::arm_controller;
-use guppy_ui::visualizer;
-
 use guppy_service::guppy_controller_client::GuppyControllerClient;
-
-use tonic::Request;
-
-pub mod guppy_service {
-    tonic::include_proto!("guppy_service");
-}
-
+use guppy_ui::visualizer;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::time::sleep;
+use tonic::Request;
 use visualizer::VisualizerInterface;
+
+pub mod guppy_service {
+    tonic::include_proto!("guppy_service");
+}
 
 impl From<nalgebra::Vector3<f32>> for guppy_service::Vector {
     fn from(source: nalgebra::Vector3<f32>) -> Self {
@@ -45,12 +43,12 @@ impl From<guppy_service::ArmPositions> for arm_controller::ArmPositions {
 }
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+async fn main() -> Result<()> {
     move_run().await?;
     Ok(())
 }
 
-async fn move_run() -> Result<(), Box<dyn std::error::Error>> {
+async fn move_run() -> Result<()> {
     let running = Arc::new(AtomicBool::new(true));
     let running_handle = running.clone();
 
