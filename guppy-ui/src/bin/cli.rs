@@ -1,5 +1,4 @@
 use async_std::io;
-use async_std::task::sleep;
 use clap::Clap;
 use guppy_controller::arm_config;
 use guppy_controller::arm_controller;
@@ -10,6 +9,7 @@ use nalgebra as na;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::time::Duration;
+use tokio::time::sleep;
 
 #[derive(Clap)]
 #[clap()]
