@@ -1,4 +1,4 @@
 (function() {var implementors = {};
-implementors["cli"] = [{"text":"impl FromArgMatches for Args","synthetic":false,"types":[]},{"text":"impl FromArgMatches for SubCommand","synthetic":false,"types":[]},{"text":"impl FromArgMatches for ConfigArgs","synthetic":false,"types":[]},{"text":"impl FromArgMatches for DisplayPositionsArgs","synthetic":false,"types":[]},{"text":"impl FromArgMatches for GenericArgs","synthetic":false,"types":[]}];
+implementors["cli"] = [{"text":"impl FromArgMatches for Args","synthetic":false,"types":[]},{"text":"impl FromArgMatches for SubCommand","synthetic":false,"types":[]},{"text":"impl FromArgMatches for DisplayPositionsArgs","synthetic":false,"types":[]},{"text":"impl FromArgMatches for GenericArgs","synthetic":false,"types":[]}];
 implementors["grpc"] = [{"text":"impl FromArgMatches for Args","synthetic":false,"types":[]}];
 if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

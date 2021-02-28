@@ -1,6 +1,6 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/bin/cli.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>cli.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings"></script><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../favicon-16x16.png">
-<link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../cli/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><span class="help-button">?</span>
+<link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../cli/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
                 <a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
@@ -386,76 +386,6 @@
 <span id="383">383</span>
 <span id="384">384</span>
 <span id="385">385</span>
-<span id="386">386</span>
-<span id="387">387</span>
-<span id="388">388</span>
-<span id="389">389</span>
-<span id="390">390</span>
-<span id="391">391</span>
-<span id="392">392</span>
-<span id="393">393</span>
-<span id="394">394</span>
-<span id="395">395</span>
-<span id="396">396</span>
-<span id="397">397</span>
-<span id="398">398</span>
-<span id="399">399</span>
-<span id="400">400</span>
-<span id="401">401</span>
-<span id="402">402</span>
-<span id="403">403</span>
-<span id="404">404</span>
-<span id="405">405</span>
-<span id="406">406</span>
-<span id="407">407</span>
-<span id="408">408</span>
-<span id="409">409</span>
-<span id="410">410</span>
-<span id="411">411</span>
-<span id="412">412</span>
-<span id="413">413</span>
-<span id="414">414</span>
-<span id="415">415</span>
-<span id="416">416</span>
-<span id="417">417</span>
-<span id="418">418</span>
-<span id="419">419</span>
-<span id="420">420</span>
-<span id="421">421</span>
-<span id="422">422</span>
-<span id="423">423</span>
-<span id="424">424</span>
-<span id="425">425</span>
-<span id="426">426</span>
-<span id="427">427</span>
-<span id="428">428</span>
-<span id="429">429</span>
-<span id="430">430</span>
-<span id="431">431</span>
-<span id="432">432</span>
-<span id="433">433</span>
-<span id="434">434</span>
-<span id="435">435</span>
-<span id="436">436</span>
-<span id="437">437</span>
-<span id="438">438</span>
-<span id="439">439</span>
-<span id="440">440</span>
-<span id="441">441</span>
-<span id="442">442</span>
-<span id="443">443</span>
-<span id="444">444</span>
-<span id="445">445</span>
-<span id="446">446</span>
-<span id="447">447</span>
-<span id="448">448</span>
-<span id="449">449</span>
-<span id="450">450</span>
-<span id="451">451</span>
-<span id="452">452</span>
-<span id="453">453</span>
-<span id="454">454</span>
-<span id="455">455</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">async_std</span>::<span class="ident">io</span>;
 <span class="kw">use</span> <span class="ident">async_std</span>::<span class="ident">task</span>::<span class="ident">sleep</span>;
@@ -467,7 +397,6 @@
 <span class="kw">use</span> <span class="ident">guppy</span>::<span class="ident">speech_service</span>;
 <span class="kw">use</span> <span class="ident">guppy</span>::<span class="ident">visualizer</span>::<span class="ident">VisualizerInterface</span>;
 <span class="kw">use</span> <span class="ident">nalgebra</span> <span class="kw">as</span> <span class="ident">na</span>;
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">path</span>::<span class="ident">Path</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">sync</span>::<span class="ident">atomic</span>::{<span class="ident">AtomicBool</span>, <span class="ident">Ordering</span>};
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">sync</span>::{<span class="ident">Arc</span>, <span class="ident">Mutex</span>};
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">time</span>::<span class="ident">Duration</span>;
@@ -487,16 +416,7 @@
     <span class="ident">Move</span>(<span class="ident">GenericArgs</span>),
     <span class="ident">MoveConfig</span>(<span class="ident">GenericArgs</span>),
     <span class="ident">TeachPendent</span>(<span class="ident">GenericArgs</span>),
-    <span class="ident">Config</span>(<span class="ident">ConfigArgs</span>),
     <span class="ident">Viz</span>,
-}
-
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clap</span>)]</span>
-<span class="kw">struct</span> <span class="ident">ConfigArgs</span> {
-    <span class="attribute">#[<span class="ident">clap</span>(<span class="ident">short</span>, <span class="ident">long</span>)]</span>
-    <span class="ident">input</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
-    <span class="attribute">#[<span class="ident">clap</span>(<span class="ident">short</span>, <span class="ident">long</span>)]</span>
-    <span class="ident">output</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clap</span>)]</span>
@@ -516,33 +436,30 @@
 }
 
 <span class="attribute">#[<span class="ident">tokio</span>::<span class="ident">main</span>]</span>
-<span class="ident">async</span> <span class="kw">fn</span> <span class="ident">main</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">dyn</span> <span class="ident">std</span>::<span class="ident">error</span>::<span class="ident">Error</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">main</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">std</span>::<span class="ident">error</span>::<span class="ident">Error</span><span class="op">&gt;</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">args</span>: <span class="ident">Args</span> <span class="op">=</span> <span class="ident">Args</span>::<span class="ident">parse</span>();
     <span class="kw">match</span> <span class="ident">args</span>.<span class="ident">command</span> {
         <span class="ident">SubCommand</span>::<span class="ident">DisplayPositions</span>(<span class="ident">args</span>) <span class="op">=</span><span class="op">&gt;</span> {
-            <span class="ident">display_positions</span>(<span class="ident">args</span>).<span class="ident">await</span><span class="question-mark">?</span>;
-        }
-        <span class="ident">SubCommand</span>::<span class="ident">Config</span>(<span class="ident">args</span>) <span class="op">=</span><span class="op">&gt;</span> {
-            <span class="ident">config</span>(<span class="ident">args</span>)<span class="question-mark">?</span>;
+            <span class="ident">display_positions</span>(<span class="ident">args</span>).<span class="kw">await</span><span class="question-mark">?</span>;
         }
         <span class="ident">SubCommand</span>::<span class="ident">Ik</span>(<span class="ident">args</span>) <span class="op">=</span><span class="op">&gt;</span> {
-            <span class="ident">ik_run</span>(<span class="ident">args</span>).<span class="ident">await</span><span class="question-mark">?</span>;
+            <span class="ident">ik_run</span>(<span class="ident">args</span>).<span class="kw">await</span><span class="question-mark">?</span>;
         }
         <span class="ident">SubCommand</span>::<span class="ident">TeachPendent</span>(<span class="ident">args</span>) <span class="op">=</span><span class="op">&gt;</span> {
-            <span class="ident">teach_pendent</span>(<span class="ident">args</span>).<span class="ident">await</span><span class="question-mark">?</span>;
+            <span class="ident">teach_pendent</span>(<span class="ident">args</span>).<span class="kw">await</span><span class="question-mark">?</span>;
         }
         <span class="ident">SubCommand</span>::<span class="ident">Move</span>(<span class="ident">args</span>) <span class="op">=</span><span class="op">&gt;</span> {
-            <span class="ident">move_run</span>(<span class="ident">args</span>).<span class="ident">await</span><span class="question-mark">?</span>;
+            <span class="ident">move_run</span>(<span class="ident">args</span>).<span class="kw">await</span><span class="question-mark">?</span>;
         }
         <span class="ident">SubCommand</span>::<span class="ident">MoveConfig</span>(<span class="ident">args</span>) <span class="op">=</span><span class="op">&gt;</span> {
-            <span class="ident">move_config_run</span>(<span class="ident">args</span>).<span class="ident">await</span><span class="question-mark">?</span>;
+            <span class="ident">move_config_run</span>(<span class="ident">args</span>).<span class="kw">await</span><span class="question-mark">?</span>;
         }
-        <span class="ident">SubCommand</span>::<span class="ident">Viz</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">test_visualizer</span>().<span class="ident">await</span><span class="question-mark">?</span>,
+        <span class="ident">SubCommand</span>::<span class="ident">Viz</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">test_visualizer</span>().<span class="kw">await</span><span class="question-mark">?</span>,
     }
     <span class="prelude-val">Ok</span>(())
 }
 
-<span class="ident">async</span> <span class="kw">fn</span> <span class="ident">test_visualizer</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">dyn</span> <span class="ident">std</span>::<span class="ident">error</span>::<span class="ident">Error</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">test_visualizer</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">std</span>::<span class="ident">error</span>::<span class="ident">Error</span><span class="op">&gt;</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">running</span> <span class="op">=</span> <span class="ident">Arc</span>::<span class="ident">new</span>(<span class="ident">AtomicBool</span>::<span class="ident">new</span>(<span class="bool-val">true</span>));
     <span class="kw">let</span> <span class="ident">running_handle</span> <span class="op">=</span> <span class="ident">running</span>.<span class="ident">clone</span>();
     <span class="kw">let</span> <span class="ident">desired_point</span> <span class="op">=</span> <span class="ident">Arc</span>::<span class="ident">new</span>(<span class="ident">Mutex</span>::<span class="ident">new</span>(<span class="ident">EndEffectorPose</span>::<span class="ident">new</span>(
@@ -577,12 +494,12 @@
         <span class="ident">visualizer</span>.<span class="ident">set_position</span>(<span class="ident">positions</span>.<span class="ident">clone</span>());
         <span class="ident">visualizer</span>.<span class="ident">set_motion_plan</span>(<span class="prelude-val">Some</span>(<span class="macro">vec</span><span class="macro">!</span>[<span class="ident">positions_2</span>]));
         <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">positions</span>.<span class="ident">end_effector</span>);
-        <span class="ident">sleep</span>(<span class="ident">Duration</span>::<span class="ident">from_secs_f32</span>(<span class="number">0.02</span>)).<span class="ident">await</span>;
+        <span class="ident">sleep</span>(<span class="ident">Duration</span>::<span class="ident">from_secs_f32</span>(<span class="number">0.02</span>)).<span class="kw">await</span>;
     }
     <span class="prelude-val">Ok</span>(())
 }
 
-<span class="ident">async</span> <span class="kw">fn</span> <span class="ident">ik_run</span>(<span class="ident">args</span>: <span class="ident">GenericArgs</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">dyn</span> <span class="ident">std</span>::<span class="ident">error</span>::<span class="ident">Error</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">ik_run</span>(<span class="ident">args</span>: <span class="ident">GenericArgs</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">std</span>::<span class="ident">error</span>::<span class="ident">Error</span><span class="op">&gt;</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">running</span> <span class="op">=</span> <span class="ident">Arc</span>::<span class="ident">new</span>(<span class="ident">AtomicBool</span>::<span class="ident">new</span>(<span class="bool-val">true</span>));
     <span class="kw">let</span> <span class="ident">running_handle</span> <span class="op">=</span> <span class="ident">running</span>.<span class="ident">clone</span>();
     <span class="kw">let</span> <span class="ident">desired_point</span> <span class="op">=</span> <span class="ident">Arc</span>::<span class="ident">new</span>(<span class="ident">Mutex</span>::<span class="ident">new</span>(<span class="ident">EndEffectorPose</span>::<span class="ident">new</span>(
@@ -598,20 +515,20 @@
     })<span class="question-mark">?</span>;
 
     <span class="kw">if</span> <span class="ident">args</span>.<span class="ident">speak</span> {
-        <span class="ident">speech_service</span>::<span class="ident">say</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;Waking up arm. Connecting to {}&quot;</span>, <span class="ident">args</span>.<span class="ident">port</span>)).<span class="ident">await</span><span class="question-mark">?</span>;
+        <span class="ident">speech_service</span>::<span class="ident">say</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;Waking up arm. Connecting to {}&quot;</span>, <span class="ident">args</span>.<span class="ident">port</span>)).<span class="kw">await</span><span class="question-mark">?</span>;
     }
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">driver</span> <span class="op">=</span>
-        <span class="ident">arm_driver</span>::<span class="ident">SerialArmDriver</span>::<span class="ident">new</span>(<span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">port</span>, <span class="ident">arm_config</span>::<span class="ident">ArmConfig</span>::<span class="ident">included</span>()).<span class="ident">await</span><span class="question-mark">?</span>;
-    <span class="ident">driver</span>.<span class="ident">limp</span>().<span class="ident">await</span><span class="question-mark">?</span>;
-    <span class="ident">driver</span>.<span class="ident">set_color</span>(<span class="ident">lss_driver</span>::<span class="ident">LedColor</span>::<span class="ident">Cyan</span>).<span class="ident">await</span><span class="question-mark">?</span>;
+        <span class="ident">arm_driver</span>::<span class="ident">SerialArmDriver</span>::<span class="ident">new</span>(<span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">port</span>, <span class="ident">arm_config</span>::<span class="ident">ArmConfig</span>::<span class="ident">included</span>()).<span class="kw">await</span><span class="question-mark">?</span>;
+    <span class="ident">driver</span>.<span class="ident">limp</span>().<span class="kw">await</span><span class="question-mark">?</span>;
+    <span class="ident">driver</span>.<span class="ident">set_color</span>(<span class="ident">lss_driver</span>::<span class="ident">LedColor</span>::<span class="ident">Cyan</span>).<span class="kw">await</span><span class="question-mark">?</span>;
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">arm_controller</span> <span class="op">=</span>
         <span class="ident">arm_controller</span>::<span class="ident">LssArmController</span>::<span class="ident">new</span>(<span class="ident">driver</span>, <span class="ident">arm_config</span>::<span class="ident">ArmConfig</span>::<span class="ident">included</span>());
 
     <span class="kw">if</span> <span class="ident">args</span>.<span class="ident">speak</span> {
-        <span class="ident">speech_service</span>::<span class="ident">say</span>(<span class="string">&quot;Connected successfully!&quot;</span>.<span class="ident">to_owned</span>()).<span class="ident">await</span><span class="question-mark">?</span>;
+        <span class="ident">speech_service</span>::<span class="ident">say</span>(<span class="string">&quot;Connected successfully!&quot;</span>.<span class="ident">to_owned</span>()).<span class="kw">await</span><span class="question-mark">?</span>;
     }
     <span class="kw">while</span> <span class="ident">running</span>.<span class="ident">load</span>(<span class="ident">Ordering</span>::<span class="ident">Acquire</span>) {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">positions</span>) <span class="op">=</span> <span class="ident">arm_controller</span>.<span class="ident">read_position</span>().<span class="ident">await</span> {
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">positions</span>) <span class="op">=</span> <span class="ident">arm_controller</span>.<span class="ident">read_position</span>().<span class="kw">await</span> {
             <span class="macro">println</span><span class="macro">!</span>(
                 <span class="string">&quot;end_effector:\n   x: {:.3}\n   y: {:.3}\n   z: {:.3}\n   angle: {:.3}\n&quot;</span>,
                 <span class="ident">positions</span>.<span class="ident">end_effector</span>.<span class="ident">x</span>,
@@ -622,19 +539,19 @@
             <span class="ident">visualizer</span>.<span class="ident">set_position</span>(<span class="ident">positions</span>.<span class="ident">clone</span>());
             <span class="kw">let</span> <span class="ident">calculated_ik</span> <span class="op">=</span> <span class="ident">arm_controller</span>
                 .<span class="ident">calculate_ik</span>(<span class="ident">positions</span>.<span class="ident">end_effector</span>, <span class="ident">positions</span>.<span class="ident">end_effector_angle</span>)
-                .<span class="ident">await</span><span class="question-mark">?</span>;
-            <span class="kw">let</span> <span class="ident">translated_fk</span> <span class="op">=</span> <span class="ident">arm_controller</span>.<span class="ident">calculate_fk</span>(<span class="ident">calculated_ik</span>).<span class="ident">await</span><span class="question-mark">?</span>;
+                .<span class="kw">await</span><span class="question-mark">?</span>;
+            <span class="kw">let</span> <span class="ident">translated_fk</span> <span class="op">=</span> <span class="ident">arm_controller</span>.<span class="ident">calculate_fk</span>(<span class="ident">calculated_ik</span>).<span class="kw">await</span><span class="question-mark">?</span>;
             <span class="ident">visualizer</span>.<span class="ident">set_motion_plan</span>(<span class="prelude-val">Some</span>(<span class="macro">vec</span><span class="macro">!</span>[<span class="ident">translated_fk</span>]));
-            <span class="ident">sleep</span>(<span class="ident">Duration</span>::<span class="ident">from_millis</span>(<span class="number">20</span>)).<span class="ident">await</span>;
+            <span class="ident">sleep</span>(<span class="ident">Duration</span>::<span class="ident">from_millis</span>(<span class="number">20</span>)).<span class="kw">await</span>;
         } <span class="kw">else</span> {
             <span class="macro">eprintln</span><span class="macro">!</span>(<span class="string">&quot;Message error&quot;</span>);
         }
     }
-    <span class="ident">sleep</span>(<span class="ident">Duration</span>::<span class="ident">from_secs_f32</span>(<span class="number">0.5</span>)).<span class="ident">await</span>;
+    <span class="ident">sleep</span>(<span class="ident">Duration</span>::<span class="ident">from_secs_f32</span>(<span class="number">0.5</span>)).<span class="kw">await</span>;
     <span class="prelude-val">Ok</span>(())
 }
 
-<span class="ident">async</span> <span class="kw">fn</span> <span class="ident">move_run</span>(<span class="ident">args</span>: <span class="ident">GenericArgs</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">dyn</span> <span class="ident">std</span>::<span class="ident">error</span>::<span class="ident">Error</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">move_run</span>(<span class="ident">args</span>: <span class="ident">GenericArgs</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">std</span>::<span class="ident">error</span>::<span class="ident">Error</span><span class="op">&gt;</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">running</span> <span class="op">=</span> <span class="ident">Arc</span>::<span class="ident">new</span>(<span class="ident">AtomicBool</span>::<span class="ident">new</span>(<span class="bool-val">true</span>));
     <span class="kw">let</span> <span class="ident">running_handle</span> <span class="op">=</span> <span class="ident">running</span>.<span class="ident">clone</span>();
     <span class="kw">let</span> <span class="ident">desired_point</span> <span class="op">=</span> <span class="ident">Arc</span>::<span class="ident">new</span>(<span class="ident">Mutex</span>::<span class="ident">new</span>(<span class="ident">EndEffectorPose</span>::<span class="ident">new</span>(
@@ -650,16 +567,16 @@
     })<span class="question-mark">?</span>;
 
     <span class="kw">if</span> <span class="ident">args</span>.<span class="ident">speak</span> {
-        <span class="ident">speech_service</span>::<span class="ident">say</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;Waking up arm. Connecting to {}&quot;</span>, <span class="ident">args</span>.<span class="ident">port</span>)).<span class="ident">await</span><span class="question-mark">?</span>;
+        <span class="ident">speech_service</span>::<span class="ident">say</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;Waking up arm. Connecting to {}&quot;</span>, <span class="ident">args</span>.<span class="ident">port</span>)).<span class="kw">await</span><span class="question-mark">?</span>;
     }
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">driver</span> <span class="op">=</span>
-        <span class="ident">arm_driver</span>::<span class="ident">SerialArmDriver</span>::<span class="ident">new</span>(<span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">port</span>, <span class="ident">arm_config</span>::<span class="ident">ArmConfig</span>::<span class="ident">included</span>()).<span class="ident">await</span><span class="question-mark">?</span>;
-    <span class="ident">driver</span>.<span class="ident">set_color</span>(<span class="ident">lss_driver</span>::<span class="ident">LedColor</span>::<span class="ident">Magenta</span>).<span class="ident">await</span><span class="question-mark">?</span>;
+        <span class="ident">arm_driver</span>::<span class="ident">SerialArmDriver</span>::<span class="ident">new</span>(<span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">port</span>, <span class="ident">arm_config</span>::<span class="ident">ArmConfig</span>::<span class="ident">included</span>()).<span class="kw">await</span><span class="question-mark">?</span>;
+    <span class="ident">driver</span>.<span class="ident">set_color</span>(<span class="ident">lss_driver</span>::<span class="ident">LedColor</span>::<span class="ident">Magenta</span>).<span class="kw">await</span><span class="question-mark">?</span>;
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">arm_controller</span> <span class="op">=</span>
         <span class="ident">arm_controller</span>::<span class="ident">LssArmController</span>::<span class="ident">new</span>(<span class="ident">driver</span>, <span class="ident">arm_config</span>::<span class="ident">ArmConfig</span>::<span class="ident">included</span>());
 
     <span class="kw">if</span> <span class="ident">args</span>.<span class="ident">speak</span> {
-        <span class="ident">speech_service</span>::<span class="ident">say</span>(<span class="string">&quot;Connected successfully!&quot;</span>.<span class="ident">to_owned</span>()).<span class="ident">await</span><span class="question-mark">?</span>;
+        <span class="ident">speech_service</span>::<span class="ident">say</span>(<span class="string">&quot;Connected successfully!&quot;</span>.<span class="ident">to_owned</span>()).<span class="kw">await</span><span class="question-mark">?</span>;
     }
     <span class="comment">// let start = Instant::now();</span>
     <span class="kw">while</span> <span class="ident">running</span>.<span class="ident">load</span>(<span class="ident">Ordering</span>::<span class="ident">Acquire</span>) {
@@ -670,24 +587,24 @@
         <span class="kw">let</span> <span class="ident">pose</span> <span class="op">=</span> <span class="ident">desired_point</span>.<span class="ident">lock</span>().<span class="ident">unwrap</span>().<span class="ident">clone</span>();
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">_arm_positions</span>) <span class="op">=</span> <span class="ident">arm_controller</span>
             .<span class="ident">move_to</span>(<span class="ident">pose</span>.<span class="ident">position</span>, <span class="ident">pose</span>.<span class="ident">end_effector_angle</span>)
-            .<span class="ident">await</span>
+            .<span class="kw">await</span>
         {
-            <span class="kw">let</span> <span class="ident">joint_positions</span> <span class="op">=</span> <span class="ident">arm_controller</span>.<span class="ident">calculate_fk</span>(<span class="ident">_arm_positions</span>).<span class="ident">await</span><span class="question-mark">?</span>;
+            <span class="kw">let</span> <span class="ident">joint_positions</span> <span class="op">=</span> <span class="ident">arm_controller</span>.<span class="ident">calculate_fk</span>(<span class="ident">_arm_positions</span>).<span class="kw">await</span><span class="question-mark">?</span>;
             <span class="ident">visualizer</span>.<span class="ident">set_position</span>(<span class="ident">joint_positions</span>);
         } <span class="kw">else</span> {
             <span class="macro">eprintln</span><span class="macro">!</span>(<span class="string">&quot;Message error&quot;</span>);
         }
-        <span class="ident">sleep</span>(<span class="ident">Duration</span>::<span class="ident">from_millis</span>(<span class="number">20</span>)).<span class="ident">await</span>;
+        <span class="ident">sleep</span>(<span class="ident">Duration</span>::<span class="ident">from_millis</span>(<span class="number">20</span>)).<span class="kw">await</span>;
     }
-    <span class="ident">arm_controller</span>.<span class="ident">limp</span>().<span class="ident">await</span><span class="question-mark">?</span>;
+    <span class="ident">arm_controller</span>.<span class="ident">limp</span>().<span class="kw">await</span><span class="question-mark">?</span>;
     <span class="ident">arm_controller</span>
         .<span class="ident">set_color</span>(<span class="ident">lss_driver</span>::<span class="ident">LedColor</span>::<span class="ident">Yellow</span>)
-        .<span class="ident">await</span><span class="question-mark">?</span>;
-    <span class="ident">sleep</span>(<span class="ident">Duration</span>::<span class="ident">from_secs_f32</span>(<span class="number">0.5</span>)).<span class="ident">await</span>;
+        .<span class="kw">await</span><span class="question-mark">?</span>;
+    <span class="ident">sleep</span>(<span class="ident">Duration</span>::<span class="ident">from_secs_f32</span>(<span class="number">0.5</span>)).<span class="kw">await</span>;
     <span class="prelude-val">Ok</span>(())
 }
 
-<span class="ident">async</span> <span class="kw">fn</span> <span class="ident">move_config_run</span>(<span class="ident">args</span>: <span class="ident">GenericArgs</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">dyn</span> <span class="ident">std</span>::<span class="ident">error</span>::<span class="ident">Error</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">move_config_run</span>(<span class="ident">args</span>: <span class="ident">GenericArgs</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">std</span>::<span class="ident">error</span>::<span class="ident">Error</span><span class="op">&gt;</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">running</span> <span class="op">=</span> <span class="ident">Arc</span>::<span class="ident">new</span>(<span class="ident">AtomicBool</span>::<span class="ident">new</span>(<span class="bool-val">true</span>));
     <span class="kw">let</span> <span class="ident">running_handle</span> <span class="op">=</span> <span class="ident">running</span>.<span class="ident">clone</span>();
     <span class="kw">let</span> <span class="ident">desired_point</span> <span class="op">=</span> <span class="ident">Arc</span>::<span class="ident">new</span>(<span class="ident">Mutex</span>::<span class="ident">new</span>(<span class="ident">EndEffectorPose</span>::<span class="ident">new</span>(
@@ -706,16 +623,16 @@
     })<span class="question-mark">?</span>;
 
     <span class="kw">if</span> <span class="ident">args</span>.<span class="ident">speak</span> {
-        <span class="ident">speech_service</span>::<span class="ident">say</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;Waking up arm. Connecting to {}&quot;</span>, <span class="ident">args</span>.<span class="ident">port</span>)).<span class="ident">await</span><span class="question-mark">?</span>;
+        <span class="ident">speech_service</span>::<span class="ident">say</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;Waking up arm. Connecting to {}&quot;</span>, <span class="ident">args</span>.<span class="ident">port</span>)).<span class="kw">await</span><span class="question-mark">?</span>;
     }
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">driver</span> <span class="op">=</span>
-        <span class="ident">arm_driver</span>::<span class="ident">SerialArmDriver</span>::<span class="ident">new</span>(<span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">port</span>, <span class="ident">arm_config</span>::<span class="ident">ArmConfig</span>::<span class="ident">included</span>()).<span class="ident">await</span><span class="question-mark">?</span>;
-    <span class="ident">driver</span>.<span class="ident">set_color</span>(<span class="ident">lss_driver</span>::<span class="ident">LedColor</span>::<span class="ident">Magenta</span>).<span class="ident">await</span><span class="question-mark">?</span>;
+        <span class="ident">arm_driver</span>::<span class="ident">SerialArmDriver</span>::<span class="ident">new</span>(<span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">port</span>, <span class="ident">arm_config</span>::<span class="ident">ArmConfig</span>::<span class="ident">included</span>()).<span class="kw">await</span><span class="question-mark">?</span>;
+    <span class="ident">driver</span>.<span class="ident">set_color</span>(<span class="ident">lss_driver</span>::<span class="ident">LedColor</span>::<span class="ident">Magenta</span>).<span class="kw">await</span><span class="question-mark">?</span>;
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">arm_controller</span> <span class="op">=</span>
         <span class="ident">arm_controller</span>::<span class="ident">LssArmController</span>::<span class="ident">new</span>(<span class="ident">driver</span>, <span class="ident">arm_config</span>::<span class="ident">ArmConfig</span>::<span class="ident">included</span>());
 
     <span class="kw">if</span> <span class="ident">args</span>.<span class="ident">speak</span> {
-        <span class="ident">speech_service</span>::<span class="ident">say</span>(<span class="string">&quot;Connected successfully!&quot;</span>.<span class="ident">to_owned</span>()).<span class="ident">await</span><span class="question-mark">?</span>;
+        <span class="ident">speech_service</span>::<span class="ident">say</span>(<span class="string">&quot;Connected successfully!&quot;</span>.<span class="ident">to_owned</span>()).<span class="kw">await</span><span class="question-mark">?</span>;
     }
     <span class="kw">let</span> <span class="ident">start</span> <span class="op">=</span> <span class="ident">Instant</span>::<span class="ident">now</span>();
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">last_reload</span> <span class="op">=</span> <span class="ident">Instant</span>::<span class="ident">now</span>();
@@ -724,36 +641,36 @@
         <span class="kw">let</span> <span class="ident">z</span> <span class="op">=</span> <span class="ident">temporal</span> <span class="op">*</span> <span class="number">0.07</span>;
         <span class="kw">let</span> <span class="ident">y</span> <span class="op">=</span> <span class="ident">temporal</span> <span class="op">*</span> <span class="number">0.07</span>;
         <span class="kw">let</span> <span class="ident">position</span> <span class="op">=</span> <span class="ident">na</span>::<span class="ident">Vector3</span>::<span class="ident">new</span>(<span class="number">0.2</span>, <span class="number">0.0</span> <span class="op">+</span> <span class="ident">y</span>, <span class="number">0.2</span> <span class="op">+</span> <span class="ident">z</span>);
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">_arm_positions</span>) <span class="op">=</span> <span class="ident">arm_controller</span>.<span class="ident">move_to</span>(<span class="ident">position</span>, <span class="number">0.0</span>).<span class="ident">await</span> {
-            <span class="kw">let</span> <span class="ident">joint_positions</span> <span class="op">=</span> <span class="ident">arm_controller</span>.<span class="ident">calculate_fk</span>(<span class="ident">_arm_positions</span>).<span class="ident">await</span><span class="question-mark">?</span>;
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">_arm_positions</span>) <span class="op">=</span> <span class="ident">arm_controller</span>.<span class="ident">move_to</span>(<span class="ident">position</span>, <span class="number">0.0</span>).<span class="kw">await</span> {
+            <span class="kw">let</span> <span class="ident">joint_positions</span> <span class="op">=</span> <span class="ident">arm_controller</span>.<span class="ident">calculate_fk</span>(<span class="ident">_arm_positions</span>).<span class="kw">await</span><span class="question-mark">?</span>;
             <span class="ident">visualizer</span>.<span class="ident">set_position</span>(<span class="ident">joint_positions</span>);
         } <span class="kw">else</span> {
             <span class="macro">eprintln</span><span class="macro">!</span>(<span class="string">&quot;Message error&quot;</span>);
         }
-        <span class="ident">sleep</span>(<span class="ident">Duration</span>::<span class="ident">from_millis</span>(<span class="number">20</span>)).<span class="ident">await</span>;
+        <span class="ident">sleep</span>(<span class="ident">Duration</span>::<span class="ident">from_millis</span>(<span class="number">20</span>)).<span class="kw">await</span>;
         <span class="kw">if</span> <span class="ident">last_reload</span>.<span class="ident">elapsed</span>() <span class="op">&gt;</span> <span class="ident">Duration</span>::<span class="ident">from_secs</span>(<span class="number">4</span>) {
             <span class="ident">settings</span> <span class="op">=</span> <span class="ident">arm_driver</span>::<span class="ident">ArmControlSettings</span>::<span class="ident">load_json</span>(<span class="string">&quot;./motor_settings.json&quot;</span>)<span class="question-mark">?</span>;
-            <span class="ident">arm_controller</span>.<span class="ident">setup_motors</span>(<span class="ident">settings</span>).<span class="ident">await</span><span class="question-mark">?</span>;
+            <span class="ident">arm_controller</span>.<span class="ident">setup_motors</span>(<span class="ident">settings</span>).<span class="kw">await</span><span class="question-mark">?</span>;
             <span class="ident">last_reload</span> <span class="op">=</span> <span class="ident">Instant</span>::<span class="ident">now</span>();
             <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;Reloaded settings&quot;</span>);
         }
     }
-    <span class="ident">arm_controller</span>.<span class="ident">limp</span>().<span class="ident">await</span><span class="question-mark">?</span>;
+    <span class="ident">arm_controller</span>.<span class="ident">limp</span>().<span class="kw">await</span><span class="question-mark">?</span>;
     <span class="ident">arm_controller</span>
         .<span class="ident">set_color</span>(<span class="ident">lss_driver</span>::<span class="ident">LedColor</span>::<span class="ident">Yellow</span>)
-        .<span class="ident">await</span><span class="question-mark">?</span>;
-    <span class="ident">sleep</span>(<span class="ident">Duration</span>::<span class="ident">from_secs_f32</span>(<span class="number">0.5</span>)).<span class="ident">await</span>;
+        .<span class="kw">await</span><span class="question-mark">?</span>;
+    <span class="ident">sleep</span>(<span class="ident">Duration</span>::<span class="ident">from_secs_f32</span>(<span class="number">0.5</span>)).<span class="kw">await</span>;
     <span class="prelude-val">Ok</span>(())
 }
 
-<span class="ident">async</span> <span class="kw">fn</span> <span class="ident">wait_for_enter</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">dyn</span> <span class="ident">std</span>::<span class="ident">error</span>::<span class="ident">Error</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">wait_for_enter</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">std</span>::<span class="ident">error</span>::<span class="ident">Error</span><span class="op">&gt;</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">stdin</span> <span class="op">=</span> <span class="ident">io</span>::<span class="ident">stdin</span>();
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">line</span> <span class="op">=</span> <span class="ident">String</span>::<span class="ident">new</span>();
-    <span class="ident">stdin</span>.<span class="ident">read_line</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">line</span>).<span class="ident">await</span><span class="question-mark">?</span>;
+    <span class="ident">stdin</span>.<span class="ident">read_line</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">line</span>).<span class="kw">await</span><span class="question-mark">?</span>;
     <span class="prelude-val">Ok</span>(())
 }
 
-<span class="ident">async</span> <span class="kw">fn</span> <span class="ident">teach_pendent</span>(<span class="ident">args</span>: <span class="ident">GenericArgs</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">dyn</span> <span class="ident">std</span>::<span class="ident">error</span>::<span class="ident">Error</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">teach_pendent</span>(<span class="ident">args</span>: <span class="ident">GenericArgs</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">std</span>::<span class="ident">error</span>::<span class="ident">Error</span><span class="op">&gt;</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">running</span> <span class="op">=</span> <span class="ident">Arc</span>::<span class="ident">new</span>(<span class="ident">AtomicBool</span>::<span class="ident">new</span>(<span class="bool-val">true</span>));
     <span class="kw">let</span> <span class="ident">running_handle</span> <span class="op">=</span> <span class="ident">running</span>.<span class="ident">clone</span>();
     <span class="kw">let</span> <span class="ident">desired_point</span> <span class="op">=</span> <span class="ident">Arc</span>::<span class="ident">new</span>(<span class="ident">Mutex</span>::<span class="ident">new</span>(<span class="ident">EndEffectorPose</span>::<span class="ident">new</span>(
@@ -769,64 +686,64 @@
     })<span class="question-mark">?</span>;
 
     <span class="kw">if</span> <span class="ident">args</span>.<span class="ident">speak</span> {
-        <span class="ident">speech_service</span>::<span class="ident">say</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;Waking up arm. Connecting to {}&quot;</span>, <span class="ident">args</span>.<span class="ident">port</span>)).<span class="ident">await</span><span class="question-mark">?</span>;
+        <span class="ident">speech_service</span>::<span class="ident">say</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;Waking up arm. Connecting to {}&quot;</span>, <span class="ident">args</span>.<span class="ident">port</span>)).<span class="kw">await</span><span class="question-mark">?</span>;
     }
     <span class="kw">let</span> <span class="ident">driver</span> <span class="op">=</span>
-        <span class="ident">arm_driver</span>::<span class="ident">SerialArmDriver</span>::<span class="ident">new</span>(<span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">port</span>, <span class="ident">arm_config</span>::<span class="ident">ArmConfig</span>::<span class="ident">included</span>()).<span class="ident">await</span><span class="question-mark">?</span>;
+        <span class="ident">arm_driver</span>::<span class="ident">SerialArmDriver</span>::<span class="ident">new</span>(<span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">port</span>, <span class="ident">arm_config</span>::<span class="ident">ArmConfig</span>::<span class="ident">included</span>()).<span class="kw">await</span><span class="question-mark">?</span>;
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">arm_controller</span> <span class="op">=</span>
         <span class="ident">arm_controller</span>::<span class="ident">LssArmController</span>::<span class="ident">new</span>(<span class="ident">driver</span>, <span class="ident">arm_config</span>::<span class="ident">ArmConfig</span>::<span class="ident">included</span>());
 
     <span class="kw">if</span> <span class="ident">args</span>.<span class="ident">speak</span> {
-        <span class="ident">speech_service</span>::<span class="ident">say</span>(<span class="string">&quot;Connected successfully!&quot;</span>.<span class="ident">to_owned</span>()).<span class="ident">await</span><span class="question-mark">?</span>;
+        <span class="ident">speech_service</span>::<span class="ident">say</span>(<span class="string">&quot;Connected successfully!&quot;</span>.<span class="ident">to_owned</span>()).<span class="kw">await</span><span class="question-mark">?</span>;
     }
 
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">history</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[];
 
     <span class="ident">arm_controller</span>
         .<span class="ident">set_color</span>(<span class="ident">lss_driver</span>::<span class="ident">LedColor</span>::<span class="ident">Magenta</span>)
-        .<span class="ident">await</span><span class="question-mark">?</span>;
-    <span class="ident">arm_controller</span>.<span class="ident">limp</span>().<span class="ident">await</span><span class="question-mark">?</span>;
+        .<span class="kw">await</span><span class="question-mark">?</span>;
+    <span class="ident">arm_controller</span>.<span class="ident">limp</span>().<span class="kw">await</span><span class="question-mark">?</span>;
 
     <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;Starting recording\npress Ctrl+C to exit record mode&quot;</span>);
     <span class="kw">while</span> <span class="ident">running</span>.<span class="ident">load</span>(<span class="ident">Ordering</span>::<span class="ident">SeqCst</span>) {
         <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;Press enter to record position&quot;</span>);
-        <span class="ident">wait_for_enter</span>().<span class="ident">await</span><span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">current_position</span> <span class="op">=</span> <span class="ident">arm_controller</span>.<span class="ident">read_position</span>().<span class="ident">await</span><span class="question-mark">?</span>;
+        <span class="ident">wait_for_enter</span>().<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">current_position</span> <span class="op">=</span> <span class="ident">arm_controller</span>.<span class="ident">read_position</span>().<span class="kw">await</span><span class="question-mark">?</span>;
         <span class="ident">history</span>.<span class="ident">push</span>(<span class="ident">current_position</span>.<span class="ident">clone</span>());
         <span class="ident">visualizer</span>.<span class="ident">set_position</span>(<span class="ident">current_position</span>);
     }
 
     <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;Entering replay mode\npress Ctrl+c to exit&quot;</span>);
-    <span class="ident">arm_controller</span>.<span class="ident">set_color</span>(<span class="ident">lss_driver</span>::<span class="ident">LedColor</span>::<span class="ident">Cyan</span>).<span class="ident">await</span><span class="question-mark">?</span>;
+    <span class="ident">arm_controller</span>.<span class="ident">set_color</span>(<span class="ident">lss_driver</span>::<span class="ident">LedColor</span>::<span class="ident">Cyan</span>).<span class="kw">await</span><span class="question-mark">?</span>;
     <span class="ident">running</span>.<span class="ident">store</span>(<span class="bool-val">true</span>, <span class="ident">Ordering</span>::<span class="ident">SeqCst</span>);
 
     <span class="kw">while</span> <span class="ident">running</span>.<span class="ident">load</span>(<span class="ident">Ordering</span>::<span class="ident">SeqCst</span>) {
         <span class="kw">for</span> <span class="ident">arm_pose</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">history</span> {
             <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">_arm_positions</span>) <span class="op">=</span> <span class="ident">arm_controller</span>
                 .<span class="ident">move_to</span>(<span class="ident">arm_pose</span>.<span class="ident">end_effector</span>, <span class="ident">arm_pose</span>.<span class="ident">end_effector_angle</span>)
-                .<span class="ident">await</span>
+                .<span class="kw">await</span>
             {
-                <span class="kw">let</span> <span class="ident">joint_positions</span> <span class="op">=</span> <span class="ident">arm_controller</span>.<span class="ident">calculate_fk</span>(<span class="ident">_arm_positions</span>).<span class="ident">await</span><span class="question-mark">?</span>;
+                <span class="kw">let</span> <span class="ident">joint_positions</span> <span class="op">=</span> <span class="ident">arm_controller</span>.<span class="ident">calculate_fk</span>(<span class="ident">_arm_positions</span>).<span class="kw">await</span><span class="question-mark">?</span>;
                 <span class="ident">visualizer</span>.<span class="ident">set_position</span>(<span class="ident">joint_positions</span>);
             } <span class="kw">else</span> {
                 <span class="macro">eprintln</span><span class="macro">!</span>(<span class="string">&quot;Message error&quot;</span>);
             }
-            <span class="ident">sleep</span>(<span class="ident">Duration</span>::<span class="ident">from_secs</span>(<span class="number">1</span>)).<span class="ident">await</span>;
+            <span class="ident">sleep</span>(<span class="ident">Duration</span>::<span class="ident">from_secs</span>(<span class="number">1</span>)).<span class="kw">await</span>;
         }
         <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;Sequence done\nPress enter to repeat&quot;</span>);
-        <span class="ident">wait_for_enter</span>().<span class="ident">await</span><span class="question-mark">?</span>;
-        <span class="ident">sleep</span>(<span class="ident">Duration</span>::<span class="ident">from_millis</span>(<span class="number">500</span>)).<span class="ident">await</span>;
+        <span class="ident">wait_for_enter</span>().<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="ident">sleep</span>(<span class="ident">Duration</span>::<span class="ident">from_millis</span>(<span class="number">500</span>)).<span class="kw">await</span>;
         <span class="kw">if</span> <span class="op">!</span><span class="ident">running</span>.<span class="ident">load</span>(<span class="ident">Ordering</span>::<span class="ident">SeqCst</span>) {
             <span class="kw">break</span>;
         }
     }
-    <span class="ident">arm_controller</span>.<span class="ident">set_color</span>(<span class="ident">lss_driver</span>::<span class="ident">LedColor</span>::<span class="ident">Red</span>).<span class="ident">await</span><span class="question-mark">?</span>;
-    <span class="ident">arm_controller</span>.<span class="ident">limp</span>().<span class="ident">await</span><span class="question-mark">?</span>;
-    <span class="ident">sleep</span>(<span class="ident">Duration</span>::<span class="ident">from_secs_f32</span>(<span class="number">0.5</span>)).<span class="ident">await</span>;
+    <span class="ident">arm_controller</span>.<span class="ident">set_color</span>(<span class="ident">lss_driver</span>::<span class="ident">LedColor</span>::<span class="ident">Red</span>).<span class="kw">await</span><span class="question-mark">?</span>;
+    <span class="ident">arm_controller</span>.<span class="ident">limp</span>().<span class="kw">await</span><span class="question-mark">?</span>;
+    <span class="ident">sleep</span>(<span class="ident">Duration</span>::<span class="ident">from_secs_f32</span>(<span class="number">0.5</span>)).<span class="kw">await</span>;
     <span class="prelude-val">Ok</span>(())
 }
 
-<span class="ident">async</span> <span class="kw">fn</span> <span class="ident">display_positions</span>(<span class="ident">args</span>: <span class="ident">DisplayPositionsArgs</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">dyn</span> <span class="ident">std</span>::<span class="ident">error</span>::<span class="ident">Error</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">display_positions</span>(<span class="ident">args</span>: <span class="ident">DisplayPositionsArgs</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">std</span>::<span class="ident">error</span>::<span class="ident">Error</span><span class="op">&gt;</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">running</span> <span class="op">=</span> <span class="ident">Arc</span>::<span class="ident">new</span>(<span class="ident">AtomicBool</span>::<span class="ident">new</span>(<span class="bool-val">true</span>));
     <span class="kw">let</span> <span class="ident">running_handle</span> <span class="op">=</span> <span class="ident">running</span>.<span class="ident">clone</span>();
 
@@ -836,80 +753,23 @@
     })<span class="question-mark">?</span>;
 
     <span class="kw">if</span> <span class="ident">args</span>.<span class="ident">speak</span> {
-        <span class="ident">speech_service</span>::<span class="ident">say</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;Waking up arm. Connecting to {}&quot;</span>, <span class="ident">args</span>.<span class="ident">port</span>)).<span class="ident">await</span><span class="question-mark">?</span>;
+        <span class="ident">speech_service</span>::<span class="ident">say</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;Waking up arm. Connecting to {}&quot;</span>, <span class="ident">args</span>.<span class="ident">port</span>)).<span class="kw">await</span><span class="question-mark">?</span>;
     }
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">driver</span> <span class="op">=</span>
-        <span class="ident">arm_driver</span>::<span class="ident">SerialArmDriver</span>::<span class="ident">new</span>(<span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">port</span>, <span class="ident">arm_config</span>::<span class="ident">ArmConfig</span>::<span class="ident">default</span>()).<span class="ident">await</span><span class="question-mark">?</span>;
-    <span class="ident">driver</span>.<span class="ident">set_color</span>(<span class="ident">lss_driver</span>::<span class="ident">LedColor</span>::<span class="ident">Cyan</span>).<span class="ident">await</span><span class="question-mark">?</span>;
+        <span class="ident">arm_driver</span>::<span class="ident">SerialArmDriver</span>::<span class="ident">new</span>(<span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">port</span>, <span class="ident">arm_config</span>::<span class="ident">ArmConfig</span>::<span class="ident">default</span>()).<span class="kw">await</span><span class="question-mark">?</span>;
+    <span class="ident">driver</span>.<span class="ident">set_color</span>(<span class="ident">lss_driver</span>::<span class="ident">LedColor</span>::<span class="ident">Cyan</span>).<span class="kw">await</span><span class="question-mark">?</span>;
     <span class="kw">if</span> <span class="ident">args</span>.<span class="ident">speak</span> {
-        <span class="ident">speech_service</span>::<span class="ident">say</span>(<span class="string">&quot;Connected successfully!&quot;</span>.<span class="ident">to_owned</span>()).<span class="ident">await</span><span class="question-mark">?</span>;
+        <span class="ident">speech_service</span>::<span class="ident">say</span>(<span class="string">&quot;Connected successfully!&quot;</span>.<span class="ident">to_owned</span>()).<span class="kw">await</span><span class="question-mark">?</span>;
     }
-    <span class="ident">driver</span>.<span class="ident">limp</span>().<span class="ident">await</span><span class="question-mark">?</span>;
-    <span class="ident">driver</span>.<span class="ident">set_color</span>(<span class="ident">lss_driver</span>::<span class="ident">LedColor</span>::<span class="ident">White</span>).<span class="ident">await</span><span class="question-mark">?</span>;
+    <span class="ident">driver</span>.<span class="ident">limp</span>().<span class="kw">await</span><span class="question-mark">?</span>;
+    <span class="ident">driver</span>.<span class="ident">set_color</span>(<span class="ident">lss_driver</span>::<span class="ident">LedColor</span>::<span class="ident">White</span>).<span class="kw">await</span><span class="question-mark">?</span>;
     <span class="kw">while</span> <span class="ident">running</span>.<span class="ident">load</span>(<span class="ident">Ordering</span>::<span class="ident">Acquire</span>) {
-        <span class="kw">let</span> <span class="ident">positions</span> <span class="op">=</span> <span class="ident">driver</span>.<span class="ident">read_position</span>().<span class="ident">await</span><span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">positions</span> <span class="op">=</span> <span class="ident">driver</span>.<span class="ident">read_position</span>().<span class="kw">await</span><span class="question-mark">?</span>;
         <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">positions</span>);
-        <span class="ident">sleep</span>(<span class="ident">Duration</span>::<span class="ident">from_secs_f32</span>(<span class="number">0.2</span>)).<span class="ident">await</span>;
+        <span class="ident">sleep</span>(<span class="ident">Duration</span>::<span class="ident">from_secs_f32</span>(<span class="number">0.2</span>)).<span class="kw">await</span>;
     }
-    <span class="ident">driver</span>.<span class="ident">set_color</span>(<span class="ident">lss_driver</span>::<span class="ident">LedColor</span>::<span class="ident">Magenta</span>).<span class="ident">await</span><span class="question-mark">?</span>;
-    <span class="ident">sleep</span>(<span class="ident">Duration</span>::<span class="ident">from_secs_f32</span>(<span class="number">0.2</span>)).<span class="ident">await</span>;
-    <span class="prelude-val">Ok</span>(())
-}
-
-<span class="kw">fn</span> <span class="ident">config</span>(<span class="ident">args</span>: <span class="ident">ConfigArgs</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">dyn</span> <span class="ident">std</span>::<span class="ident">error</span>::<span class="ident">Error</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">input</span>) <span class="op">=</span> <span class="ident">args</span>.<span class="ident">input</span> {
-        <span class="kw">let</span> <span class="ident">input_file_ext</span> <span class="op">=</span> <span class="ident">Path</span>::<span class="ident">new</span>(<span class="kw-2">&amp;</span><span class="ident">input</span>)
-            .<span class="ident">extension</span>()
-            .<span class="ident">ok_or</span>(<span class="string">&quot;Failed to extract extension&quot;</span>)<span class="question-mark">?</span>
-            .<span class="ident">to_str</span>()
-            .<span class="ident">ok_or</span>(<span class="string">&quot;Failed to convert to string&quot;</span>)<span class="question-mark">?</span>
-            .<span class="ident">to_ascii_lowercase</span>();
-        <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="ident">input_file_ext</span>[..] {
-            <span class="string">&quot;json&quot;</span> <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">let</span> <span class="ident">config</span> <span class="op">=</span> <span class="ident">arm_config</span>::<span class="ident">ArmConfig</span>::<span class="ident">load_json</span>(<span class="kw-2">&amp;</span><span class="ident">input</span>)<span class="question-mark">?</span>;
-                <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;Config parsed successfully\n\n{:?}&quot;</span>, <span class="ident">config</span>);
-                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">output</span>) <span class="op">=</span> <span class="ident">args</span>.<span class="ident">output</span> {
-                    <span class="ident">config</span>.<span class="ident">save_yaml</span>(<span class="kw-2">&amp;</span><span class="ident">output</span>)<span class="question-mark">?</span>;
-                    <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;Config written as yaml&quot;</span>);
-                }
-            }
-            <span class="string">&quot;yaml&quot;</span> <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">let</span> <span class="ident">config</span> <span class="op">=</span> <span class="ident">arm_config</span>::<span class="ident">ArmConfig</span>::<span class="ident">load_yaml</span>(<span class="kw-2">&amp;</span><span class="ident">input</span>)<span class="question-mark">?</span>;
-                <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;Config parsed successfully\n\n{:?}&quot;</span>, <span class="ident">config</span>);
-                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">output</span>) <span class="op">=</span> <span class="ident">args</span>.<span class="ident">output</span> {
-                    <span class="ident">config</span>.<span class="ident">save_json</span>(<span class="kw-2">&amp;</span><span class="ident">output</span>)<span class="question-mark">?</span>;
-                    <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;Config written as json&quot;</span>);
-                }
-            }
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="macro">println</span><span class="macro">!</span>(
-                    <span class="string">&quot;Unknown config extension {}\nParsing as yaml&quot;</span>,
-                    <span class="ident">input_file_ext</span>
-                );
-                <span class="kw">let</span> <span class="ident">config</span> <span class="op">=</span> <span class="ident">arm_config</span>::<span class="ident">ArmConfig</span>::<span class="ident">load_yaml</span>(<span class="kw-2">&amp;</span><span class="ident">input</span>)<span class="question-mark">?</span>;
-                <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;Config parsed successfully\n\n{:?}&quot;</span>, <span class="ident">config</span>);
-            }
-        }
-    } <span class="kw">else</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">output</span>) <span class="op">=</span> <span class="ident">args</span>.<span class="ident">output</span> {
-        <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;Writing included config&quot;</span>);
-        <span class="kw">let</span> <span class="ident">input_file_ext</span> <span class="op">=</span> <span class="ident">Path</span>::<span class="ident">new</span>(<span class="kw-2">&amp;</span><span class="ident">output</span>)
-            .<span class="ident">extension</span>()
-            .<span class="ident">ok_or</span>(<span class="string">&quot;Failed to extract extension&quot;</span>)<span class="question-mark">?</span>
-            .<span class="ident">to_str</span>()
-            .<span class="ident">ok_or</span>(<span class="string">&quot;Failed to convert to string&quot;</span>)<span class="question-mark">?</span>
-            .<span class="ident">to_ascii_lowercase</span>();
-        <span class="kw">let</span> <span class="ident">included</span> <span class="op">=</span> <span class="ident">arm_config</span>::<span class="ident">ArmConfig</span>::<span class="ident">included</span>();
-        <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="ident">input_file_ext</span>[..] {
-            <span class="string">&quot;json&quot;</span> <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;Saving as json&quot;</span>);
-                <span class="ident">included</span>.<span class="ident">save_json</span>(<span class="kw-2">&amp;</span><span class="ident">output</span>)<span class="question-mark">?</span>;
-            }
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;Saving as yaml&quot;</span>);
-                <span class="ident">included</span>.<span class="ident">save_yaml</span>(<span class="kw-2">&amp;</span><span class="ident">output</span>)<span class="question-mark">?</span>;
-            }
-        }
-    }
+    <span class="ident">driver</span>.<span class="ident">set_color</span>(<span class="ident">lss_driver</span>::<span class="ident">LedColor</span>::<span class="ident">Magenta</span>).<span class="kw">await</span><span class="question-mark">?</span>;
+    <span class="ident">sleep</span>(<span class="ident">Duration</span>::<span class="ident">from_secs_f32</span>(<span class="number">0.2</span>)).<span class="kw">await</span>;
     <span class="prelude-val">Ok</span>(())
 }
 </pre></div>

@@ -1,6 +1,6 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/grpc_controller.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>grpc_controller.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings"></script><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../favicon-16x16.png">
-<link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../guppy/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><span class="help-button">?</span>
+<link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../guppy/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
                 <a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
@@ -247,11 +247,11 @@
     <span class="ident">tonic</span>::<span class="macro">include_proto</span><span class="macro">!</span>(<span class="string">&quot;guppy_service&quot;</span>);
 }
 
-<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">ControllerWrapper</span> <span class="op">=</span> <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">std</span>::<span class="ident">boxed</span>::<span class="ident">Box</span><span class="op">&lt;</span><span class="ident">dyn</span> <span class="ident">arm_controller</span>::<span class="ident">ArmController</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">ControllerWrapper</span> <span class="op">=</span> <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">std</span>::<span class="ident">boxed</span>::<span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">arm_controller</span>::<span class="ident">ArmController</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>;
 
-<span class="kw">pub</span> <span class="ident">async</span> <span class="kw">fn</span> <span class="ident">connect_to_arm</span>(<span class="ident">port</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ControllerWrapper</span>, <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">dyn</span> <span class="ident">std</span>::<span class="ident">error</span>::<span class="ident">Error</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">connect_to_arm</span>(<span class="ident">port</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ControllerWrapper</span>, <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">std</span>::<span class="ident">error</span>::<span class="ident">Error</span><span class="op">&gt;</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">config</span> <span class="op">=</span> <span class="ident">arm_config</span>::<span class="ident">ArmConfig</span>::<span class="ident">included</span>();
-    <span class="kw">let</span> <span class="ident">driver</span> <span class="op">=</span> <span class="ident">arm_driver</span>::<span class="ident">SerialArmDriver</span>::<span class="ident">new</span>(<span class="ident">port</span>, <span class="ident">config</span>.<span class="ident">clone</span>()).<span class="ident">await</span><span class="question-mark">?</span>;
+    <span class="kw">let</span> <span class="ident">driver</span> <span class="op">=</span> <span class="ident">arm_driver</span>::<span class="ident">SerialArmDriver</span>::<span class="ident">new</span>(<span class="ident">port</span>, <span class="ident">config</span>.<span class="ident">clone</span>()).<span class="kw">await</span><span class="question-mark">?</span>;
     <span class="kw">let</span> <span class="ident">controller</span> <span class="op">=</span> <span class="ident">arm_controller</span>::<span class="ident">LssArmController</span>::<span class="ident">new</span>(<span class="ident">driver</span>, <span class="ident">config</span>);
     <span class="prelude-val">Ok</span>(<span class="ident">Arc</span>::<span class="ident">new</span>(<span class="ident">Mutex</span>::<span class="ident">new</span>(<span class="ident">controller</span>)))
 }
@@ -268,12 +268,12 @@
 
 <span class="attribute">#[<span class="ident">tonic</span>::<span class="ident">async_trait</span>]</span>
 <span class="kw">impl</span> <span class="ident">GuppyConfigure</span> <span class="kw">for</span> <span class="ident">GuppyConfigHandler</span> {
-    <span class="ident">async</span> <span class="kw">fn</span> <span class="ident">set_led</span>(
+    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">set_led</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">request</span>: <span class="ident">Request</span><span class="op">&lt;</span><span class="ident">guppy_service</span>::<span class="ident">SetLedRequest</span><span class="op">&gt;</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Response</span><span class="op">&lt;</span><span class="ident">guppy_service</span>::<span class="ident">SetLedResponse</span><span class="op">&gt;</span>, <span class="ident">Status</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">inner_request</span> <span class="op">=</span> <span class="ident">request</span>.<span class="ident">into_inner</span>();
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">driver</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">driver</span>.<span class="ident">lock</span>().<span class="ident">await</span>;
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">driver</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">driver</span>.<span class="ident">lock</span>().<span class="kw">await</span>;
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">color_id</span>) <span class="op">=</span> <span class="ident">inner_request</span>.<span class="ident">led_color</span> {
             <span class="kw">let</span> <span class="ident">color</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">color_id</span> {
                 <span class="number">1</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">lss_driver</span>::<span class="ident">LedColor</span>::<span class="ident">Red</span>,
@@ -287,7 +287,7 @@
             };
             <span class="ident">driver</span>
                 .<span class="ident">set_color</span>(<span class="ident">color</span>)
-                .<span class="ident">await</span>
+                .<span class="kw">await</span>
                 .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">Status</span>::<span class="ident">internal</span>(<span class="string">&quot;failed to set color&quot;</span>))<span class="question-mark">?</span>;
             <span class="prelude-val">Ok</span>(<span class="ident">Response</span>::<span class="ident">new</span>(<span class="ident">guppy_service</span>::<span class="ident">SetLedResponse</span> {}))
         } <span class="kw">else</span> {
@@ -295,20 +295,20 @@
         }
     }
 
-    <span class="ident">async</span> <span class="kw">fn</span> <span class="ident">set_configuration</span>(
+    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">set_configuration</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">request</span>: <span class="ident">Request</span><span class="op">&lt;</span><span class="ident">guppy_service</span>::<span class="ident">ArmControlSettings</span><span class="op">&gt;</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Response</span><span class="op">&lt;</span><span class="ident">guppy_service</span>::<span class="ident">ConfigurationResponse</span><span class="op">&gt;</span>, <span class="ident">Status</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">config_proto</span> <span class="op">=</span> <span class="ident">request</span>.<span class="ident">into_inner</span>();
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">driver</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">driver</span>.<span class="ident">lock</span>().<span class="ident">await</span>;
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">driver</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">driver</span>.<span class="ident">lock</span>().<span class="kw">await</span>;
         <span class="ident">driver</span>
             .<span class="ident">setup_motors</span>(<span class="ident">config_proto</span>.<span class="ident">into</span>())
-            .<span class="ident">await</span>
+            .<span class="kw">await</span>
             .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">Status</span>::<span class="ident">unimplemented</span>(<span class="string">&quot;message&quot;</span>))<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(<span class="ident">Response</span>::<span class="ident">new</span>(<span class="ident">guppy_service</span>::<span class="ident">ConfigurationResponse</span> {}))
     }
 
-    <span class="ident">async</span> <span class="kw">fn</span> <span class="ident">get_default_configuration</span>(
+    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">get_default_configuration</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="kw">_</span>: <span class="ident">Request</span><span class="op">&lt;</span><span class="ident">guppy_service</span>::<span class="ident">ConfigurationRequest</span><span class="op">&gt;</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Response</span><span class="op">&lt;</span><span class="ident">guppy_service</span>::<span class="ident">ArmControlSettings</span><span class="op">&gt;</span>, <span class="ident">Status</span><span class="op">&gt;</span> {
@@ -316,14 +316,14 @@
         <span class="prelude-val">Ok</span>(<span class="ident">Response</span>::<span class="ident">new</span>(<span class="ident">default_config</span>))
     }
 
-    <span class="ident">async</span> <span class="kw">fn</span> <span class="ident">get_arm_configuration</span>(
+    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">get_arm_configuration</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="kw">_</span>: <span class="ident">Request</span><span class="op">&lt;</span><span class="ident">guppy_service</span>::<span class="ident">ConfigurationRequest</span><span class="op">&gt;</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Response</span><span class="op">&lt;</span><span class="ident">guppy_service</span>::<span class="ident">ArmControlSettings</span><span class="op">&gt;</span>, <span class="ident">Status</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">driver</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">driver</span>.<span class="ident">lock</span>().<span class="ident">await</span>;
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">driver</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">driver</span>.<span class="ident">lock</span>().<span class="kw">await</span>;
         <span class="kw">let</span> <span class="ident">arm_settings</span> <span class="op">=</span> <span class="ident">driver</span>
             .<span class="ident">load_motor_settings</span>()
-            .<span class="ident">await</span>
+            .<span class="kw">await</span>
             .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">Status</span>::<span class="ident">internal</span>(<span class="string">&quot;failed to read config from arm&quot;</span>))<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(<span class="ident">Response</span>::<span class="ident">new</span>(<span class="ident">arm_settings</span>.<span class="ident">into</span>()))
     }
@@ -341,7 +341,7 @@
 
 <span class="attribute">#[<span class="ident">tonic</span>::<span class="ident">async_trait</span>]</span>
 <span class="kw">impl</span> <span class="ident">GuppyController</span> <span class="kw">for</span> <span class="ident">GuppyControllerHandler</span> {
-    <span class="ident">async</span> <span class="kw">fn</span> <span class="ident">move_to</span>(
+    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">move_to</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">request</span>: <span class="ident">Request</span><span class="op">&lt;</span><span class="ident">guppy_service</span>::<span class="ident">MoveToCommand</span><span class="op">&gt;</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Response</span><span class="op">&lt;</span><span class="ident">guppy_service</span>::<span class="ident">ArmPositions</span><span class="op">&gt;</span>, <span class="ident">Status</span><span class="op">&gt;</span> {
@@ -349,27 +349,27 @@
         <span class="kw">let</span> <span class="ident">position</span> <span class="op">=</span> <span class="ident">inner</span>
             .<span class="ident">position</span>
             .<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">Status</span>::<span class="ident">invalid_argument</span>(<span class="string">&quot;missing position&quot;</span>))<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">driver</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">driver</span>.<span class="ident">lock</span>().<span class="ident">await</span>;
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">driver</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">driver</span>.<span class="ident">lock</span>().<span class="kw">await</span>;
         <span class="kw">let</span> <span class="ident">joint_positions</span> <span class="op">=</span> <span class="ident">driver</span>
             .<span class="ident">move_to</span>(<span class="ident">position</span>.<span class="ident">into</span>(), <span class="ident">inner</span>.<span class="ident">effector_angle</span>)
-            .<span class="ident">await</span>
+            .<span class="kw">await</span>
             .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">Status</span>::<span class="ident">internal</span>(<span class="string">&quot;Failed to move&quot;</span>))<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">arm_positions</span> <span class="op">=</span> <span class="ident">driver</span>
             .<span class="ident">calculate_fk</span>(<span class="ident">joint_positions</span>)
-            .<span class="ident">await</span>
+            .<span class="kw">await</span>
             .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">Status</span>::<span class="ident">internal</span>(<span class="string">&quot;Failed to calculate FK&quot;</span>))<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(<span class="ident">Response</span>::<span class="ident">new</span>(<span class="ident">arm_positions</span>.<span class="ident">into</span>()))
     }
 
-    <span class="ident">async</span> <span class="kw">fn</span> <span class="ident">set_gripper</span>(
+    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">set_gripper</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">request</span>: <span class="ident">Request</span><span class="op">&lt;</span><span class="ident">guppy_service</span>::<span class="ident">SetGripperRequest</span><span class="op">&gt;</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Response</span><span class="op">&lt;</span><span class="ident">guppy_service</span>::<span class="ident">SetGripperResponse</span><span class="op">&gt;</span>, <span class="ident">Status</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">gripper_position</span> <span class="op">=</span> <span class="ident">request</span>.<span class="ident">into_inner</span>();
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">driver</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">driver</span>.<span class="ident">lock</span>().<span class="ident">await</span>;
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">driver</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">driver</span>.<span class="ident">lock</span>().<span class="kw">await</span>;
         <span class="ident">driver</span>
             .<span class="ident">move_gripper</span>(<span class="ident">gripper_position</span>.<span class="ident">gripper</span>)
-            .<span class="ident">await</span>
+            .<span class="kw">await</span>
             .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">Status</span>::<span class="ident">internal</span>(<span class="string">&quot;failed to move gripper&quot;</span>))<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(<span class="ident">Response</span>::<span class="ident">new</span>(<span class="ident">guppy_service</span>::<span class="ident">SetGripperResponse</span> {}))
     }
