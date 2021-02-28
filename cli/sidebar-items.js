@@ -1,1 +1,1 @@
-initSidebarItems({"enum":[["SubCommand",""]],"fn":[["display_positions",""],["ik_run",""],["main",""],["move_config_run",""],["move_run",""],["teach_pendent",""],["test_visualizer",""],["wait_for_enter",""]],"struct":[["Args",""],["GenericArgs",""]]});
+initSidebarItems({"enum":[["SubCommand",""]],"fn":[["display_positions",""],["ik_run","Monitor pose in loop and display"],["main",""],["move_run",""],["teach_pendent","read pose for a bit and then repeat poses"],["test_visualizer",""],["wait_for_enter",""]],"struct":[["Args",""],["GenericArgs",""]]});

@@ -288,62 +288,6 @@
 <span id="285">285</span>
 <span id="286">286</span>
 <span id="287">287</span>
-<span id="288">288</span>
-<span id="289">289</span>
-<span id="290">290</span>
-<span id="291">291</span>
-<span id="292">292</span>
-<span id="293">293</span>
-<span id="294">294</span>
-<span id="295">295</span>
-<span id="296">296</span>
-<span id="297">297</span>
-<span id="298">298</span>
-<span id="299">299</span>
-<span id="300">300</span>
-<span id="301">301</span>
-<span id="302">302</span>
-<span id="303">303</span>
-<span id="304">304</span>
-<span id="305">305</span>
-<span id="306">306</span>
-<span id="307">307</span>
-<span id="308">308</span>
-<span id="309">309</span>
-<span id="310">310</span>
-<span id="311">311</span>
-<span id="312">312</span>
-<span id="313">313</span>
-<span id="314">314</span>
-<span id="315">315</span>
-<span id="316">316</span>
-<span id="317">317</span>
-<span id="318">318</span>
-<span id="319">319</span>
-<span id="320">320</span>
-<span id="321">321</span>
-<span id="322">322</span>
-<span id="323">323</span>
-<span id="324">324</span>
-<span id="325">325</span>
-<span id="326">326</span>
-<span id="327">327</span>
-<span id="328">328</span>
-<span id="329">329</span>
-<span id="330">330</span>
-<span id="331">331</span>
-<span id="332">332</span>
-<span id="333">333</span>
-<span id="334">334</span>
-<span id="335">335</span>
-<span id="336">336</span>
-<span id="337">337</span>
-<span id="338">338</span>
-<span id="339">339</span>
-<span id="340">340</span>
-<span id="341">341</span>
-<span id="342">342</span>
-<span id="343">343</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">async_std</span>::<span class="ident">io</span>;
 <span class="kw">use</span> <span class="ident">async_std</span>::<span class="ident">task</span>::<span class="ident">sleep</span>;
@@ -357,7 +301,6 @@
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">sync</span>::<span class="ident">atomic</span>::{<span class="ident">AtomicBool</span>, <span class="ident">Ordering</span>};
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">sync</span>::{<span class="ident">Arc</span>, <span class="ident">Mutex</span>};
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">time</span>::<span class="ident">Duration</span>;
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">time</span>::<span class="ident">Instant</span>;
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clap</span>)]</span>
 <span class="attribute">#[<span class="ident">clap</span>()]</span>
@@ -371,7 +314,6 @@
     <span class="ident">DisplayPositions</span>(<span class="ident">GenericArgs</span>),
     <span class="ident">Ik</span>(<span class="ident">GenericArgs</span>),
     <span class="ident">Move</span>(<span class="ident">GenericArgs</span>),
-    <span class="ident">MoveConfig</span>(<span class="ident">GenericArgs</span>),
     <span class="ident">TeachPendent</span>(<span class="ident">GenericArgs</span>),
     <span class="ident">Viz</span>,
 }
@@ -397,9 +339,6 @@
         }
         <span class="ident">SubCommand</span>::<span class="ident">Move</span>(<span class="ident">args</span>) <span class="op">=</span><span class="op">&gt;</span> {
             <span class="ident">move_run</span>(<span class="ident">args</span>).<span class="kw">await</span><span class="question-mark">?</span>;
-        }
-        <span class="ident">SubCommand</span>::<span class="ident">MoveConfig</span>(<span class="ident">args</span>) <span class="op">=</span><span class="op">&gt;</span> {
-            <span class="ident">move_config_run</span>(<span class="ident">args</span>).<span class="kw">await</span><span class="question-mark">?</span>;
         }
         <span class="ident">SubCommand</span>::<span class="ident">Viz</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">test_visualizer</span>().<span class="kw">await</span><span class="question-mark">?</span>,
     }
@@ -446,6 +385,7 @@
     <span class="prelude-val">Ok</span>(())
 }
 
+<span class="doccomment">/// Monitor pose in loop and display</span>
 <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">ik_run</span>(<span class="ident">args</span>: <span class="ident">GenericArgs</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">std</span>::<span class="ident">error</span>::<span class="ident">Error</span><span class="op">&gt;</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">running</span> <span class="op">=</span> <span class="ident">Arc</span>::<span class="ident">new</span>(<span class="ident">AtomicBool</span>::<span class="ident">new</span>(<span class="bool-val">true</span>));
     <span class="kw">let</span> <span class="ident">running_handle</span> <span class="op">=</span> <span class="ident">running</span>.<span class="ident">clone</span>();
@@ -539,59 +479,6 @@
     <span class="prelude-val">Ok</span>(())
 }
 
-<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">move_config_run</span>(<span class="ident">args</span>: <span class="ident">GenericArgs</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">std</span>::<span class="ident">error</span>::<span class="ident">Error</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">running</span> <span class="op">=</span> <span class="ident">Arc</span>::<span class="ident">new</span>(<span class="ident">AtomicBool</span>::<span class="ident">new</span>(<span class="bool-val">true</span>));
-    <span class="kw">let</span> <span class="ident">running_handle</span> <span class="op">=</span> <span class="ident">running</span>.<span class="ident">clone</span>();
-    <span class="kw">let</span> <span class="ident">desired_point</span> <span class="op">=</span> <span class="ident">Arc</span>::<span class="ident">new</span>(<span class="ident">Mutex</span>::<span class="ident">new</span>(<span class="ident">EndEffectorPose</span>::<span class="ident">new</span>(
-        <span class="ident">na</span>::<span class="ident">Vector3</span>::<span class="ident">new</span>(<span class="number">0.2</span>, <span class="number">0.</span>, <span class="number">0.2</span>),
-        <span class="number">0.</span>,
-    )));
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">visualizer</span> <span class="op">=</span>
-        <span class="ident">VisualizerInterface</span>::<span class="ident">new</span>(<span class="ident">desired_point</span>.<span class="ident">clone</span>(), <span class="ident">Arc</span>::<span class="ident">new</span>(<span class="ident">AtomicBool</span>::<span class="ident">new</span>(<span class="bool-val">true</span>)));
-
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">settings</span> <span class="op">=</span> <span class="ident">arm_driver</span>::<span class="ident">ArmControlSettings</span>::<span class="ident">default</span>();
-    <span class="ident">settings</span>.<span class="ident">save_json</span>(<span class="string">&quot;./motor_settings.json&quot;</span>)<span class="question-mark">?</span>;
-
-    <span class="ident">ctrlc</span>::<span class="ident">set_handler</span>(<span class="kw">move</span> <span class="op">|</span><span class="op">|</span> {
-        <span class="ident">running_handle</span>.<span class="ident">store</span>(<span class="bool-val">false</span>, <span class="ident">Ordering</span>::<span class="ident">Release</span>);
-        <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;Caught interrupt\nExiting...&quot;</span>);
-    })<span class="question-mark">?</span>;
-
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">driver</span> <span class="op">=</span>
-        <span class="ident">arm_driver</span>::<span class="ident">SerialArmDriver</span>::<span class="ident">new</span>(<span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">port</span>, <span class="ident">arm_config</span>::<span class="ident">ArmConfig</span>::<span class="ident">included</span>()).<span class="kw">await</span><span class="question-mark">?</span>;
-    <span class="ident">driver</span>.<span class="ident">set_color</span>(<span class="ident">lss_driver</span>::<span class="ident">LedColor</span>::<span class="ident">Magenta</span>).<span class="kw">await</span><span class="question-mark">?</span>;
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">arm_controller</span> <span class="op">=</span>
-        <span class="ident">arm_controller</span>::<span class="ident">LssArmController</span>::<span class="ident">new</span>(<span class="ident">driver</span>, <span class="ident">arm_config</span>::<span class="ident">ArmConfig</span>::<span class="ident">included</span>());
-
-    <span class="kw">let</span> <span class="ident">start</span> <span class="op">=</span> <span class="ident">Instant</span>::<span class="ident">now</span>();
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">last_reload</span> <span class="op">=</span> <span class="ident">Instant</span>::<span class="ident">now</span>();
-    <span class="kw">while</span> <span class="ident">running</span>.<span class="ident">load</span>(<span class="ident">Ordering</span>::<span class="ident">Acquire</span>) {
-        <span class="kw">let</span> <span class="ident">temporal</span> <span class="op">=</span> (<span class="ident">start</span>.<span class="ident">elapsed</span>().<span class="ident">as_secs_f32</span>() <span class="op">*</span> <span class="number">2.</span>).<span class="ident">sin</span>();
-        <span class="kw">let</span> <span class="ident">z</span> <span class="op">=</span> <span class="ident">temporal</span> <span class="op">*</span> <span class="number">0.07</span>;
-        <span class="kw">let</span> <span class="ident">y</span> <span class="op">=</span> <span class="ident">temporal</span> <span class="op">*</span> <span class="number">0.07</span>;
-        <span class="kw">let</span> <span class="ident">position</span> <span class="op">=</span> <span class="ident">na</span>::<span class="ident">Vector3</span>::<span class="ident">new</span>(<span class="number">0.2</span>, <span class="number">0.0</span> <span class="op">+</span> <span class="ident">y</span>, <span class="number">0.2</span> <span class="op">+</span> <span class="ident">z</span>);
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">_arm_positions</span>) <span class="op">=</span> <span class="ident">arm_controller</span>.<span class="ident">move_to</span>(<span class="ident">position</span>, <span class="number">0.0</span>).<span class="kw">await</span> {
-            <span class="kw">let</span> <span class="ident">joint_positions</span> <span class="op">=</span> <span class="ident">arm_controller</span>.<span class="ident">calculate_fk</span>(<span class="ident">_arm_positions</span>).<span class="kw">await</span><span class="question-mark">?</span>;
-            <span class="ident">visualizer</span>.<span class="ident">set_position</span>(<span class="ident">joint_positions</span>);
-        } <span class="kw">else</span> {
-            <span class="macro">eprintln</span><span class="macro">!</span>(<span class="string">&quot;Message error&quot;</span>);
-        }
-        <span class="ident">sleep</span>(<span class="ident">Duration</span>::<span class="ident">from_millis</span>(<span class="number">20</span>)).<span class="kw">await</span>;
-        <span class="kw">if</span> <span class="ident">last_reload</span>.<span class="ident">elapsed</span>() <span class="op">&gt;</span> <span class="ident">Duration</span>::<span class="ident">from_secs</span>(<span class="number">4</span>) {
-            <span class="ident">settings</span> <span class="op">=</span> <span class="ident">arm_driver</span>::<span class="ident">ArmControlSettings</span>::<span class="ident">load_json</span>(<span class="string">&quot;./motor_settings.json&quot;</span>)<span class="question-mark">?</span>;
-            <span class="ident">arm_controller</span>.<span class="ident">setup_motors</span>(<span class="ident">settings</span>).<span class="kw">await</span><span class="question-mark">?</span>;
-            <span class="ident">last_reload</span> <span class="op">=</span> <span class="ident">Instant</span>::<span class="ident">now</span>();
-            <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;Reloaded settings&quot;</span>);
-        }
-    }
-    <span class="ident">arm_controller</span>.<span class="ident">limp</span>().<span class="kw">await</span><span class="question-mark">?</span>;
-    <span class="ident">arm_controller</span>
-        .<span class="ident">set_color</span>(<span class="ident">lss_driver</span>::<span class="ident">LedColor</span>::<span class="ident">Yellow</span>)
-        .<span class="kw">await</span><span class="question-mark">?</span>;
-    <span class="ident">sleep</span>(<span class="ident">Duration</span>::<span class="ident">from_secs_f32</span>(<span class="number">0.5</span>)).<span class="kw">await</span>;
-    <span class="prelude-val">Ok</span>(())
-}
-
 <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">wait_for_enter</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">std</span>::<span class="ident">error</span>::<span class="ident">Error</span><span class="op">&gt;</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">stdin</span> <span class="op">=</span> <span class="ident">io</span>::<span class="ident">stdin</span>();
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">line</span> <span class="op">=</span> <span class="ident">String</span>::<span class="ident">new</span>();
@@ -599,6 +486,7 @@
     <span class="prelude-val">Ok</span>(())
 }
 
+<span class="doccomment">/// read pose for a bit and then repeat poses</span>
 <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">teach_pendent</span>(<span class="ident">args</span>: <span class="ident">GenericArgs</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">std</span>::<span class="ident">error</span>::<span class="ident">Error</span><span class="op">&gt;</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">running</span> <span class="op">=</span> <span class="ident">Arc</span>::<span class="ident">new</span>(<span class="ident">AtomicBool</span>::<span class="ident">new</span>(<span class="bool-val">true</span>));
     <span class="kw">let</span> <span class="ident">running_handle</span> <span class="op">=</span> <span class="ident">running</span>.<span class="ident">clone</span>();
