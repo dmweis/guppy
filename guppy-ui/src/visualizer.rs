@@ -1,16 +1,17 @@
-use guppy_controller::arm_controller::ArmPositions;
-use guppy_controller::arm_controller::EndEffectorPose;
-use kiss3d::event::Action;
-use kiss3d::event::Key;
-use kiss3d::scene::SceneNode;
-use kiss3d::window::Window;
-use nalgebra as na;
-use nalgebra::{Isometry3, Point2, Point3, Translation3, UnitQuaternion, Vector3};
-use std::sync::{
-    atomic::{AtomicBool, Ordering},
-    Arc, Mutex,
+use guppy_controller::arm_controller::{ArmPositions, EndEffectorPose};
+use kiss3d::{
+    event::{Action, Key},
+    scene::SceneNode,
+    window::Window,
 };
-use std::time::Instant;
+use nalgebra::{Isometry3, Point2, Point3, Translation3, UnitQuaternion, Vector3};
+use std::{
+    sync::{
+        atomic::{AtomicBool, Ordering},
+        Arc, Mutex,
+    },
+    time::Instant,
+};
 
 fn add_ground_plane(window: &mut Window) {
     let size = 0.5;
@@ -179,26 +180,26 @@ impl ArmRenderer {
     fn step(&mut self, window: &mut Window, arm_pose: &ArmPositions) {
         let base = convert_coordinates(arm_pose.base);
         self.base_sphere
-            .set_local_translation(na::Translation3::new(base.x, base.y, base.z));
+            .set_local_translation(Translation3::new(base.x, base.y, base.z));
 
         let shoulder = convert_coordinates(arm_pose.shoulder);
         window.draw_line(&base, &shoulder, &self.color);
         self.shoulder_sphere
-            .set_local_translation(na::Translation3::new(shoulder.x, shoulder.y, shoulder.z));
+            .set_local_translation(Translation3::new(shoulder.x, shoulder.y, shoulder.z));
 
         let elbow = convert_coordinates(arm_pose.elbow);
         window.draw_line(&shoulder, &elbow, &self.color);
         self.elbow_sphere
-            .set_local_translation(na::Translation3::new(elbow.x, elbow.y, elbow.z));
+            .set_local_translation(Translation3::new(elbow.x, elbow.y, elbow.z));
 
         let wrist = convert_coordinates(arm_pose.wrist);
         window.draw_line(&elbow, &wrist, &self.color);
         self.wrist_sphere
-            .set_local_translation(na::Translation3::new(wrist.x, wrist.y, wrist.z));
+            .set_local_translation(Translation3::new(wrist.x, wrist.y, wrist.z));
 
         let end_effector = convert_coordinates(arm_pose.end_effector);
         self.end_effector_sphere
-            .set_local_translation(na::Translation3::new(
+            .set_local_translation(Translation3::new(
                 end_effector.x,
                 end_effector.y,
                 end_effector.z,
