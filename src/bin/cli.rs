@@ -3,12 +3,12 @@ use async_std::task::sleep;
 use clap::Clap;
 use guppy::arm_config;
 use guppy::arm_controller;
-use guppy::arm_controller::{ArmController, EndEffectorPose};
+use guppy::arm_controller::ArmController;
 use guppy::arm_driver::{self, ArmDriver};
 use guppy::visualizer::VisualizerInterface;
 use nalgebra as na;
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 use std::time::Duration;
 
 #[derive(Clap)]
@@ -57,12 +57,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 async fn test_visualizer() -> Result<(), Box<dyn std::error::Error>> {
     let running = Arc::new(AtomicBool::new(true));
     let running_handle = running.clone();
-    let desired_point = Arc::new(Mutex::new(EndEffectorPose::new(
-        na::Vector3::new(0., 0., 0.),
-        0.,
-    )));
-    let mut visualizer =
-        VisualizerInterface::new(desired_point.clone(), Arc::new(AtomicBool::new(true)));
+
+    let mut visualizer = VisualizerInterface::default();
 
     ctrlc::set_handler(move || {
         running_handle.store(false, Ordering::Release);
@@ -98,12 +94,8 @@ async fn test_visualizer() -> Result<(), Box<dyn std::error::Error>> {
 async fn ik_run(args: GenericArgs) -> Result<(), Box<dyn std::error::Error>> {
     let running = Arc::new(AtomicBool::new(true));
     let running_handle = running.clone();
-    let desired_point = Arc::new(Mutex::new(EndEffectorPose::new(
-        na::Vector3::new(0., 0., 0.),
-        0.,
-    )));
-    let mut visualizer =
-        VisualizerInterface::new(desired_point.clone(), Arc::new(AtomicBool::new(true)));
+
+    let mut visualizer = VisualizerInterface::default();
 
     ctrlc::set_handler(move || {
         running_handle.store(false, Ordering::Release);
@@ -144,12 +136,7 @@ async fn ik_run(args: GenericArgs) -> Result<(), Box<dyn std::error::Error>> {
 async fn move_run(args: GenericArgs) -> Result<(), Box<dyn std::error::Error>> {
     let running = Arc::new(AtomicBool::new(true));
     let running_handle = running.clone();
-    let desired_point = Arc::new(Mutex::new(EndEffectorPose::new(
-        na::Vector3::new(0.2, 0., 0.2),
-        0.,
-    )));
-    let mut visualizer =
-        VisualizerInterface::new(desired_point.clone(), Arc::new(AtomicBool::new(true)));
+    let mut visualizer = VisualizerInterface::default();
 
     ctrlc::set_handler(move || {
         running_handle.store(false, Ordering::Release);
@@ -168,7 +155,7 @@ async fn move_run(args: GenericArgs) -> Result<(), Box<dyn std::error::Error>> {
         // let z = temporal * 0.07;
         // let y = temporal * 0.07;
         // let position = na::Vector3::new(0.2, 0.0 + y, 0.2 + z);
-        let pose = desired_point.lock().unwrap().clone();
+        let pose = visualizer.get_desired_state().pose().clone();
         if let Ok(_arm_positions) = arm_controller
             .move_to(pose.position, pose.end_effector_angle)
             .await
@@ -199,12 +186,8 @@ async fn wait_for_enter() -> Result<(), Box<dyn std::error::Error>> {
 async fn teach_pendent(args: GenericArgs) -> Result<(), Box<dyn std::error::Error>> {
     let running = Arc::new(AtomicBool::new(true));
     let running_handle = running.clone();
-    let desired_point = Arc::new(Mutex::new(EndEffectorPose::new(
-        na::Vector3::new(0.2, 0., 0.2),
-        0.,
-    )));
-    let mut visualizer =
-        VisualizerInterface::new(desired_point.clone(), Arc::new(AtomicBool::new(true)));
+
+    let mut visualizer = VisualizerInterface::default();
 
     ctrlc::set_handler(move || {
         running_handle.store(false, Ordering::SeqCst);

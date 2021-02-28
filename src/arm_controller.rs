@@ -5,7 +5,7 @@ use async_trait::async_trait;
 use nalgebra as na;
 use std::error::Error;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Default)]
 pub struct EndEffectorPose {
     pub position: na::Vector3<f32>,
     pub end_effector_angle: f32,

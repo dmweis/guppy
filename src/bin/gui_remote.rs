@@ -10,13 +10,10 @@ pub mod guppy_service {
 }
 
 use async_std::task::sleep;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Arc;
 use std::time::Duration;
 use visualizer::VisualizerInterface;
-
-use crate::arm_controller::EndEffectorPose;
-use nalgebra as na;
-use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::{Arc, Mutex};
 
 impl From<nalgebra::Vector3<f32>> for guppy_service::Vector {
     fn from(source: nalgebra::Vector3<f32>) -> Self {
@@ -56,13 +53,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 async fn move_run() -> Result<(), Box<dyn std::error::Error>> {
     let running = Arc::new(AtomicBool::new(true));
     let running_handle = running.clone();
-    let desired_point = Arc::new(Mutex::new(EndEffectorPose::new(
-        na::Vector3::new(0.2, 0., 0.2),
-        0.,
-    )));
-    let gripper_state = Arc::new(AtomicBool::new(false));
-    let mut visualizer =
-        VisualizerInterface::new(desired_point.clone(), Arc::clone(&gripper_state));
+
+    let mut visualizer = VisualizerInterface::default();
 
     ctrlc::set_handler(move || {
         running_handle.store(false, Ordering::Release);
@@ -77,7 +69,7 @@ async fn move_run() -> Result<(), Box<dyn std::error::Error>> {
         // let z = temporal * 0.07;
         // let y = temporal * 0.07;
         // let position = na::Vector3::new(0.2, 0.0 + y, 0.2 + z);
-        let pose = desired_point.lock().unwrap().clone();
+        let pose = visualizer.get_desired_state().pose().clone();
         if let Ok(joint_positions) = client
             .move_to(Request::new(guppy_service::MoveToCommand {
                 position: Some(pose.position.into()),
@@ -89,7 +81,7 @@ async fn move_run() -> Result<(), Box<dyn std::error::Error>> {
         } else {
             eprintln!("Message error");
         }
-        let gripper_closed = gripper_state.load(Ordering::Acquire);
+        let gripper_closed = visualizer.get_desired_state().gripper_state();
         if gripper_closed {
             client
                 .set_gripper(Request::new(guppy_service::SetGripperRequest {
