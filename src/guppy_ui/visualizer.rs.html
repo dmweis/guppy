@@ -322,6 +322,16 @@
 <span id="319">319</span>
 <span id="320">320</span>
 <span id="321">321</span>
+<span id="322">322</span>
+<span id="323">323</span>
+<span id="324">324</span>
+<span id="325">325</span>
+<span id="326">326</span>
+<span id="327">327</span>
+<span id="328">328</span>
+<span id="329">329</span>
+<span id="330">330</span>
+<span id="331">331</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">guppy_controller</span>::<span class="ident">arm_controller</span>::{<span class="ident">ArmPositions</span>, <span class="ident">EndEffectorPose</span>};
 <span class="kw">use</span> <span class="ident">kiss3d</span>::{
@@ -369,6 +379,12 @@
 }
 
 <span class="kw">impl</span> <span class="ident">DesiredState</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">pose</span>: <span class="ident">EndEffectorPose</span>, <span class="ident">gripper_state</span>: <span class="ident">bool</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="ident">DesiredState</span> {
+            <span class="ident">pose</span>,
+            <span class="ident">gripper_state</span>,
+        }
+    }
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">pose</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="ident">EndEffectorPose</span> {
         <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">pose</span>
     }
@@ -387,6 +403,39 @@
 }
 
 <span class="kw">impl</span> <span class="ident">VisualizerInterface</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">desired_state</span>: <span class="ident">DesiredState</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">let</span> <span class="ident">current_arm_pose</span> <span class="op">=</span> <span class="ident">Arc</span>::<span class="ident">new</span>(<span class="ident">Mutex</span>::<span class="ident">new</span>(<span class="prelude-val">None</span>));
+        <span class="kw">let</span> <span class="ident">motion_plan</span> <span class="op">=</span> <span class="ident">Arc</span>::<span class="ident">new</span>(<span class="ident">Mutex</span>::<span class="ident">new</span>(<span class="prelude-val">None</span>));
+        <span class="kw">let</span> <span class="ident">desired_state</span> <span class="op">=</span> <span class="ident">Arc</span>::<span class="ident">new</span>(<span class="ident">Mutex</span>::<span class="ident">new</span>(<span class="ident">desired_state</span>));
+        <span class="kw">let</span> <span class="ident">keep_running</span> <span class="op">=</span> <span class="ident">Arc</span>::<span class="ident">new</span>(<span class="ident">AtomicBool</span>::<span class="ident">new</span>(<span class="bool-val">true</span>));
+
+        <span class="kw">let</span> <span class="ident">keep_running_clone</span> <span class="op">=</span> <span class="ident">keep_running</span>.<span class="ident">clone</span>();
+        <span class="kw">let</span> <span class="ident">current_arm_pose_clone</span> <span class="op">=</span> <span class="ident">current_arm_pose</span>.<span class="ident">clone</span>();
+        <span class="kw">let</span> <span class="ident">desired_state_clone</span> <span class="op">=</span> <span class="ident">desired_state</span>.<span class="ident">clone</span>();
+        <span class="kw">let</span> <span class="ident">motion_plan_clone</span> <span class="op">=</span> <span class="ident">motion_plan</span>.<span class="ident">clone</span>();
+        <span class="kw">let</span> <span class="ident">thread_handle</span> <span class="op">=</span> <span class="ident">std</span>::<span class="ident">thread</span>::<span class="ident">spawn</span>(<span class="kw">move</span> <span class="op">|</span><span class="op">|</span> {
+            <span class="ident">render_loop</span>(
+                <span class="ident">current_arm_pose_clone</span>,
+                <span class="ident">motion_plan_clone</span>,
+                <span class="ident">keep_running_clone</span>,
+                <span class="ident">desired_state_clone</span>,
+            );
+        });
+        <span class="ident">VisualizerInterface</span> {
+            <span class="ident">current_arm_pose</span>,
+            <span class="ident">motion_plan</span>,
+            <span class="ident">keep_running</span>,
+            <span class="ident">desired_state</span>,
+            <span class="ident">thread_handle</span>: <span class="prelude-val">Some</span>(<span class="ident">thread_handle</span>),
+        }
+    }
+
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sensible_default</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">let</span> <span class="ident">desired_state</span> <span class="op">=</span>
+            <span class="ident">DesiredState</span>::<span class="ident">new</span>(<span class="ident">EndEffectorPose</span>::<span class="ident">new</span>(<span class="ident">Vector3</span>::<span class="ident">new</span>(<span class="number">0.2</span>, <span class="number">0.</span>, <span class="number">0.2</span>), <span class="number">0.0</span>), <span class="bool-val">false</span>);
+        <span class="self">Self</span>::<span class="ident">new</span>(<span class="ident">desired_state</span>)
+    }
+
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_position</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">arm_position</span>: <span class="ident">ArmPositions</span>) {
         <span class="self">self</span>.<span class="ident">current_arm_pose</span>
             .<span class="ident">lock</span>()
@@ -415,35 +464,6 @@
                     .<span class="ident">expect</span>(<span class="string">&quot;Failed lock in set_motion_plan&quot;</span>)
                     .<span class="ident">take</span>();
             }
-        }
-    }
-}
-
-<span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">VisualizerInterface</span> {
-    <span class="kw">fn</span> <span class="ident">default</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="kw">let</span> <span class="ident">current_arm_pose</span> <span class="op">=</span> <span class="ident">Arc</span>::<span class="ident">new</span>(<span class="ident">Mutex</span>::<span class="ident">new</span>(<span class="prelude-val">None</span>));
-        <span class="kw">let</span> <span class="ident">motion_plan</span> <span class="op">=</span> <span class="ident">Arc</span>::<span class="ident">new</span>(<span class="ident">Mutex</span>::<span class="ident">new</span>(<span class="prelude-val">None</span>));
-        <span class="kw">let</span> <span class="ident">desired_state</span> <span class="op">=</span> <span class="ident">Arc</span>::<span class="ident">new</span>(<span class="ident">Mutex</span>::<span class="ident">new</span>(<span class="ident">DesiredState</span>::<span class="ident">default</span>()));
-        <span class="kw">let</span> <span class="ident">keep_running</span> <span class="op">=</span> <span class="ident">Arc</span>::<span class="ident">new</span>(<span class="ident">AtomicBool</span>::<span class="ident">new</span>(<span class="bool-val">true</span>));
-
-        <span class="kw">let</span> <span class="ident">keep_running_clone</span> <span class="op">=</span> <span class="ident">keep_running</span>.<span class="ident">clone</span>();
-        <span class="kw">let</span> <span class="ident">current_arm_pose_clone</span> <span class="op">=</span> <span class="ident">current_arm_pose</span>.<span class="ident">clone</span>();
-        <span class="kw">let</span> <span class="ident">desired_state_clone</span> <span class="op">=</span> <span class="ident">desired_state</span>.<span class="ident">clone</span>();
-        <span class="kw">let</span> <span class="ident">motion_plan_clone</span> <span class="op">=</span> <span class="ident">motion_plan</span>.<span class="ident">clone</span>();
-        <span class="kw">let</span> <span class="ident">thread_handle</span> <span class="op">=</span> <span class="ident">std</span>::<span class="ident">thread</span>::<span class="ident">spawn</span>(<span class="kw">move</span> <span class="op">|</span><span class="op">|</span> {
-            <span class="ident">render_loop</span>(
-                <span class="ident">current_arm_pose_clone</span>,
-                <span class="ident">motion_plan_clone</span>,
-                <span class="ident">keep_running_clone</span>,
-                <span class="ident">desired_state_clone</span>,
-            );
-        });
-        <span class="ident">VisualizerInterface</span> {
-            <span class="ident">current_arm_pose</span>,
-            <span class="ident">motion_plan</span>,
-            <span class="ident">keep_running</span>,
-            <span class="ident">desired_state</span>,
-            <span class="ident">thread_handle</span>: <span class="prelude-val">Some</span>(<span class="ident">thread_handle</span>),
         }
     }
 }
