@@ -102,16 +102,16 @@ mod tests {
         let collision_handler = CollisionHandler::new(config);
         assert!(collision_handler.point_in_workspace(&na::Point3::new(0.0, 0.0, 0.0)));
         assert!(
-            collision_handler.point_in_workspace(&(na::Point3::new(0.35, 0.0, 0.0) + root_point))
+            collision_handler.point_in_workspace(&(na::Point3::new(0.27, 0.0, 0.0) + root_point))
         );
         assert!(
-            collision_handler.point_in_workspace(&(na::Point3::new(0.0, 0.35, 0.0) + root_point))
+            collision_handler.point_in_workspace(&(na::Point3::new(0.0, 0.27, 0.0) + root_point))
         );
         assert!(
-            collision_handler.point_in_workspace(&(na::Point3::new(0.0, 0.0, 0.35) + root_point))
+            collision_handler.point_in_workspace(&(na::Point3::new(0.0, 0.0, 0.27) + root_point))
         );
         assert!(
-            !collision_handler.point_in_workspace(&(na::Point3::new(0.37, 0.0, 0.0) + root_point))
+            !collision_handler.point_in_workspace(&(na::Point3::new(0.29, 0.0, 0.0) + root_point))
         );
     }
 
