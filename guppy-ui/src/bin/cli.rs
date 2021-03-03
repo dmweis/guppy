@@ -5,6 +5,7 @@ use guppy_controller::arm_config;
 use guppy_controller::arm_controller;
 use guppy_controller::arm_controller::ArmController;
 use guppy_controller::arm_driver::{self, ArmDriver, LedColor};
+use guppy_controller::motion_planner;
 use guppy_ui::visualizer::VisualizerInterface;
 use nalgebra as na;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -136,6 +137,8 @@ async fn move_run(args: GenericArgs) -> Result<()> {
     let running = Arc::new(AtomicBool::new(true));
     let running_handle = running.clone();
     let mut visualizer = VisualizerInterface::sensible_default();
+    let collision_checker =
+        motion_planner::CollisionHandler::new(arm_config::ArmConfig::included());
 
     ctrlc::set_handler(move || {
         running_handle.store(false, Ordering::Release);
@@ -148,16 +151,22 @@ async fn move_run(args: GenericArgs) -> Result<()> {
     let mut arm_controller =
         arm_controller::LssArmController::new(driver, arm_config::ArmConfig::included());
 
-    // let start = Instant::now();
     while running.load(Ordering::Acquire) {
-        // let temporal = (start.elapsed().as_secs_f32() * 2.).sin();
-        // let z = temporal * 0.07;
-        // let y = temporal * 0.07;
-        // let position = na::Vector3::new(0.2, 0.0 + y, 0.2 + z);
-        let pose = visualizer.get_desired_state().pose().clone();
-        if let Ok(_arm_positions) = arm_controller.move_to(pose).await {
-            let joint_positions = arm_controller.calculate_fk(_arm_positions)?;
-            visualizer.set_position(joint_positions);
+        let desired_pose = visualizer.get_desired_state().pose().clone();
+        let (pose, joints) = arm_controller.calculate_full_poses(desired_pose)?;
+        // check collisions
+        if !collision_checker.point_in_workspace(&pose.wrist.into()) {
+            arm_controller.set_color(LedColor::Red).await?;
+            continue;
+        }
+        if collision_checker.colliding_with_self(&pose.wrist.into()) {
+            arm_controller.set_color(LedColor::Yellow).await?;
+            continue;
+        }
+        arm_controller.set_color(LedColor::Magenta).await?;
+
+        if let Ok(_arm_positions) = arm_controller.move_joints_to(joints).await {
+            visualizer.set_position(pose);
         } else {
             eprintln!("Message error");
         }

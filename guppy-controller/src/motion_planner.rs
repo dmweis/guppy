@@ -12,7 +12,7 @@ pub struct CollisionHandler {
 impl CollisionHandler {
     pub fn new(config: ArmConfig) -> Self {
         Self {
-            workspace_sphere: shape::Ball::new(0.36),
+            workspace_sphere: shape::Ball::new(0.28),
             base_collider: shape::Cylinder::new(0.18, 0.09),
             config,
         }

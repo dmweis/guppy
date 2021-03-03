@@ -60,8 +60,13 @@ pub trait ArmController: Send + Sync {
     async fn move_gripper(&mut self, closed: f32) -> Result<()>;
     fn calculate_ik(&self, pose: EndEffectorPose) -> Result<JointPositions>;
     fn calculate_fk(&self, joints: JointPositions) -> Result<ArmPositions>;
+    fn calculate_full_poses(
+        &self,
+        target: EndEffectorPose,
+    ) -> Result<(ArmPositions, JointPositions)>;
     async fn read_position(&mut self) -> Result<ArmPositions>;
     async fn move_to(&mut self, pose: EndEffectorPose) -> Result<JointPositions>;
+    async fn move_joints_to(&mut self, joints: JointPositions) -> Result<()>;
     async fn halt(&mut self) -> Result<()>;
     async fn limp(&mut self) -> Result<()>;
     async fn setup_motors(&mut self, settings: arm_driver::ArmControlSettings) -> Result<()>;
@@ -105,6 +110,17 @@ impl ArmController for LssArmController {
         self.kinematic_solver.calculate_fk(joints)
     }
 
+    fn calculate_full_poses(
+        &self,
+        target: EndEffectorPose,
+    ) -> Result<(ArmPositions, JointPositions)> {
+        // This should really be one call.
+        // I don't know why I solve the poses so awkwardly
+        let joints = self.kinematic_solver.calculate_ik(target)?;
+        let pose = self.kinematic_solver.calculate_fk(joints.clone())?;
+        Ok((pose, joints))
+    }
+
     async fn read_position(&mut self) -> Result<ArmPositions> {
         let motor_positions = self.driver.read_position().await?;
         let arm_positions = self.calculate_fk(motor_positions)?;
@@ -115,6 +131,11 @@ impl ArmController for LssArmController {
         let joint_positions = self.calculate_ik(pose)?;
         self.driver.move_to(joint_positions.clone()).await?;
         Ok(joint_positions)
+    }
+
+    async fn move_joints_to(&mut self, joints: JointPositions) -> Result<()> {
+        self.driver.move_to(joints).await?;
+        Ok(())
     }
 
     async fn halt(&mut self) -> Result<()> {
