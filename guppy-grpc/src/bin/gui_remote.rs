@@ -52,7 +52,7 @@ async fn move_run() -> Result<()> {
     let running = Arc::new(AtomicBool::new(true));
     let running_handle = running.clone();
 
-    let mut visualizer = VisualizerInterface::default();
+    let mut visualizer = VisualizerInterface::sensible_default();
 
     ctrlc::set_handler(move || {
         running_handle.store(false, Ordering::Release);

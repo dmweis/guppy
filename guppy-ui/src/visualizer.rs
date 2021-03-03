@@ -44,6 +44,12 @@ pub struct DesiredState {
 }
 
 impl DesiredState {
+    pub fn new(pose: EndEffectorPose, gripper_state: bool) -> Self {
+        DesiredState {
+            pose,
+            gripper_state,
+        }
+    }
     pub fn pose(&self) -> &EndEffectorPose {
         &self.pose
     }
@@ -62,6 +68,39 @@ pub struct VisualizerInterface {
 }
 
 impl VisualizerInterface {
+    pub fn new(desired_state: DesiredState) -> Self {
+        let current_arm_pose = Arc::new(Mutex::new(None));
+        let motion_plan = Arc::new(Mutex::new(None));
+        let desired_state = Arc::new(Mutex::new(desired_state));
+        let keep_running = Arc::new(AtomicBool::new(true));
+
+        let keep_running_clone = keep_running.clone();
+        let current_arm_pose_clone = current_arm_pose.clone();
+        let desired_state_clone = desired_state.clone();
+        let motion_plan_clone = motion_plan.clone();
+        let thread_handle = std::thread::spawn(move || {
+            render_loop(
+                current_arm_pose_clone,
+                motion_plan_clone,
+                keep_running_clone,
+                desired_state_clone,
+            );
+        });
+        VisualizerInterface {
+            current_arm_pose,
+            motion_plan,
+            keep_running,
+            desired_state,
+            thread_handle: Some(thread_handle),
+        }
+    }
+
+    pub fn sensible_default() -> Self {
+        let desired_state =
+            DesiredState::new(EndEffectorPose::new(Vector3::new(0.2, 0., 0.2), 0.0), false);
+        Self::new(desired_state)
+    }
+
     pub fn set_position(&mut self, arm_position: ArmPositions) {
         self.current_arm_pose
             .lock()
@@ -90,35 +129,6 @@ impl VisualizerInterface {
                     .expect("Failed lock in set_motion_plan")
                     .take();
             }
-        }
-    }
-}
-
-impl Default for VisualizerInterface {
-    fn default() -> Self {
-        let current_arm_pose = Arc::new(Mutex::new(None));
-        let motion_plan = Arc::new(Mutex::new(None));
-        let desired_state = Arc::new(Mutex::new(DesiredState::default()));
-        let keep_running = Arc::new(AtomicBool::new(true));
-
-        let keep_running_clone = keep_running.clone();
-        let current_arm_pose_clone = current_arm_pose.clone();
-        let desired_state_clone = desired_state.clone();
-        let motion_plan_clone = motion_plan.clone();
-        let thread_handle = std::thread::spawn(move || {
-            render_loop(
-                current_arm_pose_clone,
-                motion_plan_clone,
-                keep_running_clone,
-                desired_state_clone,
-            );
-        });
-        VisualizerInterface {
-            current_arm_pose,
-            motion_plan,
-            keep_running,
-            desired_state,
-            thread_handle: Some(thread_handle),
         }
     }
 }

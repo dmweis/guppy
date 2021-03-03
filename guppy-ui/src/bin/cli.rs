@@ -59,7 +59,7 @@ async fn test_visualizer() -> Result<()> {
     let running = Arc::new(AtomicBool::new(true));
     let running_handle = running.clone();
 
-    let mut visualizer = VisualizerInterface::default();
+    let mut visualizer = VisualizerInterface::sensible_default();
 
     ctrlc::set_handler(move || {
         running_handle.store(false, Ordering::Release);
@@ -96,7 +96,7 @@ async fn ik_run(args: GenericArgs) -> Result<()> {
     let running = Arc::new(AtomicBool::new(true));
     let running_handle = running.clone();
 
-    let mut visualizer = VisualizerInterface::default();
+    let mut visualizer = VisualizerInterface::sensible_default();
 
     ctrlc::set_handler(move || {
         running_handle.store(false, Ordering::Release);
@@ -135,7 +135,7 @@ async fn ik_run(args: GenericArgs) -> Result<()> {
 async fn move_run(args: GenericArgs) -> Result<()> {
     let running = Arc::new(AtomicBool::new(true));
     let running_handle = running.clone();
-    let mut visualizer = VisualizerInterface::default();
+    let mut visualizer = VisualizerInterface::sensible_default();
 
     ctrlc::set_handler(move || {
         running_handle.store(false, Ordering::Release);
@@ -181,7 +181,7 @@ async fn teach_pendent(args: GenericArgs) -> Result<()> {
     let running = Arc::new(AtomicBool::new(true));
     let running_handle = running.clone();
 
-    let mut visualizer = VisualizerInterface::default();
+    let mut visualizer = VisualizerInterface::sensible_default();
 
     ctrlc::set_handler(move || {
         running_handle.store(false, Ordering::SeqCst);

@@ -21,7 +21,7 @@ async fn main() -> Result<()> {
         println!("Caught interrupt\nExiting...");
     })?;
 
-    let mut visualizer = VisualizerInterface::default();
+    let mut visualizer = VisualizerInterface::sensible_default();
     let config = arm_config::ArmConfig::included();
     let kinematic_solver = KinematicSolver::new(config);
 
