@@ -228,6 +228,27 @@
 <span id="225">225</span>
 <span id="226">226</span>
 <span id="227">227</span>
+<span id="228">228</span>
+<span id="229">229</span>
+<span id="230">230</span>
+<span id="231">231</span>
+<span id="232">232</span>
+<span id="233">233</span>
+<span id="234">234</span>
+<span id="235">235</span>
+<span id="236">236</span>
+<span id="237">237</span>
+<span id="238">238</span>
+<span id="239">239</span>
+<span id="240">240</span>
+<span id="241">241</span>
+<span id="242">242</span>
+<span id="243">243</span>
+<span id="244">244</span>
+<span id="245">245</span>
+<span id="246">246</span>
+<span id="247">247</span>
+<span id="248">248</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">arm_config</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">arm_driver</span>;
@@ -291,8 +312,13 @@
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">move_gripper</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">closed</span>: <span class="ident">f32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>;
     <span class="kw">fn</span> <span class="ident">calculate_ik</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">pose</span>: <span class="ident">EndEffectorPose</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">JointPositions</span><span class="op">&gt;</span>;
     <span class="kw">fn</span> <span class="ident">calculate_fk</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">joints</span>: <span class="ident">JointPositions</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ArmPositions</span><span class="op">&gt;</span>;
+    <span class="kw">fn</span> <span class="ident">calculate_full_poses</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">target</span>: <span class="ident">EndEffectorPose</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">ArmPositions</span>, <span class="ident">JointPositions</span>)<span class="op">&gt;</span>;
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">read_position</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ArmPositions</span><span class="op">&gt;</span>;
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">move_to</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">pose</span>: <span class="ident">EndEffectorPose</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">JointPositions</span><span class="op">&gt;</span>;
+    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">move_joints_to</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">joints</span>: <span class="ident">JointPositions</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>;
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">halt</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>;
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">limp</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>;
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">setup_motors</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">settings</span>: <span class="ident">arm_driver</span>::<span class="ident">ArmControlSettings</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>;
@@ -336,6 +362,17 @@
         <span class="self">self</span>.<span class="ident">kinematic_solver</span>.<span class="ident">calculate_fk</span>(<span class="ident">joints</span>)
     }
 
+    <span class="kw">fn</span> <span class="ident">calculate_full_poses</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">target</span>: <span class="ident">EndEffectorPose</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">ArmPositions</span>, <span class="ident">JointPositions</span>)<span class="op">&gt;</span> {
+        <span class="comment">// This should really be one call.</span>
+        <span class="comment">// I don&#39;t know why I solve the poses so awkwardly</span>
+        <span class="kw">let</span> <span class="ident">joints</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">kinematic_solver</span>.<span class="ident">calculate_ik</span>(<span class="ident">target</span>)<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">pose</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">kinematic_solver</span>.<span class="ident">calculate_fk</span>(<span class="ident">joints</span>.<span class="ident">clone</span>())<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>((<span class="ident">pose</span>, <span class="ident">joints</span>))
+    }
+
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">read_position</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ArmPositions</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">motor_positions</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">driver</span>.<span class="ident">read_position</span>().<span class="kw">await</span><span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">arm_positions</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">calculate_fk</span>(<span class="ident">motor_positions</span>)<span class="question-mark">?</span>;
@@ -346,6 +383,11 @@
         <span class="kw">let</span> <span class="ident">joint_positions</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">calculate_ik</span>(<span class="ident">pose</span>)<span class="question-mark">?</span>;
         <span class="self">self</span>.<span class="ident">driver</span>.<span class="ident">move_to</span>(<span class="ident">joint_positions</span>.<span class="ident">clone</span>()).<span class="kw">await</span><span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(<span class="ident">joint_positions</span>)
+    }
+
+    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">move_joints_to</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">joints</span>: <span class="ident">JointPositions</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+        <span class="self">self</span>.<span class="ident">driver</span>.<span class="ident">move_to</span>(<span class="ident">joints</span>).<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(())
     }
 
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">halt</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
