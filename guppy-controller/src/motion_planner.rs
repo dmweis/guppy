@@ -1,9 +1,12 @@
 use crate::arm_controller::{ArmController, EndEffectorPose};
 use crate::{arm_config::ArmConfig, arm_controller};
-use anyhow::Result;
+use anyhow::{Context, Result};
 use nalgebra as na;
 use parry3d::{query::PointQuery, shape};
 use std::f32;
+use std::sync::mpsc;
+use std::time;
+use tokio::task;
 
 pub struct CollisionHandler {
     workspace_sphere: shape::Ball,
@@ -135,6 +138,125 @@ impl MovePoseTowards for EndEffectorPose {
             (None, Some(angle)) => Some(EndEffectorPose::new(target.position, angle)),
             (Some(position), Some(angle)) => Some(EndEffectorPose::new(position, angle)),
         }
+    }
+}
+
+enum MotionCommand {
+    MoveTo(EndEffectorPose),
+}
+
+pub struct MotionController {
+    sender: mpsc::Sender<MotionCommand>,
+    _join_handle: task::JoinHandle<()>,
+}
+
+impl MotionController {
+    pub async fn new(
+        arm_controller: Box<dyn ArmController>,
+        translation_speed: f32,
+        rotational_speed: f32,
+    ) -> Result<Self> {
+        let (sender, receiver) = mpsc::channel();
+        let internal = MotionControllerInternal::new(
+            arm_controller,
+            translation_speed,
+            rotational_speed,
+            receiver,
+        )
+        .await?;
+        let join_handle = internal.start();
+        Ok(Self {
+            sender,
+            _join_handle: join_handle,
+        })
+    }
+
+    pub async fn set_target(&mut self, target: EndEffectorPose) {
+        self.sender
+            .send(MotionCommand::MoveTo(target))
+            .context("Failed to send motion command")
+            .unwrap();
+    }
+}
+
+struct MotionControllerInternal {
+    arm_controller: Box<dyn ArmController>,
+    /// move speed in m/s
+    translation_speed: f32,
+    /// angel per second
+    // should be rad really
+    rotational_speed: f32,
+    last_command_ts: time::Instant,
+    last_pose: arm_controller::ArmPositions,
+    desired_position: Option<arm_controller::EndEffectorPose>,
+    receiver: mpsc::Receiver<MotionCommand>,
+}
+
+impl MotionControllerInternal {
+    async fn new(
+        mut arm_controller: Box<dyn ArmController>,
+        translation_speed: f32,
+        rotational_speed: f32,
+        receiver: mpsc::Receiver<MotionCommand>,
+    ) -> Result<Self> {
+        let last_pose = arm_controller.read_position().await?;
+        Ok(Self {
+            arm_controller,
+            translation_speed,
+            rotational_speed,
+            last_command_ts: time::Instant::now(),
+            last_pose,
+            desired_position: None,
+            receiver,
+        })
+    }
+
+    fn start(mut self) -> task::JoinHandle<()> {
+        tokio::spawn(async move {
+            self.last_command_ts = time::Instant::now();
+            loop {
+                tokio::time::sleep(time::Duration::from_millis(20)).await;
+                if self.check_messaged().is_err() {
+                    // return error if sender is closed
+                    // we want to end if that's the case
+                    return;
+                }
+                self.tick().await.unwrap();
+                self.last_command_ts = time::Instant::now();
+            }
+        })
+    }
+
+    fn check_messaged(&mut self) -> Result<()> {
+        loop {
+            match self.receiver.try_recv() {
+                Ok(message) => match message {
+                    MotionCommand::MoveTo(pose) => self.desired_position = Some(pose),
+                },
+                Err(mpsc::TryRecvError::Empty) => break,
+                Err(mpsc::TryRecvError::Disconnected) => {
+                    return Err(anyhow::anyhow!("Sender closed"))
+                }
+            }
+        }
+        Ok(())
+    }
+
+    async fn tick(&mut self) -> Result<()> {
+        let elapsed = self.last_command_ts.elapsed();
+        if let Some(desired_pose) = &self.desired_position {
+            let next = self.last_pose.get_end_effector_pose().move_towards(
+                &desired_pose,
+                self.translation_speed * elapsed.as_secs_f32(),
+                self.rotational_speed * elapsed.as_secs_f32(),
+            );
+            if let Some(next) = next {
+                let (positions, joints) = self.arm_controller.calculate_full_poses(next)?;
+                self.last_pose = positions;
+                self.arm_controller.move_joints_to(joints).await?;
+            }
+        }
+        Ok(())
     }
 }
 
