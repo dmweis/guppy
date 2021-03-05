@@ -137,7 +137,7 @@ async fn move_run(args: GenericArgs) -> Result<()> {
     let running = Arc::new(AtomicBool::new(true));
     let running_handle = running.clone();
     let mut visualizer = VisualizerInterface::sensible_default();
-    let collision_checker =
+    let collision_handler =
         motion_planner::CollisionHandler::new(arm_config::ArmConfig::included());
 
     ctrlc::set_handler(move || {
@@ -155,14 +155,11 @@ async fn move_run(args: GenericArgs) -> Result<()> {
         let desired_pose = visualizer.get_desired_state().pose().clone();
         let (pose, joints) = arm_controller.calculate_full_poses(desired_pose)?;
         // check collisions
-        if !collision_checker.point_in_workspace(&pose.wrist.into()) {
+        if !collision_handler.pose_collision_free(&pose) {
             arm_controller.set_color(LedColor::Red).await?;
             continue;
         }
-        if collision_checker.colliding_with_self(&pose.wrist.into()) {
-            arm_controller.set_color(LedColor::Yellow).await?;
-            continue;
-        }
+
         arm_controller.set_color(LedColor::Magenta).await?;
 
         if let Ok(_arm_positions) = arm_controller.move_joints_to(joints).await {

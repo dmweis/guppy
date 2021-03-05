@@ -1404,7 +1404,7 @@ dependencies = [
 [[package]]
 name = "lss_driver"
 version = "0.5.0"
-source = "git+https://github.com/dmweis/lss_driver?branch=tokio-1.0#a7c07be8ad222ef145ec384e457bb0e4e4f87477"
+source = "git+https://github.com/dmweis/lss_driver?branch=tokio-1.0#226a6fe31bcc136e2aa9bdc766dc9d0c4ed5ff3d"
 dependencies = [
  "async-trait",
  "bytes",
