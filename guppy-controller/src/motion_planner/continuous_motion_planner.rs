@@ -111,12 +111,12 @@ enum MotionCommand {
     MoveTo(EndEffectorPose),
 }
 
-pub struct MotionController {
+pub struct ContinuousMotionController {
     sender: mpsc::Sender<MotionCommand>,
     _join_handle: task::JoinHandle<()>,
 }
 
-impl MotionController {
+impl ContinuousMotionController {
     pub async fn new(
         arm_controller: Box<dyn ArmController>,
         collision_handler: CollisionHandler,

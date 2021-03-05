@@ -3,7 +3,7 @@ use clap::Clap;
 use guppy_controller::arm_controller;
 use guppy_controller::arm_driver::{self, ArmDriver, LedColor};
 use guppy_controller::collision_handler;
-use guppy_controller::{arm_config, motion_planner::MotionController};
+use guppy_controller::{arm_config, motion_planner::ContinuousMotionController};
 use guppy_ui::arm_controller::EndEffectorPose;
 use nalgebra as na;
 use std::{
@@ -40,7 +40,7 @@ async fn main() -> Result<()> {
     let arm_controller =
         arm_controller::LssArmController::new(driver, arm_config::ArmConfig::included());
     let mut motion_planner =
-        MotionController::new(arm_controller, collision_handler, 0.15, 10.0).await?;
+        ContinuousMotionController::new(arm_controller, collision_handler, 0.15, 10.0).await?;
 
     while running.load(Ordering::Acquire) {
         motion_planner.set_target(EndEffectorPose::new(
