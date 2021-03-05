@@ -5,7 +5,7 @@ use guppy_controller::arm_config;
 use guppy_controller::arm_controller;
 use guppy_controller::arm_controller::ArmController;
 use guppy_controller::arm_driver::{self, ArmDriver, LedColor};
-use guppy_controller::motion_planner;
+use guppy_controller::collision_handler;
 use guppy_ui::visualizer::VisualizerInterface;
 use nalgebra as na;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -138,7 +138,7 @@ async fn move_run(args: GenericArgs) -> Result<()> {
     let running_handle = running.clone();
     let mut visualizer = VisualizerInterface::sensible_default();
     let collision_handler =
-        motion_planner::CollisionHandler::new(arm_config::ArmConfig::included());
+        collision_handler::CollisionHandler::new(arm_config::ArmConfig::included());
 
     ctrlc::set_handler(move || {
         running_handle.store(false, Ordering::Release);

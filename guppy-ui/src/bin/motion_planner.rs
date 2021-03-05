@@ -2,7 +2,7 @@ use anyhow::Result;
 use clap::Clap;
 use guppy_controller::arm_controller;
 use guppy_controller::arm_driver::{self, ArmDriver, LedColor};
-use guppy_controller::motion_planner;
+use guppy_controller::collision_handler;
 use guppy_controller::{arm_config, motion_planner::MotionController};
 use guppy_ui::arm_controller::EndEffectorPose;
 use nalgebra as na;
@@ -27,7 +27,7 @@ async fn main() -> Result<()> {
     let running = Arc::new(AtomicBool::new(true));
     let running_handle = running.clone();
     let collision_handler =
-        motion_planner::CollisionHandler::new(arm_config::ArmConfig::included());
+        collision_handler::CollisionHandler::new(arm_config::ArmConfig::included());
 
     ctrlc::set_handler(move || {
         running_handle.store(false, Ordering::Release);
