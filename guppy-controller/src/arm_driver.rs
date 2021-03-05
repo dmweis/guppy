@@ -1,10 +1,10 @@
 use crate::arm_config;
 use anyhow::Result;
 use async_trait::async_trait;
-use lss_driver::LSSDriver;
 pub use lss_driver::LedColor;
+use lss_driver::{CommandModifier, LSSDriver};
 use serde::{Deserialize, Serialize};
-use std::{fs, include_bytes, str, sync::Arc};
+use std::{fs, include_bytes, str, sync::Arc, time::Duration};
 use tokio::sync::Mutex;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -149,8 +149,14 @@ pub trait ArmDriver: Send + Sync {
     async fn halt(&mut self) -> Result<()>;
     async fn limp(&mut self) -> Result<()>;
     async fn move_to(&mut self, position: JointPositions) -> Result<()>;
+    async fn move_to_timed(&mut self, position: JointPositions, duration: Duration) -> Result<()>;
     async fn read_position(&mut self) -> Result<JointPositions>;
-    async fn move_gripper(&mut self, closed: f32) -> Result<()>;
+    async fn move_gripper(
+        &mut self,
+        closed: f32,
+        current_limit: u32,
+        duration: Duration,
+    ) -> Result<()>;
 }
 
 pub struct SerialArmDriver {
@@ -306,6 +312,38 @@ impl ArmDriver for SerialArmDriver {
         Ok(())
     }
 
+    async fn move_to_timed(&mut self, position: JointPositions, duration: Duration) -> Result<()> {
+        self.driver
+            .move_to_position_with_modifier(
+                self.config.base_id,
+                position.base,
+                CommandModifier::TimedDuration(duration),
+            )
+            .await?;
+        self.driver
+            .move_to_position_with_modifier(
+                self.config.shoulder_id,
+                position.shoulder,
+                CommandModifier::TimedDuration(duration),
+            )
+            .await?;
+        self.driver
+            .move_to_position_with_modifier(
+                self.config.elbow_id,
+                position.elbow,
+                CommandModifier::TimedDuration(duration),
+            )
+            .await?;
+        self.driver
+            .move_to_position_with_modifier(
+                self.config.wrist_id,
+                position.wrist,
+                CommandModifier::TimedDuration(duration),
+            )
+            .await?;
+        Ok(())
+    }
+
     async fn read_position(&mut self) -> Result<JointPositions> {
         let base_position = self.driver.query_position(self.config.base_id).await?;
         let shoulder_position = self.driver.query_position(self.config.shoulder_id).await?;
@@ -322,10 +360,22 @@ impl ArmDriver for SerialArmDriver {
     /// Set how open the gripper is
     /// 0.0 is fully open
     /// 1.0 is fully closed
-    async fn move_gripper(&mut self, closed: f32) -> Result<()> {
+    async fn move_gripper(
+        &mut self,
+        closed: f32,
+        current_limit: u32,
+        duration: Duration,
+    ) -> Result<()> {
         let desired_position = calc_gripper(closed);
         self.driver
-            .move_to_position(self.config.gripper_id, desired_position)
+            .move_to_position_with_modifiers(
+                self.config.gripper_id,
+                desired_position,
+                &[
+                    CommandModifier::TimedDuration(duration),
+                    CommandModifier::CurrentHold(current_limit),
+                ],
+            )
             .await?;
         Ok(())
     }
@@ -492,6 +542,39 @@ impl ArmDriver for SharedSerialArmDriver {
         Ok(())
     }
 
+    async fn move_to_timed(&mut self, position: JointPositions, duration: Duration) -> Result<()> {
+        let mut driver = self.driver.lock().await;
+        driver
+            .move_to_position_with_modifier(
+                self.config.base_id,
+                position.base,
+                CommandModifier::TimedDuration(duration),
+            )
+            .await?;
+        driver
+            .move_to_position_with_modifier(
+                self.config.shoulder_id,
+                position.shoulder,
+                CommandModifier::TimedDuration(duration),
+            )
+            .await?;
+        driver
+            .move_to_position_with_modifier(
+                self.config.elbow_id,
+                position.elbow,
+                CommandModifier::TimedDuration(duration),
+            )
+            .await?;
+        driver
+            .move_to_position_with_modifier(
+                self.config.wrist_id,
+                position.wrist,
+                CommandModifier::TimedDuration(duration),
+            )
+            .await?;
+        Ok(())
+    }
+
     async fn read_position(&mut self) -> Result<JointPositions> {
         let mut driver = self.driver.lock().await;
         let base_position = driver.query_position(self.config.base_id).await?;
@@ -509,12 +592,24 @@ impl ArmDriver for SharedSerialArmDriver {
     /// Set how open the gripper is
     /// 0.0 is fully open
     /// 1.0 is fully closed
-    async fn move_gripper(&mut self, closed: f32) -> Result<()> {
+    async fn move_gripper(
+        &mut self,
+        closed: f32,
+        current_limit: u32,
+        duration: Duration,
+    ) -> Result<()> {
         let desired_position = calc_gripper(closed);
         self.driver
             .lock()
             .await
-            .move_to_position(self.config.gripper_id, desired_position)
+            .move_to_position_with_modifiers(
+                self.config.gripper_id,
+                desired_position,
+                &[
+                    CommandModifier::TimedDuration(duration),
+                    CommandModifier::CurrentHold(current_limit),
+                ],
+            )
             .await?;
         Ok(())
     }

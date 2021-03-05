@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use crate::arm_config;
 use crate::arm_driver;
 use crate::arm_driver::JointPositions;
@@ -67,6 +69,8 @@ pub trait ArmController: Send + Sync {
     async fn read_position(&mut self) -> Result<ArmPositions>;
     async fn move_to(&mut self, pose: EndEffectorPose) -> Result<JointPositions>;
     async fn move_joints_to(&mut self, joints: JointPositions) -> Result<()>;
+    async fn move_joints_timed(&mut self, joints: JointPositions, duration: Duration)
+        -> Result<()>;
     async fn halt(&mut self) -> Result<()>;
     async fn limp(&mut self) -> Result<()>;
     async fn setup_motors(&mut self, settings: arm_driver::ArmControlSettings) -> Result<()>;
@@ -96,7 +100,9 @@ impl ArmController for LssArmController {
     }
 
     async fn move_gripper(&mut self, closed: f32) -> Result<()> {
-        self.driver.move_gripper(closed).await?;
+        self.driver
+            .move_gripper(closed, 200, Duration::from_millis(800))
+            .await?;
         Ok(())
     }
 
@@ -135,6 +141,15 @@ impl ArmController for LssArmController {
 
     async fn move_joints_to(&mut self, joints: JointPositions) -> Result<()> {
         self.driver.move_to(joints).await?;
+        Ok(())
+    }
+
+    async fn move_joints_timed(
+        &mut self,
+        joints: JointPositions,
+        duration: Duration,
+    ) -> Result<()> {
+        self.driver.move_to_timed(joints, duration).await?;
         Ok(())
     }
 
