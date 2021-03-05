@@ -277,7 +277,7 @@
 <span class="kw">use</span> <span class="ident">guppy_controller</span>::<span class="ident">arm_controller</span>;
 <span class="kw">use</span> <span class="ident">guppy_controller</span>::<span class="ident">arm_controller</span>::<span class="ident">ArmController</span>;
 <span class="kw">use</span> <span class="ident">guppy_controller</span>::<span class="ident">arm_driver</span>::{<span class="self">self</span>, <span class="ident">ArmDriver</span>, <span class="ident">LedColor</span>};
-<span class="kw">use</span> <span class="ident">guppy_controller</span>::<span class="ident">motion_planner</span>;
+<span class="kw">use</span> <span class="ident">guppy_controller</span>::<span class="ident">collision_handler</span>;
 <span class="kw">use</span> <span class="ident">guppy_ui</span>::<span class="ident">visualizer</span>::<span class="ident">VisualizerInterface</span>;
 <span class="kw">use</span> <span class="ident">nalgebra</span> <span class="kw">as</span> <span class="ident">na</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">sync</span>::<span class="ident">atomic</span>::{<span class="ident">AtomicBool</span>, <span class="ident">Ordering</span>};
@@ -410,7 +410,7 @@
     <span class="kw">let</span> <span class="ident">running_handle</span> <span class="op">=</span> <span class="ident">running</span>.<span class="ident">clone</span>();
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">visualizer</span> <span class="op">=</span> <span class="ident">VisualizerInterface</span>::<span class="ident">sensible_default</span>();
     <span class="kw">let</span> <span class="ident">collision_handler</span> <span class="op">=</span>
-        <span class="ident">motion_planner</span>::<span class="ident">CollisionHandler</span>::<span class="ident">new</span>(<span class="ident">arm_config</span>::<span class="ident">ArmConfig</span>::<span class="ident">included</span>());
+        <span class="ident">collision_handler</span>::<span class="ident">CollisionHandler</span>::<span class="ident">new</span>(<span class="ident">arm_config</span>::<span class="ident">ArmConfig</span>::<span class="ident">included</span>());
 
     <span class="ident">ctrlc</span>::<span class="ident">set_handler</span>(<span class="kw">move</span> <span class="op">|</span><span class="op">|</span> {
         <span class="ident">running_handle</span>.<span class="ident">store</span>(<span class="bool-val">false</span>, <span class="ident">Ordering</span>::<span class="ident">Release</span>);

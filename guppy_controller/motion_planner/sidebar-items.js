@@ -1,1 +1,1 @@
-initSidebarItems({"struct":[["CollisionHandler",""],["LinearMotion",""],["MotionController",""]]});
+initSidebarItems({"struct":[["LinearMotion",""],["MotionController",""]]});

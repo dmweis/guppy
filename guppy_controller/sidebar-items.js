@@ -1,1 +1,1 @@
-initSidebarItems({"mod":[["arm_config",""],["arm_controller",""],["arm_driver",""],["motion_planner",""]]});
+initSidebarItems({"mod":[["arm_config",""],["arm_controller",""],["arm_driver",""],["collision_handler",""],["motion_planner",""]]});
