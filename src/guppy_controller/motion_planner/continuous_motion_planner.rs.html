@@ -441,12 +441,12 @@
     <span class="ident">MoveTo</span>(<span class="ident">EndEffectorPose</span>),
 }
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">MotionController</span> {
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ContinuousMotionController</span> {
     <span class="ident">sender</span>: <span class="ident">mpsc</span>::<span class="ident">Sender</span><span class="op">&lt;</span><span class="ident">MotionCommand</span><span class="op">&gt;</span>,
     <span class="ident">_join_handle</span>: <span class="ident">task</span>::<span class="ident">JoinHandle</span><span class="op">&lt;</span>()<span class="op">&gt;</span>,
 }
 
-<span class="kw">impl</span> <span class="ident">MotionController</span> {
+<span class="kw">impl</span> <span class="ident">ContinuousMotionController</span> {
     <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">new</span>(
         <span class="ident">arm_controller</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">ArmController</span><span class="op">&gt;</span>,
         <span class="ident">collision_handler</span>: <span class="ident">CollisionHandler</span>,
