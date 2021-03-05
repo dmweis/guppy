@@ -152,7 +152,7 @@ struct MotionControllerInternal {
     collision_handler: CollisionHandler,
     /// move speed in m/s
     translation_speed: f32,
-    /// angel per second
+    /// degrees per second
     // should be rad really
     rotational_speed: f32,
     last_command_ts: time::Instant,
