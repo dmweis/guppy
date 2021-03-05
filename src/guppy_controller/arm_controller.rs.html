@@ -249,7 +249,24 @@
 <span id="246">246</span>
 <span id="247">247</span>
 <span id="248">248</span>
+<span id="249">249</span>
+<span id="250">250</span>
+<span id="251">251</span>
+<span id="252">252</span>
+<span id="253">253</span>
+<span id="254">254</span>
+<span id="255">255</span>
+<span id="256">256</span>
+<span id="257">257</span>
+<span id="258">258</span>
+<span id="259">259</span>
+<span id="260">260</span>
+<span id="261">261</span>
+<span id="262">262</span>
+<span id="263">263</span>
 </pre><div class="example-wrap"><pre class="rust ">
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">time</span>::<span class="ident">Duration</span>;
+
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">arm_config</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">arm_driver</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">arm_driver</span>::<span class="ident">JointPositions</span>;
@@ -319,6 +336,8 @@
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">read_position</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ArmPositions</span><span class="op">&gt;</span>;
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">move_to</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">pose</span>: <span class="ident">EndEffectorPose</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">JointPositions</span><span class="op">&gt;</span>;
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">move_joints_to</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">joints</span>: <span class="ident">JointPositions</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>;
+    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">move_joints_timed</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">joints</span>: <span class="ident">JointPositions</span>, <span class="ident">duration</span>: <span class="ident">Duration</span>)
+        <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>;
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">halt</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>;
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">limp</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>;
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">setup_motors</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">settings</span>: <span class="ident">arm_driver</span>::<span class="ident">ArmControlSettings</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>;
@@ -348,7 +367,9 @@
     }
 
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">move_gripper</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">closed</span>: <span class="ident">f32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">driver</span>.<span class="ident">move_gripper</span>(<span class="ident">closed</span>).<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="self">self</span>.<span class="ident">driver</span>
+            .<span class="ident">move_gripper</span>(<span class="ident">closed</span>, <span class="number">200</span>, <span class="ident">Duration</span>::<span class="ident">from_millis</span>(<span class="number">800</span>))
+            .<span class="kw">await</span><span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(())
     }
 
@@ -387,6 +408,15 @@
 
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">move_joints_to</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">joints</span>: <span class="ident">JointPositions</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">driver</span>.<span class="ident">move_to</span>(<span class="ident">joints</span>).<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(())
+    }
+
+    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">move_joints_timed</span>(
+        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="ident">joints</span>: <span class="ident">JointPositions</span>,
+        <span class="ident">duration</span>: <span class="ident">Duration</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+        <span class="self">self</span>.<span class="ident">driver</span>.<span class="ident">move_to_timed</span>(<span class="ident">joints</span>, <span class="ident">duration</span>).<span class="kw">await</span><span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(())
     }
 
