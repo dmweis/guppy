@@ -1,1 +1,1 @@
-initSidebarItems({"struct":[["ArmPositions",""],["EndEffectorPose",""],["KinematicSolver",""],["LssArmController",""]],"trait":[["ArmController",""]]});
+initSidebarItems({"enum":[["IkError","Error generated during IK calculation"]],"struct":[["ArmPositions",""],["EndEffectorPose",""],["KinematicSolver",""],["LssArmController",""]],"trait":[["ArmController",""]]});

@@ -90,7 +90,7 @@
                 <span class="kw">break</span>;
             }
             <span class="kw">let</span> <span class="ident">joint_pose</span> <span class="op">=</span> <span class="ident">kinematic_solver</span>.<span class="ident">calculate_ik</span>(<span class="ident">EndEffectorPose</span>::<span class="ident">new</span>(<span class="ident">position</span>, <span class="number">0.0</span>))<span class="question-mark">?</span>;
-            <span class="kw">let</span> <span class="ident">arm_pose</span> <span class="op">=</span> <span class="ident">kinematic_solver</span>.<span class="ident">calculate_fk</span>(<span class="ident">joint_pose</span>)<span class="question-mark">?</span>;
+            <span class="kw">let</span> <span class="ident">arm_pose</span> <span class="op">=</span> <span class="ident">kinematic_solver</span>.<span class="ident">calculate_fk</span>(<span class="ident">joint_pose</span>);
             <span class="ident">visualizer</span>.<span class="ident">set_position</span>(<span class="ident">arm_pose</span>);
             <span class="ident">sleep</span>(<span class="ident">Duration</span>::<span class="ident">from_millis</span>(<span class="number">10</span>)).<span class="kw">await</span>;
         }
@@ -99,7 +99,7 @@
                 <span class="kw">break</span>;
             }
             <span class="kw">let</span> <span class="ident">joint_pose</span> <span class="op">=</span> <span class="ident">kinematic_solver</span>.<span class="ident">calculate_ik</span>(<span class="ident">EndEffectorPose</span>::<span class="ident">new</span>(<span class="ident">position</span>, <span class="number">0.0</span>))<span class="question-mark">?</span>;
-            <span class="kw">let</span> <span class="ident">arm_pose</span> <span class="op">=</span> <span class="ident">kinematic_solver</span>.<span class="ident">calculate_fk</span>(<span class="ident">joint_pose</span>)<span class="question-mark">?</span>;
+            <span class="kw">let</span> <span class="ident">arm_pose</span> <span class="op">=</span> <span class="ident">kinematic_solver</span>.<span class="ident">calculate_fk</span>(<span class="ident">joint_pose</span>);
             <span class="ident">visualizer</span>.<span class="ident">set_position</span>(<span class="ident">arm_pose</span>);
             <span class="ident">sleep</span>(<span class="ident">Duration</span>::<span class="ident">from_millis</span>(<span class="number">10</span>)).<span class="kw">await</span>;
         }

@@ -241,8 +241,6 @@
 <span id="238">238</span>
 <span id="239">239</span>
 <span id="240">240</span>
-<span id="241">241</span>
-<span id="242">242</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">anyhow</span>::<span class="prelude-ty">Result</span>;
 <span class="kw">use</span> <span class="ident">guppy_controller</span>::<span class="ident">arm_controller</span>;
@@ -373,9 +371,7 @@
             ))
             .<span class="kw">await</span>
             .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">Status</span>::<span class="ident">internal</span>(<span class="string">&quot;Failed to move&quot;</span>))<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">arm_positions</span> <span class="op">=</span> <span class="ident">driver</span>
-            .<span class="ident">calculate_fk</span>(<span class="ident">joint_positions</span>)
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">Status</span>::<span class="ident">internal</span>(<span class="string">&quot;Failed to calculate FK&quot;</span>))<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">arm_positions</span> <span class="op">=</span> <span class="ident">driver</span>.<span class="ident">calculate_fk</span>(<span class="ident">joint_positions</span>);
         <span class="prelude-val">Ok</span>(<span class="ident">Response</span>::<span class="ident">new</span>(<span class="ident">arm_positions</span>.<span class="ident">into</span>()))
     }
 
