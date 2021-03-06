@@ -1,7 +1,7 @@
 use anyhow::Result;
-use guppy_controller::arm_config;
 use guppy_controller::arm_controller;
 use guppy_controller::arm_driver;
+use guppy_controller::{arm_config, arm_driver::ArmControlSettings};
 pub use guppy_service::guppy_configure_server::{GuppyConfigure, GuppyConfigureServer};
 pub use guppy_service::guppy_controller_server::{GuppyController, GuppyControllerServer};
 use std::sync::Arc;
@@ -16,7 +16,12 @@ pub type ControllerWrapper = Arc<Mutex<std::boxed::Box<dyn arm_controller::ArmCo
 
 pub async fn connect_to_arm(port: &str) -> Result<ControllerWrapper> {
     let config = arm_config::ArmConfig::included();
-    let driver = arm_driver::SerialArmDriver::new(port, config.clone()).await?;
+    let driver = arm_driver::SerialArmDriver::new(
+        port,
+        config.clone(),
+        ArmControlSettings::included_continuous(),
+    )
+    .await?;
     let controller = arm_controller::LssArmController::new(driver, config);
     Ok(Arc::new(Mutex::new(controller)))
 }
@@ -77,7 +82,7 @@ impl GuppyConfigure for GuppyConfigHandler {
         &self,
         _: Request<guppy_service::ConfigurationRequest>,
     ) -> Result<Response<guppy_service::ArmControlSettings>, Status> {
-        let default_config = arm_driver::ArmControlSettings::default().into();
+        let default_config = arm_driver::ArmControlSettings::included_continuous().into();
         Ok(Response::new(default_config))
     }
 

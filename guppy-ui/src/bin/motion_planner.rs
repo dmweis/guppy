@@ -3,8 +3,8 @@ use clap::Clap;
 use guppy_controller::arm_controller;
 use guppy_controller::arm_driver::{self, ArmDriver, LedColor};
 use guppy_controller::collision_handler;
-use guppy_controller::{arm_config, motion_planner::ContinuousMotionController};
-use guppy_ui::arm_controller::EndEffectorPose;
+use guppy_controller::{arm_config, motion_planner::MotionController};
+use guppy_ui::{arm_controller::EndEffectorPose, arm_driver::ArmControlSettings};
 use nalgebra as na;
 use std::{
     sync::{
@@ -34,25 +34,33 @@ async fn main() -> Result<()> {
         println!("Caught interrupt\nExiting...");
     })?;
 
-    let mut driver =
-        arm_driver::SerialArmDriver::new(&args.port, arm_config::ArmConfig::included()).await?;
+    let mut driver = arm_driver::SerialArmDriver::new(
+        &args.port,
+        arm_config::ArmConfig::included(),
+        ArmControlSettings::included_trajectory(),
+    )
+    .await?;
     driver.set_color(LedColor::Magenta).await?;
     let arm_controller =
         arm_controller::LssArmController::new(driver, arm_config::ArmConfig::included());
     let mut motion_planner =
-        ContinuousMotionController::new(arm_controller, collision_handler, 0.15, 10.0).await?;
+        MotionController::new(arm_controller, collision_handler, 0.15, 10.0).await?;
 
     while running.load(Ordering::Acquire) {
-        motion_planner.set_target(EndEffectorPose::new(
-            na::Vector3::new(0.18, 0.04, 0.22),
-            0.0,
-        ));
+        motion_planner
+            .move_to(EndEffectorPose::new(
+                na::Vector3::new(0.18, 0.06, 0.22),
+                0.0,
+            ))
+            .await?;
         sleep(Duration::from_secs(2)).await;
 
-        motion_planner.set_target(EndEffectorPose::new(
-            na::Vector3::new(0.28, -0.04, 0.18),
-            0.0,
-        ));
+        motion_planner
+            .move_to(EndEffectorPose::new(
+                na::Vector3::new(0.28, -0.03, 0.10),
+                0.0,
+            ))
+            .await?;
         sleep(Duration::from_secs(2)).await;
     }
 

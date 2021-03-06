@@ -110,15 +110,20 @@ impl ArmControlSettings {
     ///
     /// This file is packaged with the binary
     /// This method retrieves this included version
-    pub fn included() -> ArmControlSettings {
-        let json = str::from_utf8(include_bytes!("../config/motor_settings.json")).unwrap();
+    pub fn included_continuous() -> ArmControlSettings {
+        let json =
+            str::from_utf8(include_bytes!("../config/motor_settings_continuous.json")).unwrap();
         ArmControlSettings::parse_json(json).unwrap()
     }
-}
 
-impl Default for ArmControlSettings {
-    fn default() -> Self {
-        ArmControlSettings::included()
+    /// Guppy comes with an included config file.
+    ///
+    /// This file is packaged with the binary
+    /// This method retrieves this included version
+    pub fn included_trajectory() -> ArmControlSettings {
+        let json =
+            str::from_utf8(include_bytes!("../config/motor_settings_trajectory.json")).unwrap();
+        ArmControlSettings::parse_json(json).unwrap()
     }
 }
 
@@ -165,12 +170,14 @@ pub struct SerialArmDriver {
 }
 
 impl SerialArmDriver {
-    pub async fn new(port: &str, config: arm_config::ArmConfig) -> Result<Box<Self>> {
+    pub async fn new(
+        port: &str,
+        config: arm_config::ArmConfig,
+        control_settings: ArmControlSettings,
+    ) -> Result<Box<Self>> {
         let driver = lss_driver::LSSDriver::new(port)?;
         let mut arm_driver = SerialArmDriver { driver, config };
-        arm_driver
-            .setup_motors(ArmControlSettings::default())
-            .await?;
+        arm_driver.setup_motors(control_settings).await?;
         Ok(Box::new(arm_driver))
     }
 }
@@ -390,11 +397,10 @@ impl SharedSerialArmDriver {
     pub async fn new(
         driver: Arc<Mutex<LSSDriver>>,
         config: arm_config::ArmConfig,
+        control_settings: ArmControlSettings,
     ) -> Result<Box<Self>> {
         let mut arm_driver = Self { driver, config };
-        arm_driver
-            .setup_motors(ArmControlSettings::default())
-            .await?;
+        arm_driver.setup_motors(control_settings).await?;
         Ok(Box::new(arm_driver))
     }
 }
@@ -626,8 +632,13 @@ mod tests {
     use approx::assert_relative_eq;
 
     #[test]
-    fn arm_driver_includes_default_config() {
-        ArmControlSettings::default();
+    fn arm_driver_includes_continuous_config() {
+        ArmControlSettings::included_continuous();
+    }
+
+    #[test]
+    fn arm_driver_includes_trajectory_config() {
+        ArmControlSettings::included_trajectory();
     }
 
     #[test]

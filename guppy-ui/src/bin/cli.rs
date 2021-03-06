@@ -6,7 +6,7 @@ use guppy_controller::arm_controller;
 use guppy_controller::arm_controller::ArmController;
 use guppy_controller::arm_driver::{self, ArmDriver, LedColor};
 use guppy_controller::collision_handler;
-use guppy_ui::visualizer::VisualizerInterface;
+use guppy_ui::{arm_driver::ArmControlSettings, visualizer::VisualizerInterface};
 use nalgebra as na;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
@@ -104,8 +104,12 @@ async fn ik_run(args: GenericArgs) -> Result<()> {
         println!("Caught interrupt\nExiting...");
     })?;
 
-    let mut driver =
-        arm_driver::SerialArmDriver::new(&args.port, arm_config::ArmConfig::included()).await?;
+    let mut driver = arm_driver::SerialArmDriver::new(
+        &args.port,
+        arm_config::ArmConfig::included(),
+        ArmControlSettings::included_continuous(),
+    )
+    .await?;
     driver.limp().await?;
     driver.set_color(LedColor::Cyan).await?;
     let mut arm_controller =
@@ -145,8 +149,12 @@ async fn move_run(args: GenericArgs) -> Result<()> {
         println!("Caught interrupt\nExiting...");
     })?;
 
-    let mut driver =
-        arm_driver::SerialArmDriver::new(&args.port, arm_config::ArmConfig::included()).await?;
+    let mut driver = arm_driver::SerialArmDriver::new(
+        &args.port,
+        arm_config::ArmConfig::included(),
+        ArmControlSettings::included_continuous(),
+    )
+    .await?;
     driver.set_color(LedColor::Magenta).await?;
     let mut arm_controller =
         arm_controller::LssArmController::new(driver, arm_config::ArmConfig::included());
@@ -194,8 +202,12 @@ async fn teach_pendent(args: GenericArgs) -> Result<()> {
         println!("Caught interrupt\nExiting...");
     })?;
 
-    let driver =
-        arm_driver::SerialArmDriver::new(&args.port, arm_config::ArmConfig::included()).await?;
+    let driver = arm_driver::SerialArmDriver::new(
+        &args.port,
+        arm_config::ArmConfig::included(),
+        ArmControlSettings::included_continuous(),
+    )
+    .await?;
     let mut arm_controller =
         arm_controller::LssArmController::new(driver, arm_config::ArmConfig::included());
 
@@ -252,8 +264,12 @@ async fn display_positions(args: GenericArgs) -> Result<()> {
         println!("Caught interrupt\nExiting...");
     })?;
 
-    let mut driver =
-        arm_driver::SerialArmDriver::new(&args.port, arm_config::ArmConfig::default()).await?;
+    let mut driver = arm_driver::SerialArmDriver::new(
+        &args.port,
+        arm_config::ArmConfig::default(),
+        ArmControlSettings::included_continuous(),
+    )
+    .await?;
     driver.set_color(LedColor::Cyan).await?;
     driver.limp().await?;
     driver.set_color(LedColor::White).await?;

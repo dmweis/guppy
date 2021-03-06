@@ -1,0 +1,26 @@
+{
+  "base": {
+    "motion_profile": true,
+    "angular_holding_stiffness": 0,
+    "angular_stiffness": 0,
+    "filter_position_count": 0
+  },
+  "shoulder": {
+    "motion_profile": true,
+    "angular_holding_stiffness": 0,
+    "angular_stiffness": 0,
+    "filter_position_count": 0
+  },
+  "elbow": {
+    "motion_profile": true,
+    "angular_holding_stiffness": 0,
+    "angular_stiffness": 0,
+    "filter_position_count": 0
+  },
+  "wrist": {
+    "motion_profile": true,
+    "angular_holding_stiffness": 0,
+    "angular_stiffness": 0,
+    "filter_position_count": 0
+  }
+}
