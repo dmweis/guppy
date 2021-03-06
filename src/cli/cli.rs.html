@@ -465,7 +465,7 @@
         }
         <span class="ident">sleep</span>(<span class="ident">Duration</span>::<span class="ident">from_millis</span>(<span class="number">20</span>)).<span class="kw">await</span>;
     }
-    <span class="ident">arm_controller</span>.<span class="ident">limp</span>().<span class="kw">await</span><span class="question-mark">?</span>;
+    <span class="ident">arm_controller</span>.<span class="ident">halt</span>().<span class="kw">await</span><span class="question-mark">?</span>;
     <span class="ident">arm_controller</span>.<span class="ident">set_color</span>(<span class="ident">LedColor</span>::<span class="ident">Yellow</span>).<span class="kw">await</span><span class="question-mark">?</span>;
     <span class="ident">sleep</span>(<span class="ident">Duration</span>::<span class="ident">from_secs_f32</span>(<span class="number">0.5</span>)).<span class="kw">await</span>;
     <span class="prelude-val">Ok</span>(())
