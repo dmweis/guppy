@@ -70,6 +70,8 @@
 <span id="67">67</span>
 <span id="68">68</span>
 <span id="69">69</span>
+<span id="70">70</span>
+<span id="71">71</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">anyhow</span>::<span class="prelude-ty">Result</span>;
 <span class="kw">use</span> <span class="ident">clap</span>::<span class="ident">Clap</span>;
@@ -136,6 +138,8 @@
             .<span class="kw">await</span><span class="question-mark">?</span>;
         <span class="ident">sleep</span>(<span class="ident">Duration</span>::<span class="ident">from_secs</span>(<span class="number">2</span>)).<span class="kw">await</span>;
     }
+
+    <span class="ident">motion_planner</span>.<span class="ident">home</span>().<span class="kw">await</span><span class="question-mark">?</span>;
 
     <span class="ident">sleep</span>(<span class="ident">Duration</span>::<span class="ident">from_secs_f32</span>(<span class="number">0.5</span>)).<span class="kw">await</span>;
     <span class="prelude-val">Ok</span>(())
