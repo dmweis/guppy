@@ -34,7 +34,7 @@ async fn main() -> Result<()> {
                 break;
             }
             let joint_pose = kinematic_solver.calculate_ik(EndEffectorPose::new(position, 0.0))?;
-            let arm_pose = kinematic_solver.calculate_fk(joint_pose)?;
+            let arm_pose = kinematic_solver.calculate_fk(joint_pose);
             visualizer.set_position(arm_pose);
             sleep(Duration::from_millis(10)).await;
         }
@@ -43,7 +43,7 @@ async fn main() -> Result<()> {
                 break;
             }
             let joint_pose = kinematic_solver.calculate_ik(EndEffectorPose::new(position, 0.0))?;
-            let arm_pose = kinematic_solver.calculate_fk(joint_pose)?;
+            let arm_pose = kinematic_solver.calculate_fk(joint_pose);
             visualizer.set_position(arm_pose);
             sleep(Duration::from_millis(10)).await;
         }

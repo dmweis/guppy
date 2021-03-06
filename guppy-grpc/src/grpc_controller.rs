@@ -127,9 +127,7 @@ impl GuppyController for GuppyControllerHandler {
             ))
             .await
             .map_err(|_| Status::internal("Failed to move"))?;
-        let arm_positions = driver
-            .calculate_fk(joint_positions)
-            .map_err(|_| Status::internal("Failed to calculate FK"))?;
+        let arm_positions = driver.calculate_fk(joint_positions);
         Ok(Response::new(arm_positions.into()))
     }
 

@@ -10,11 +10,13 @@ pub struct CollisionHandler {
     config: ArmConfig,
 }
 
+const WORKSPACE_RADIUS: f32 = 0.30;
+
 impl CollisionHandler {
     pub fn new(config: ArmConfig) -> Self {
         Self {
-            workspace_sphere: shape::Ball::new(0.28),
-            base_collider: shape::Cylinder::new(0.18, 0.09),
+            workspace_sphere: shape::Ball::new(WORKSPACE_RADIUS),
+            base_collider: shape::Cylinder::new(0.18, 0.08),
             config,
         }
     }
@@ -55,18 +57,14 @@ mod tests {
         let root_point = config.shoulder;
         let collision_handler = CollisionHandler::new(config);
         assert!(collision_handler.point_in_workspace(&na::Point3::new(0.0, 0.0, 0.0)));
-        assert!(
-            collision_handler.point_in_workspace(&(na::Point3::new(0.27, 0.0, 0.0) + root_point))
-        );
-        assert!(
-            collision_handler.point_in_workspace(&(na::Point3::new(0.0, 0.27, 0.0) + root_point))
-        );
-        assert!(
-            collision_handler.point_in_workspace(&(na::Point3::new(0.0, 0.0, 0.27) + root_point))
-        );
-        assert!(
-            !collision_handler.point_in_workspace(&(na::Point3::new(0.29, 0.0, 0.0) + root_point))
-        );
+        assert!(collision_handler
+            .point_in_workspace(&(na::Point3::new(WORKSPACE_RADIUS - 0.1, 0.0, 0.0) + root_point)));
+        assert!(collision_handler
+            .point_in_workspace(&(na::Point3::new(0.0, WORKSPACE_RADIUS - 0.1, 0.0) + root_point)));
+        assert!(collision_handler
+            .point_in_workspace(&(na::Point3::new(0.0, 0.0, WORKSPACE_RADIUS - 0.1) + root_point)));
+        assert!(!collision_handler
+            .point_in_workspace(&(na::Point3::new(WORKSPACE_RADIUS + 0.1, 0.0, 0.0) + root_point)));
     }
 
     #[test]

@@ -126,7 +126,7 @@ async fn ik_run(args: GenericArgs) -> Result<()> {
             );
             visualizer.set_position(positions.clone());
             let calculated_ik = arm_controller.calculate_ik(positions.get_end_effector_pose())?;
-            let translated_fk = arm_controller.calculate_fk(calculated_ik)?;
+            let translated_fk = arm_controller.calculate_fk(calculated_ik);
             visualizer.set_motion_plan(Some(vec![translated_fk]));
             sleep(Duration::from_millis(20)).await;
         } else {
@@ -161,19 +161,22 @@ async fn move_run(args: GenericArgs) -> Result<()> {
 
     while running.load(Ordering::Acquire) {
         let desired_pose = visualizer.get_desired_state().pose().clone();
-        let (pose, joints) = arm_controller.calculate_full_poses(desired_pose)?;
-        // check collisions
-        if !collision_handler.pose_collision_free(&pose) {
-            arm_controller.set_color(LedColor::Red).await?;
-            continue;
-        }
+        if let Ok((pose, joints)) = arm_controller.calculate_full_poses(desired_pose) {
+            // check collisions
+            if !collision_handler.pose_collision_free(&pose) {
+                arm_controller.set_color(LedColor::Yellow).await?;
+                continue;
+            }
 
-        arm_controller.set_color(LedColor::Magenta).await?;
+            arm_controller.set_color(LedColor::Magenta).await?;
 
-        if let Ok(_arm_positions) = arm_controller.move_joints_to(joints).await {
-            visualizer.set_position(pose);
+            if let Ok(_arm_positions) = arm_controller.move_joints_to(joints).await {
+                visualizer.set_position(pose);
+            } else {
+                eprintln!("Message error");
+            }
         } else {
-            eprintln!("Message error");
+            arm_controller.set_color(LedColor::Red).await?;
         }
         sleep(Duration::from_millis(20)).await;
     }
@@ -235,7 +238,7 @@ async fn teach_pendent(args: GenericArgs) -> Result<()> {
                 .move_to(arm_pose.get_end_effector_pose())
                 .await
             {
-                let joint_positions = arm_controller.calculate_fk(_arm_positions)?;
+                let joint_positions = arm_controller.calculate_fk(_arm_positions);
                 visualizer.set_position(joint_positions);
             } else {
                 eprintln!("Message error");

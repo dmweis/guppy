@@ -64,19 +64,24 @@ impl MotionController {
             self.translation_speed,
             self.rotational_speed,
         );
-        let (positions, joints) = self.arm_controller.calculate_full_poses(target.clone())?;
-        if self.collision_handler.pose_collision_free(&positions) {
-            self.arm_controller
-                .set_color(lss_driver::LedColor::Cyan)
-                .await?;
-            self.arm_controller
-                .move_joints_timed(joints, duration)
-                .await?;
-            self.last_pose = target;
-            sleep(duration).await;
-            self.arm_controller
-                .set_color(lss_driver::LedColor::Magenta)
-                .await?;
+        if let Ok((positions, joints)) = self.arm_controller.calculate_full_poses(target.clone()) {
+            if self.collision_handler.pose_collision_free(&positions) {
+                self.arm_controller
+                    .set_color(lss_driver::LedColor::Cyan)
+                    .await?;
+                self.arm_controller
+                    .move_joints_timed(joints, duration)
+                    .await?;
+                self.last_pose = target;
+                sleep(duration).await;
+                self.arm_controller
+                    .set_color(lss_driver::LedColor::Magenta)
+                    .await?;
+            } else {
+                self.arm_controller
+                    .set_color(lss_driver::LedColor::Yellow)
+                    .await?;
+            }
         } else {
             self.arm_controller
                 .set_color(lss_driver::LedColor::Red)

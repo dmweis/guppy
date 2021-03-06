@@ -6,6 +6,16 @@ use crate::arm_driver::JointPositions;
 use anyhow::Result;
 use async_trait::async_trait;
 use nalgebra as na;
+use thiserror::Error;
+
+/// Error generated during IK calculation
+#[derive(Error, Debug)]
+pub enum IkError {
+    #[error("IK resolution produced results with NaN")]
+    NanFound(&'static str),
+    #[error("point is out of reach of current chain")]
+    OutOfReach,
+}
 
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct EndEffectorPose {
@@ -60,12 +70,12 @@ impl ArmPositions {
 pub trait ArmController: Send + Sync {
     async fn set_color(&mut self, color: lss_driver::LedColor) -> Result<()>;
     async fn move_gripper(&mut self, closed: f32) -> Result<()>;
-    fn calculate_ik(&self, pose: EndEffectorPose) -> Result<JointPositions>;
-    fn calculate_fk(&self, joints: JointPositions) -> Result<ArmPositions>;
+    fn calculate_ik(&self, pose: EndEffectorPose) -> Result<JointPositions, IkError>;
+    fn calculate_fk(&self, joints: JointPositions) -> ArmPositions;
     fn calculate_full_poses(
         &self,
         target: EndEffectorPose,
-    ) -> Result<(ArmPositions, JointPositions)>;
+    ) -> Result<(ArmPositions, JointPositions), IkError>;
     async fn read_position(&mut self) -> Result<ArmPositions>;
     async fn move_to(&mut self, pose: EndEffectorPose) -> Result<JointPositions>;
     async fn move_joints_to(&mut self, joints: JointPositions) -> Result<()>;
@@ -108,28 +118,28 @@ impl ArmController for LssArmController {
 
     /// calculate Ik
     /// This method expects a point translated from arm base
-    fn calculate_ik(&self, pose: EndEffectorPose) -> Result<JointPositions> {
+    fn calculate_ik(&self, pose: EndEffectorPose) -> Result<JointPositions, IkError> {
         self.kinematic_solver.calculate_ik(pose)
     }
 
-    fn calculate_fk(&self, joints: JointPositions) -> Result<ArmPositions> {
+    fn calculate_fk(&self, joints: JointPositions) -> ArmPositions {
         self.kinematic_solver.calculate_fk(joints)
     }
 
     fn calculate_full_poses(
         &self,
         target: EndEffectorPose,
-    ) -> Result<(ArmPositions, JointPositions)> {
+    ) -> Result<(ArmPositions, JointPositions), IkError> {
         // This should really be one call.
         // I don't know why I solve the poses so awkwardly
         let joints = self.kinematic_solver.calculate_ik(target)?;
-        let pose = self.kinematic_solver.calculate_fk(joints.clone())?;
+        let pose = self.kinematic_solver.calculate_fk(joints.clone());
         Ok((pose, joints))
     }
 
     async fn read_position(&mut self) -> Result<ArmPositions> {
         let motor_positions = self.driver.read_position().await?;
-        let arm_positions = self.calculate_fk(motor_positions)?;
+        let arm_positions = self.calculate_fk(motor_positions);
         Ok(arm_positions)
     }
 
@@ -182,7 +192,7 @@ impl KinematicSolver {
         KinematicSolver { config }
     }
 
-    pub fn calculate_ik(&self, pose: EndEffectorPose) -> Result<JointPositions> {
+    pub fn calculate_ik(&self, pose: EndEffectorPose) -> Result<JointPositions, IkError> {
         let effector_angle = pose.end_effector_angle.to_radians();
         let base_angle = (-pose.position.y).atan2(pose.position.x);
         let horizontal_distance = (pose.position.x.powi(2) + pose.position.y.powi(2)).sqrt();
@@ -199,6 +209,9 @@ impl KinematicSolver {
         let forearm_length = self.config.wrist.magnitude();
         let reduced_distance =
             (reduced_height.powi(2) + reduced_horizontal_distance.powi(2)).sqrt();
+        if reduced_distance > (shoulder_length + forearm_length) {
+            return Err(IkError::OutOfReach);
+        }
         // correct until here I think
         // this is angle between horizontal plane and shoulder/forearm triangle
         let shoulder_plane_target_angle = reduced_height.atan2(reduced_horizontal_distance);
@@ -223,15 +236,28 @@ impl KinematicSolver {
 
         let offset_shoulder = 90_f32.to_radians() - shoulder_angle;
         let offset_elbow_angle = 90_f32.to_radians() - elbow_angle + shoulder_offset_angle;
+        let wrist_angle = -offset_elbow_angle - offset_shoulder + effector_angle;
+        if !base_angle.is_finite() {
+            return Err(IkError::NanFound("base_angle"));
+        }
+        if !offset_shoulder.is_finite() {
+            return Err(IkError::NanFound("offset_shoulder"));
+        }
+        if !offset_elbow_angle.is_finite() {
+            return Err(IkError::NanFound("offset_elbow_angle"));
+        }
+        if !wrist_angle.is_finite() {
+            return Err(IkError::NanFound("wrist_angle"));
+        }
         Ok(JointPositions::new(
             base_angle.to_degrees(),
             offset_shoulder.to_degrees(),
             offset_elbow_angle.to_degrees(),
-            (-offset_elbow_angle - offset_shoulder + effector_angle).to_degrees(),
+            wrist_angle.to_degrees(),
         ))
     }
 
-    pub fn calculate_fk(&self, joints: JointPositions) -> Result<ArmPositions> {
+    pub fn calculate_fk(&self, joints: JointPositions) -> ArmPositions {
         let base = na::Vector3::new(0.0, 0.0, 0.0);
         let base_rotation =
             na::Rotation3::from_axis_angle(&na::Vector3::z_axis(), -joints.base.to_radians());
@@ -250,14 +276,13 @@ impl KinematicSolver {
                 * elbow_rotation
                 * wrist_rotation
                 * self.config.end_effector;
-        let arm_positions = ArmPositions::new(
+        ArmPositions::new(
             base,
             shoulder,
             elbow,
             wrist,
             end_effector,
             joints.elbow + joints.shoulder + joints.wrist,
-        );
-        Ok(arm_positions)
+        )
     }
 }
