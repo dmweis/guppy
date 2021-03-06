@@ -289,6 +289,10 @@
 <span id="286">286</span>
 <span id="287">287</span>
 <span id="288">288</span>
+<span id="289">289</span>
+<span id="290">290</span>
+<span id="291">291</span>
+<span id="292">292</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">time</span>::<span class="ident">Duration</span>;
 
@@ -361,6 +365,8 @@
 <span class="attribute">#[<span class="ident">async_trait</span>]</span>
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">ArmController</span>: <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span> {
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">set_color</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">color</span>: <span class="ident">lss_driver</span>::<span class="ident">LedColor</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>;
+    <span class="doccomment">/// 0.0 is fully open</span>
+    <span class="doccomment">/// 1.0 is fully closed</span>
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">move_gripper</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">closed</span>: <span class="ident">f32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>;
     <span class="kw">fn</span> <span class="ident">calculate_ik</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">pose</span>: <span class="ident">EndEffectorPose</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">JointPositions</span>, <span class="ident">IkError</span><span class="op">&gt;</span>;
     <span class="kw">fn</span> <span class="ident">calculate_fk</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">joints</span>: <span class="ident">JointPositions</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ArmPositions</span>;
@@ -401,9 +407,11 @@
         <span class="prelude-val">Ok</span>(())
     }
 
+    <span class="doccomment">/// 0.0 is fully open</span>
+    <span class="doccomment">/// 1.0 is fully closed</span>
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">move_gripper</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">closed</span>: <span class="ident">f32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">driver</span>
-            .<span class="ident">move_gripper</span>(<span class="ident">closed</span>, <span class="number">200</span>, <span class="ident">Duration</span>::<span class="ident">from_millis</span>(<span class="number">800</span>))
+            .<span class="ident">move_gripper</span>(<span class="ident">closed</span>, <span class="number">400</span>, <span class="ident">Duration</span>::<span class="ident">from_millis</span>(<span class="number">800</span>))
             .<span class="kw">await</span><span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(())
     }

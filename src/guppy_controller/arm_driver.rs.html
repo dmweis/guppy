@@ -665,6 +665,8 @@
 <span id="662">662</span>
 <span id="663">663</span>
 <span id="664">664</span>
+<span id="665">665</span>
+<span id="666">666</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">arm_config</span>;
 <span class="kw">use</span> <span class="ident">anyhow</span>::<span class="prelude-ty">Result</span>;
@@ -811,6 +813,8 @@
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">move_to</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">position</span>: <span class="ident">JointPositions</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>;
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">move_to_timed</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">position</span>: <span class="ident">JointPositions</span>, <span class="ident">duration</span>: <span class="ident">Duration</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>;
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">read_position</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">JointPositions</span><span class="op">&gt;</span>;
+    <span class="doccomment">/// 0.0 is fully open</span>
+    <span class="doccomment">/// 1.0 is fully closed</span>
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">move_gripper</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
         <span class="ident">closed</span>: <span class="ident">f32</span>,
@@ -1039,8 +1043,8 @@
                 <span class="self">self</span>.<span class="ident">config</span>.<span class="ident">gripper_id</span>,
                 <span class="ident">desired_position</span>,
                 <span class="kw-2">&amp;</span>[
-                    <span class="ident">CommandModifier</span>::<span class="ident">TimedDuration</span>(<span class="ident">duration</span>),
                     <span class="ident">CommandModifier</span>::<span class="ident">CurrentHold</span>(<span class="ident">current_limit</span>),
+                    <span class="ident">CommandModifier</span>::<span class="ident">TimedDuration</span>(<span class="ident">duration</span>),
                 ],
             )
             .<span class="kw">await</span><span class="question-mark">?</span>;
