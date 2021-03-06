@@ -177,7 +177,7 @@ async fn move_run(args: GenericArgs) -> Result<()> {
         }
         sleep(Duration::from_millis(20)).await;
     }
-    arm_controller.limp().await?;
+    arm_controller.halt().await?;
     arm_controller.set_color(LedColor::Yellow).await?;
     sleep(Duration::from_secs_f32(0.5)).await;
     Ok(())
