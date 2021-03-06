@@ -241,6 +241,8 @@
 <span id="238">238</span>
 <span id="239">239</span>
 <span id="240">240</span>
+<span id="241">241</span>
+<span id="242">242</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">anyhow</span>::<span class="prelude-ty">Result</span>;
 <span class="kw">use</span> <span class="ident">guppy_controller</span>::<span class="ident">arm_controller</span>;
@@ -398,6 +400,7 @@
             <span class="ident">shoulder</span>: <span class="ident">source</span>.<span class="ident">shoulder</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">config</span><span class="op">|</span> <span class="ident">config</span>.<span class="ident">into</span>()),
             <span class="ident">elbow</span>: <span class="ident">source</span>.<span class="ident">elbow</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">config</span><span class="op">|</span> <span class="ident">config</span>.<span class="ident">into</span>()),
             <span class="ident">wrist</span>: <span class="ident">source</span>.<span class="ident">wrist</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">config</span><span class="op">|</span> <span class="ident">config</span>.<span class="ident">into</span>()),
+            <span class="ident">gripper</span>: <span class="ident">source</span>.<span class="ident">gripper</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">config</span><span class="op">|</span> <span class="ident">config</span>.<span class="ident">into</span>()),
         }
     }
 }
@@ -424,6 +427,7 @@
             <span class="ident">shoulder</span>: <span class="ident">source</span>.<span class="ident">shoulder</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">config</span><span class="op">|</span> <span class="ident">config</span>.<span class="ident">into</span>()),
             <span class="ident">elbow</span>: <span class="ident">source</span>.<span class="ident">elbow</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">config</span><span class="op">|</span> <span class="ident">config</span>.<span class="ident">into</span>()),
             <span class="ident">wrist</span>: <span class="ident">source</span>.<span class="ident">wrist</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">config</span><span class="op">|</span> <span class="ident">config</span>.<span class="ident">into</span>()),
+            <span class="ident">gripper</span>: <span class="ident">source</span>.<span class="ident">gripper</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">config</span><span class="op">|</span> <span class="ident">config</span>.<span class="ident">into</span>()),
         }
     }
 }
