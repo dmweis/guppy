@@ -61,7 +61,41 @@ impl MotionController {
         })
     }
 
+    pub async fn open_gripper(&mut self) -> Result<()> {
+        self.arm_controller.move_gripper(0.0).await
+    }
+
+    pub async fn close_gripper(&mut self) -> Result<()> {
+        self.arm_controller.move_gripper(1.0).await
+    }
+
     pub async fn move_to(&mut self, target: EndEffectorPose) -> Result<()> {
+        let duration = estimate_time(
+            &self.last_pose,
+            &target,
+            self.translation_speed,
+            self.rotational_speed,
+        );
+        if let Ok((positions, joints)) = self.arm_controller.calculate_full_poses(target.clone()) {
+            if self.collision_handler.pose_collision_free(&positions) {
+                self.arm_controller
+                    .move_joints_timed(joints, duration)
+                    .await?;
+                self.last_pose = target;
+            } else {
+                self.arm_controller
+                    .set_color(lss_driver::LedColor::Yellow)
+                    .await?;
+            }
+        } else {
+            self.arm_controller
+                .set_color(lss_driver::LedColor::Red)
+                .await?;
+        }
+        Ok(())
+    }
+
+    pub async fn move_to_blocking(&mut self, target: EndEffectorPose) -> Result<()> {
         let duration = estimate_time(
             &self.last_pose,
             &target,

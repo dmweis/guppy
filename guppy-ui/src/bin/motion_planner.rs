@@ -47,21 +47,26 @@ async fn main() -> Result<()> {
         MotionController::new(arm_controller, collision_handler, 0.15, 10.0).await?;
 
     while running.load(Ordering::Acquire) {
+        motion_planner.open_gripper().await?;
         motion_planner
             .move_to(EndEffectorPose::new(
                 na::Vector3::new(0.18, 0.06, 0.22),
                 0.0,
             ))
             .await?;
-        sleep(Duration::from_secs(2)).await;
+        sleep(Duration::from_secs(4)).await;
 
+        motion_planner.close_gripper().await?;
+        if !running.load(Ordering::Acquire) {
+            break;
+        }
         motion_planner
             .move_to(EndEffectorPose::new(
                 na::Vector3::new(0.28, -0.03, 0.10),
                 0.0,
             ))
             .await?;
-        sleep(Duration::from_secs(2)).await;
+        sleep(Duration::from_secs(4)).await;
     }
 
     motion_planner.home().await?;

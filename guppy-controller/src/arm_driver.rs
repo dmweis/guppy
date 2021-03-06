@@ -143,6 +143,8 @@ pub trait ArmDriver: Send + Sync {
     async fn move_to(&mut self, position: JointPositions) -> Result<()>;
     async fn move_to_timed(&mut self, position: JointPositions, duration: Duration) -> Result<()>;
     async fn read_position(&mut self) -> Result<JointPositions>;
+    /// 0.0 is fully open
+    /// 1.0 is fully closed
     async fn move_gripper(
         &mut self,
         closed: f32,
@@ -371,8 +373,8 @@ impl ArmDriver for SerialArmDriver {
                 self.config.gripper_id,
                 desired_position,
                 &[
-                    CommandModifier::TimedDuration(duration),
                     CommandModifier::CurrentHold(current_limit),
+                    CommandModifier::TimedDuration(duration),
                 ],
             )
             .await?;

@@ -69,6 +69,8 @@ impl ArmPositions {
 #[async_trait]
 pub trait ArmController: Send + Sync {
     async fn set_color(&mut self, color: lss_driver::LedColor) -> Result<()>;
+    /// 0.0 is fully open
+    /// 1.0 is fully closed
     async fn move_gripper(&mut self, closed: f32) -> Result<()>;
     fn calculate_ik(&self, pose: EndEffectorPose) -> Result<JointPositions, IkError>;
     fn calculate_fk(&self, joints: JointPositions) -> ArmPositions;
@@ -109,9 +111,11 @@ impl ArmController for LssArmController {
         Ok(())
     }
 
+    /// 0.0 is fully open
+    /// 1.0 is fully closed
     async fn move_gripper(&mut self, closed: f32) -> Result<()> {
         self.driver
-            .move_gripper(closed, 200, Duration::from_millis(800))
+            .move_gripper(closed, 400, Duration::from_millis(800))
             .await?;
         Ok(())
     }
