@@ -34,5 +34,14 @@
     "angular_acceleration": 100,
     "angular_deceleration": 100,
     "maximum_speed_degrees": 36
+  },
+  "gripper": {
+    "motion_profile": true,
+    "angular_holding_stiffness": 0,
+    "angular_stiffness": 0,
+    "filter_position_count": 5,
+    "angular_acceleration": 100,
+    "angular_deceleration": 100,
+    "maximum_speed_degrees": 36
   }
 }

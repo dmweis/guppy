@@ -86,6 +86,8 @@ pub struct ArmControlSettings {
     pub elbow: Option<ServoControlSettings>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub wrist: Option<ServoControlSettings>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub gripper: Option<ServoControlSettings>,
 }
 
 impl ArmControlSettings {
@@ -249,6 +251,9 @@ impl ArmDriver for SerialArmDriver {
         if let Some(wrist_settings) = &settings.wrist {
             set_motor(&mut self.driver, self.config.wrist_id, wrist_settings).await?;
         }
+        if let Some(gripper_settings) = &settings.gripper {
+            set_motor(&mut self.driver, self.config.gripper_id, gripper_settings).await?;
+        }
         Ok(())
     }
 
@@ -281,11 +286,13 @@ impl ArmDriver for SerialArmDriver {
         let shoulder = Some(read_motor_config(&mut self.driver, self.config.shoulder_id).await?);
         let elbow = Some(read_motor_config(&mut self.driver, self.config.elbow_id).await?);
         let wrist = Some(read_motor_config(&mut self.driver, self.config.wrist_id).await?);
+        let gripper = Some(read_motor_config(&mut self.driver, self.config.gripper_id).await?);
         Ok(ArmControlSettings {
             base,
             shoulder,
             elbow,
             wrist,
+            gripper,
         })
     }
 
@@ -474,6 +481,9 @@ impl ArmDriver for SharedSerialArmDriver {
         if let Some(wrist_settings) = &settings.wrist {
             set_motor(&mut driver, self.config.wrist_id, wrist_settings).await?;
         }
+        if let Some(gripper_settings) = &settings.gripper {
+            set_motor(&mut driver, self.config.gripper_id, gripper_settings).await?;
+        }
         Ok(())
     }
 
@@ -507,11 +517,13 @@ impl ArmDriver for SharedSerialArmDriver {
         let shoulder = Some(read_motor_config(&mut driver, self.config.shoulder_id).await?);
         let elbow = Some(read_motor_config(&mut driver, self.config.elbow_id).await?);
         let wrist = Some(read_motor_config(&mut driver, self.config.wrist_id).await?);
+        let gripper = Some(read_motor_config(&mut driver, self.config.gripper_id).await?);
         Ok(ArmControlSettings {
             base,
             shoulder,
             elbow,
             wrist,
+            gripper,
         })
     }
 

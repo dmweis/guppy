@@ -154,6 +154,7 @@ impl From<guppy_service::ArmControlSettings> for arm_driver::ArmControlSettings 
             shoulder: source.shoulder.map(|config| config.into()),
             elbow: source.elbow.map(|config| config.into()),
             wrist: source.wrist.map(|config| config.into()),
+            gripper: source.gripper.map(|config| config.into()),
         }
     }
 }
@@ -180,6 +181,7 @@ impl From<arm_driver::ArmControlSettings> for guppy_service::ArmControlSettings 
             shoulder: source.shoulder.map(|config| config.into()),
             elbow: source.elbow.map(|config| config.into()),
             wrist: source.wrist.map(|config| config.into()),
+            gripper: source.gripper.map(|config| config.into()),
         }
     }
 }

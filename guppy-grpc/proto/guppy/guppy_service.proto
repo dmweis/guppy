@@ -28,6 +28,7 @@ message ArmControlSettings {
     ServoControlSettings shoulder = 2;
     ServoControlSettings elbow = 3;
     ServoControlSettings wrist = 4;
+    ServoControlSettings gripper = 5;
 }
 
 message ConfigurationResponse {}
