@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 use std::{fs, include_bytes, str, sync::Arc, time::Duration};
 use tokio::sync::Mutex;
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
 pub struct ServoControlSettings {
     /// Settings for servo in arm
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -60,22 +60,7 @@ impl ServoControlSettings {
     }
 }
 
-impl Default for ServoControlSettings {
-    fn default() -> Self {
-        ServoControlSettings {
-            motion_profile: Some(false),
-            angular_holding_stiffness: Some(-4),
-            angular_stiffness: Some(-4),
-            filter_position_count: Some(0),
-            maximum_motor_duty: None,
-            angular_acceleration: None,
-            angular_deceleration: None,
-            maximum_speed_degrees: None,
-        }
-    }
-}
-
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
 pub struct ArmControlSettings {
     /// Settings for each servo in the arm
     #[serde(skip_serializing_if = "Option::is_none")]

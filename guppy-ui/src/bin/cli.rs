@@ -1,11 +1,11 @@
 use anyhow::Result;
 use async_std::io;
 use clap::Clap;
-use guppy_controller::arm_config;
 use guppy_controller::arm_controller;
 use guppy_controller::arm_controller::ArmController;
 use guppy_controller::arm_driver::{self, ArmDriver, LedColor};
 use guppy_controller::collision_handler;
+use guppy_controller::{arm_config, motion_planner::MotionController};
 use guppy_ui::{arm_driver::ArmControlSettings, visualizer::VisualizerInterface};
 use nalgebra as na;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -181,7 +181,9 @@ async fn move_run(args: GenericArgs) -> Result<()> {
         sleep(Duration::from_millis(20)).await;
     }
     arm_controller.halt().await?;
-    arm_controller.set_color(LedColor::Yellow).await?;
+    let mut motion_planner =
+        MotionController::new(arm_controller, collision_handler, 0.15, 10.0).await?;
+    motion_planner.home().await?;
     sleep(Duration::from_secs_f32(0.5)).await;
     Ok(())
 }

@@ -64,6 +64,8 @@ async fn main() -> Result<()> {
         sleep(Duration::from_secs(2)).await;
     }
 
+    motion_planner.home().await?;
+
     sleep(Duration::from_secs_f32(0.5)).await;
     Ok(())
 }

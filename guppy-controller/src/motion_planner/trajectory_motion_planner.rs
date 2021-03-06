@@ -1,5 +1,6 @@
 use crate::{
     arm_controller::{ArmController, EndEffectorPose},
+    arm_driver::{ArmControlSettings, JointPositions, ServoControlSettings},
     collision_handler::CollisionHandler,
 };
 use anyhow::Result;
@@ -44,6 +45,9 @@ impl MotionController {
         translation_speed: f32,
         rotational_speed: f32,
     ) -> Result<Self> {
+        arm_controller
+            .setup_motors(ArmControlSettings::included_trajectory())
+            .await?;
         let last_pose = arm_controller
             .read_position()
             .await?
@@ -87,6 +91,38 @@ impl MotionController {
                 .set_color(lss_driver::LedColor::Red)
                 .await?;
         }
+        Ok(())
+    }
+
+    pub async fn home(&mut self) -> Result<()> {
+        let lifted_home = JointPositions::new(0.0, -80.0, 82.0, 15.0);
+        self.arm_controller
+            .move_joints_timed(lifted_home, Duration::from_millis(900))
+            .await?;
+        sleep(Duration::from_millis(900)).await;
+        let relaxed_arm_settings = ArmControlSettings {
+            shoulder: Some(ServoControlSettings {
+                angular_holding_stiffness: Some(-4),
+                angular_stiffness: Some(-4),
+                ..Default::default()
+            }),
+            elbow: Some(ServoControlSettings {
+                angular_holding_stiffness: Some(-4),
+                angular_stiffness: Some(-4),
+                ..Default::default()
+            }),
+            wrist: Some(ServoControlSettings {
+                angular_holding_stiffness: Some(-4),
+                angular_stiffness: Some(-4),
+                ..Default::default()
+            }),
+            ..Default::default()
+        };
+        self.arm_controller
+            .setup_motors(relaxed_arm_settings)
+            .await?;
+        sleep(Duration::from_secs(2)).await;
+        self.arm_controller.limp().await?;
         Ok(())
     }
 }
