@@ -1,0 +1,1 @@
+initSidebarItems({"mod":[["guppy_service",""]],"struct":[["Request","A gRPC request and metadata from an RPC call."]]});

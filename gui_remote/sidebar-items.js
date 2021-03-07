@@ -1,1 +1,1 @@
-initSidebarItems({"fn":[["main",""],["move_run",""]],"mod":[["guppy_service",""]]});
+initSidebarItems({"fn":[["main",""],["move_run",""]]});
