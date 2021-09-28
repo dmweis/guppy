@@ -7,17 +7,17 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-lss_driver = { git = "https://github.com/dmweis/lss_driver", branch = "tokio-1.0" }
-tokio = { version = "1.0", features = ["time"] }
+lss_driver = "0.6"
+tokio = { version = "1.12", features = ["time"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 serde_yaml = "0.8"
 async-trait = "0.1"
-nalgebra = { version = "0.24", features = ["serde-serialize"] }
+nalgebra = { version = "0.26", features = ["serde-serialize"] }
 async-std = "1.6"
 anyhow = "^1.0"
 thiserror = "1.0"
-parry3d = "0.1"
+parry3d = "0.4"
 
 [dev-dependencies]
 approx = "0.4"
