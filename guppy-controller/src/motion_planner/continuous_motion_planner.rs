@@ -220,7 +220,7 @@ impl MotionControllerInternal {
         let elapsed = self.last_command_ts.elapsed();
         if let Some(desired_pose) = &self.desired_position {
             let next = self.last_pose.move_towards(
-                &desired_pose,
+                desired_pose,
                 (self.translation_speed * elapsed.as_secs_f32()).abs(),
                 (self.rotational_speed * elapsed.as_secs_f32()).abs(),
             );

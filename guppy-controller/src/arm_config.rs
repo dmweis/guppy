@@ -52,12 +52,12 @@ impl ArmConfig {
     }
 
     pub fn parse_json(text: &str) -> Result<ArmConfig> {
-        let config: ArmConfig = serde_json::from_str(&text)?;
+        let config: ArmConfig = serde_json::from_str(text)?;
         Ok(config)
     }
 
     pub fn parse_yaml(text: &str) -> Result<ArmConfig> {
-        let config: ArmConfig = serde_yaml::from_str(&text)?;
+        let config: ArmConfig = serde_yaml::from_str(text)?;
         Ok(config)
     }
 
