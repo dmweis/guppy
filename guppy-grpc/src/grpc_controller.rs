@@ -209,9 +209,9 @@ impl From<nalgebra::Vector3<f32>> for guppy_service::Vector {
     }
 }
 
-impl Into<nalgebra::Vector3<f32>> for guppy_service::Vector {
-    fn into(self) -> nalgebra::Vector3<f32> {
-        nalgebra::Vector3::new(self.x, self.y, self.z)
+impl From<guppy_service::Vector> for nalgebra::Vector3<f32> {
+    fn from(vector: guppy_service::Vector) -> Self {
+        nalgebra::Vector3::new(vector.x, vector.y, vector.z)
     }
 }
 
