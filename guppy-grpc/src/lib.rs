@@ -1,3 +1,5 @@
+#![doc = include_str!("../../doc_include.md")]
+
 pub mod grpc_client;
 pub mod grpc_controller;
 pub use guppy_controller::arm_config;
