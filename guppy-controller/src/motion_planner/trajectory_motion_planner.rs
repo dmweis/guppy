@@ -128,6 +128,13 @@ impl MotionController {
         Ok(())
     }
 
+    pub async fn apply_settings(&mut self) -> Result<()> {
+        self.arm_controller
+            .setup_motors(ArmControlSettings::included_trajectory())
+            .await?;
+        Ok(())
+    }
+
     pub async fn home(&mut self) -> Result<()> {
         let lifted_home = JointPositions::new(0.0, -80.0, 82.0, 15.0);
         self.arm_controller
@@ -136,18 +143,18 @@ impl MotionController {
         sleep(Duration::from_millis(900)).await;
         let relaxed_arm_settings = ArmControlSettings {
             shoulder: Some(ServoControlSettings {
-                angular_holding_stiffness: Some(-4),
-                angular_stiffness: Some(-4),
+                angular_holding_stiffness: Some(-40),
+                angular_stiffness: Some(-40),
                 ..Default::default()
             }),
             elbow: Some(ServoControlSettings {
-                angular_holding_stiffness: Some(-4),
-                angular_stiffness: Some(-4),
+                angular_holding_stiffness: Some(-40),
+                angular_stiffness: Some(-40),
                 ..Default::default()
             }),
             wrist: Some(ServoControlSettings {
-                angular_holding_stiffness: Some(-4),
-                angular_stiffness: Some(-4),
+                angular_holding_stiffness: Some(-40),
+                angular_stiffness: Some(-40),
                 ..Default::default()
             }),
             ..Default::default()
@@ -155,7 +162,13 @@ impl MotionController {
         self.arm_controller
             .setup_motors(relaxed_arm_settings)
             .await?;
-        sleep(Duration::from_secs(2)).await;
+        self.arm_controller
+            .set_color(lss_driver::LedColor::Red)
+            .await?;
+        sleep(Duration::from_secs(4)).await;
+        self.arm_controller
+            .set_color(lss_driver::LedColor::Off)
+            .await?;
         self.arm_controller.limp().await?;
         Ok(())
     }
