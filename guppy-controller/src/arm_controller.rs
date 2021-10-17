@@ -89,6 +89,7 @@ pub trait ArmController: Send + Sync {
     async fn limp(&mut self) -> Result<()>;
     async fn setup_motors(&mut self, settings: arm_driver::ArmControlSettings) -> Result<()>;
     async fn load_motor_settings(&mut self) -> Result<arm_driver::ArmControlSettings>;
+    async fn check_motors_okay(&mut self) -> Result<bool>;
 }
 
 pub struct LssArmController {
@@ -186,6 +187,11 @@ impl ArmController for LssArmController {
 
     async fn load_motor_settings(&mut self) -> Result<arm_driver::ArmControlSettings> {
         Ok(self.driver.load_motor_settings().await?)
+    }
+
+    async fn check_motors_okay(&mut self) -> Result<bool> {
+        let arm_status = self.driver.query_motor_status().await?;
+        Ok(arm_status.is_arm_okay())
     }
 }
 

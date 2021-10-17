@@ -202,7 +202,6 @@ pub trait ArmDriver: Send + Sync {
         current_limit: u32,
         duration: Duration,
     ) -> Result<()>;
-
     async fn query_motor_status(&mut self) -> Result<ArmMotorStatus>;
 }
 
