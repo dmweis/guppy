@@ -1,11 +1,23 @@
 use crate::arm_config;
-use anyhow::Result;
 use async_trait::async_trait;
 pub use lss_driver::LedColor;
 use lss_driver::{CommandModifier, LSSDriver};
 use serde::{Deserialize, Serialize};
 use std::{fs, include_bytes, str, sync::Arc, time::Duration};
+use thiserror::Error;
 use tokio::sync::Mutex;
+
+#[derive(Error, Debug)]
+pub enum DriverError {
+    #[error("error while accessing configuration")]
+    IoError(#[from] std::io::Error),
+    #[error("error while parsing json")]
+    DeserializationError(#[from] serde_json::error::Error),
+    #[error("failed when talking to arm")]
+    LssDriverError(#[from] lss_driver::LssDriverError),
+}
+
+type Result<T> = std::result::Result<T, DriverError>;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
 pub struct ServoControlSettings {
@@ -133,6 +145,45 @@ impl JointPositions {
     }
 }
 
+#[derive(Debug, PartialEq, Eq)]
+pub enum MotorStatus {
+    Ok,
+    SafeMode,
+    NotDetected,
+}
+
+impl MotorStatus {
+    fn from_safety_mode_query_result(
+        response: std::result::Result<lss_driver::SafeModeStatus, lss_driver::LssDriverError>,
+    ) -> Self {
+        // This is some pretty awkward logic
+        match response {
+            Ok(lss_driver::SafeModeStatus::NoLimits) => MotorStatus::Ok,
+            Ok(_) => MotorStatus::SafeMode,
+            Err(_) => MotorStatus::NotDetected,
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct ArmMotorStatus {
+    base: MotorStatus,
+    shoulder: MotorStatus,
+    elbow: MotorStatus,
+    wrist: MotorStatus,
+    gripper: MotorStatus,
+}
+
+impl ArmMotorStatus {
+    pub fn is_arm_okay(&self) -> bool {
+        self.base == MotorStatus::Ok
+            && self.shoulder == MotorStatus::Ok
+            && self.elbow == MotorStatus::Ok
+            && self.wrist == MotorStatus::Ok
+            && self.gripper == MotorStatus::Ok
+    }
+}
+
 #[async_trait]
 pub trait ArmDriver: Send + Sync {
     async fn set_color(&mut self, color: lss_driver::LedColor) -> Result<()>;
@@ -151,6 +202,8 @@ pub trait ArmDriver: Send + Sync {
         current_limit: u32,
         duration: Duration,
     ) -> Result<()>;
+
+    async fn query_motor_status(&mut self) -> Result<ArmMotorStatus>;
 }
 
 pub struct SerialArmDriver {
@@ -379,6 +432,35 @@ impl ArmDriver for SerialArmDriver {
             )
             .await?;
         Ok(())
+    }
+
+    async fn query_motor_status(&mut self) -> Result<ArmMotorStatus> {
+        let base = MotorStatus::from_safety_mode_query_result(
+            self.driver.query_safety_status(self.config.base_id).await,
+        );
+        let shoulder = MotorStatus::from_safety_mode_query_result(
+            self.driver
+                .query_safety_status(self.config.shoulder_id)
+                .await,
+        );
+        let elbow = MotorStatus::from_safety_mode_query_result(
+            self.driver.query_safety_status(self.config.elbow_id).await,
+        );
+        let wrist = MotorStatus::from_safety_mode_query_result(
+            self.driver.query_safety_status(self.config.wrist_id).await,
+        );
+        let gripper = MotorStatus::from_safety_mode_query_result(
+            self.driver
+                .query_safety_status(self.config.gripper_id)
+                .await,
+        );
+        Ok(ArmMotorStatus {
+            base,
+            shoulder,
+            elbow,
+            wrist,
+            gripper,
+        })
     }
 }
 
@@ -617,6 +699,32 @@ impl ArmDriver for SharedSerialArmDriver {
             )
             .await?;
         Ok(())
+    }
+
+    async fn query_motor_status(&mut self) -> Result<ArmMotorStatus> {
+        let mut driver = self.driver.lock().await;
+        let base = MotorStatus::from_safety_mode_query_result(
+            driver.query_safety_status(self.config.base_id).await,
+        );
+        let shoulder = MotorStatus::from_safety_mode_query_result(
+            driver.query_safety_status(self.config.shoulder_id).await,
+        );
+        let elbow = MotorStatus::from_safety_mode_query_result(
+            driver.query_safety_status(self.config.elbow_id).await,
+        );
+        let wrist = MotorStatus::from_safety_mode_query_result(
+            driver.query_safety_status(self.config.wrist_id).await,
+        );
+        let gripper = MotorStatus::from_safety_mode_query_result(
+            driver.query_safety_status(self.config.gripper_id).await,
+        );
+        Ok(ArmMotorStatus {
+            base,
+            shoulder,
+            elbow,
+            wrist,
+            gripper,
+        })
     }
 }
 

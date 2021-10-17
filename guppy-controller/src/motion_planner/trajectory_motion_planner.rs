@@ -62,11 +62,13 @@ impl MotionController {
     }
 
     pub async fn open_gripper(&mut self) -> Result<()> {
-        self.arm_controller.move_gripper(0.0).await
+        self.arm_controller.move_gripper(0.0).await?;
+        Ok(())
     }
 
     pub async fn close_gripper(&mut self) -> Result<()> {
-        self.arm_controller.move_gripper(1.0).await
+        self.arm_controller.move_gripper(1.0).await?;
+        Ok(())
     }
 
     pub async fn move_to(&mut self, target: EndEffectorPose) -> Result<()> {

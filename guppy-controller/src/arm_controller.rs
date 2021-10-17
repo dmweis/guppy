@@ -1,11 +1,9 @@
-use std::time::Duration;
-
 use crate::arm_config;
 use crate::arm_driver;
 use crate::arm_driver::JointPositions;
-use anyhow::Result;
 use async_trait::async_trait;
 use nalgebra as na;
+use std::time::Duration;
 use thiserror::Error;
 
 /// Error generated during IK calculation
@@ -15,7 +13,11 @@ pub enum IkError {
     NanFound(&'static str),
     #[error("point is out of reach of current chain")]
     OutOfReach,
+    #[error("error originating from driver")]
+    DriverError(#[from] arm_driver::DriverError),
 }
+
+type Result<T> = std::result::Result<T, IkError>;
 
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct EndEffectorPose {
@@ -72,12 +74,12 @@ pub trait ArmController: Send + Sync {
     /// 0.0 is fully open
     /// 1.0 is fully closed
     async fn move_gripper(&mut self, closed: f32) -> Result<()>;
-    fn calculate_ik(&self, pose: EndEffectorPose) -> Result<JointPositions, IkError>;
+    fn calculate_ik(&self, pose: EndEffectorPose) -> Result<JointPositions>;
     fn calculate_fk(&self, joints: JointPositions) -> ArmPositions;
     fn calculate_full_poses(
         &self,
         target: EndEffectorPose,
-    ) -> Result<(ArmPositions, JointPositions), IkError>;
+    ) -> Result<(ArmPositions, JointPositions)>;
     async fn read_position(&mut self) -> Result<ArmPositions>;
     async fn move_to(&mut self, pose: EndEffectorPose) -> Result<JointPositions>;
     async fn move_joints_to(&mut self, joints: JointPositions) -> Result<()>;
@@ -122,7 +124,7 @@ impl ArmController for LssArmController {
 
     /// calculate Ik
     /// This method expects a point translated from arm base
-    fn calculate_ik(&self, pose: EndEffectorPose) -> Result<JointPositions, IkError> {
+    fn calculate_ik(&self, pose: EndEffectorPose) -> Result<JointPositions> {
         self.kinematic_solver.calculate_ik(pose)
     }
 
@@ -133,7 +135,7 @@ impl ArmController for LssArmController {
     fn calculate_full_poses(
         &self,
         target: EndEffectorPose,
-    ) -> Result<(ArmPositions, JointPositions), IkError> {
+    ) -> Result<(ArmPositions, JointPositions)> {
         // This should really be one call.
         // I don't know why I solve the poses so awkwardly
         let joints = self.kinematic_solver.calculate_ik(target)?;
@@ -196,7 +198,7 @@ impl KinematicSolver {
         KinematicSolver { config }
     }
 
-    pub fn calculate_ik(&self, pose: EndEffectorPose) -> Result<JointPositions, IkError> {
+    pub fn calculate_ik(&self, pose: EndEffectorPose) -> Result<JointPositions> {
         let effector_angle = pose.end_effector_angle.to_radians();
         let base_angle = (-pose.position.y).atan2(pose.position.x);
         let horizontal_distance = (pose.position.x.powi(2) + pose.position.y.powi(2)).sqrt();
