@@ -213,6 +213,7 @@ pub trait ArmDriver: Send + Sync {
         duration: Duration,
     ) -> Result<()>;
     async fn query_motor_status(&mut self) -> Result<ArmMotorStatus>;
+    async fn restart_motors(&mut self) -> Result<()>;
 }
 
 pub struct SerialArmDriver {
@@ -470,6 +471,13 @@ impl ArmDriver for SerialArmDriver {
             wrist,
             gripper,
         })
+    }
+
+    async fn restart_motors(&mut self) -> Result<()> {
+        for id in self.config.get_ids() {
+            self.driver.reset(id).await?;
+        }
+        Ok(())
     }
 }
 
@@ -734,6 +742,14 @@ impl ArmDriver for SharedSerialArmDriver {
             wrist,
             gripper,
         })
+    }
+
+    async fn restart_motors(&mut self) -> Result<()> {
+        let mut driver = self.driver.lock().await;
+        for id in self.config.get_ids() {
+            driver.reset(id).await?;
+        }
+        Ok(())
     }
 }
 

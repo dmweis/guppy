@@ -214,7 +214,7 @@ impl MotionController for LssMotionController {
     }
 
     async fn restart_motors(&mut self) -> Result<()> {
-        todo!();
+        Ok(self.arm_controller.restart_motors().await?)
     }
 }
 
