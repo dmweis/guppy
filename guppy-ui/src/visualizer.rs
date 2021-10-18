@@ -19,10 +19,8 @@ fn add_ground_plane(window: &mut Window) {
         for j in 0..4 {
             let mut cube = window.add_cube(size, size, 0.001);
             if (i + j) % 2 == 0 {
-                // cube.set_color(1.0, 0.3, 0.2);
                 cube.set_color(0.0, 0.0, 0.0);
             } else {
-                // cube.set_color(0.5, 0.04, 0.17);
                 cube.set_color(1.0, 1.0, 1.0);
             }
             let distance = (1_f32.powi(2) + 1_f32.powi(2)).sqrt();
