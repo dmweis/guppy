@@ -65,7 +65,7 @@ async fn move_run(args: Args) -> Result<()> {
     let mut gripper_opened = false;
 
     motion_planner.apply_continuous_settings().await?;
-    while running.load(Ordering::Acquire) {
+    while running.load(Ordering::Acquire) && visualizer.window_opened() {
         let desired_state = visualizer.get_desired_state().clone();
         if let Ok(arm_positions) = motion_planner.move_to_jogging(desired_state.pose()).await {
             visualizer.set_position(arm_positions);
@@ -85,6 +85,6 @@ async fn move_run(args: Args) -> Result<()> {
     motion_planner.halt().await?;
     motion_planner.apply_trajectory_settings().await?;
     motion_planner.home().await?;
-    sleep(Duration::from_secs_f32(0.5)).await;
+    sleep(Duration::from_secs(2)).await;
     Ok(())
 }

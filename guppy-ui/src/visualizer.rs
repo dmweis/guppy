@@ -75,6 +75,10 @@ impl VisualizerInterface {
     pub fn get_desired_state(&self) -> DesiredState {
         self.state.get_desired_state()
     }
+
+    pub fn window_opened(&self) -> bool {
+        self.state.window_opened()
+    }
 }
 
 impl Drop for VisualizerInterface {
@@ -92,6 +96,7 @@ struct VisualizerInterfaceInternal {
     current_arm_pose: Arc<Mutex<Option<ArmPositions>>>,
     keep_running: Arc<AtomicBool>,
     desired_state: Arc<Mutex<DesiredState>>,
+    window_opened: Arc<AtomicBool>,
 }
 
 impl VisualizerInterfaceInternal {
@@ -100,6 +105,7 @@ impl VisualizerInterfaceInternal {
             current_arm_pose: Arc::default(),
             keep_running: Arc::new(AtomicBool::new(true)),
             desired_state: Arc::new(Mutex::new(desired_state)),
+            window_opened: Arc::new(AtomicBool::new(true)),
         }
     }
 
@@ -125,6 +131,14 @@ impl VisualizerInterfaceInternal {
 
     fn stop_running(&self) {
         self.keep_running.store(false, Ordering::SeqCst);
+    }
+
+    fn window_opened(&self) -> bool {
+        self.window_opened.load(Ordering::SeqCst)
+    }
+
+    fn set_window_closed(&self) {
+        self.window_opened.store(false, Ordering::SeqCst);
     }
 }
 
@@ -216,7 +230,8 @@ fn render_loop(state: Arc<VisualizerInterfaceInternal>) {
         frame_counter = Instant::now();
         window.render_with_camera(&mut camera);
     }
-    window.close()
+    window.close();
+    state.set_window_closed();
 }
 
 struct ArmRenderer {
