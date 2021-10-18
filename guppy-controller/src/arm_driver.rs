@@ -209,7 +209,7 @@ pub trait ArmDriver: Send + Sync {
     async fn move_gripper(
         &mut self,
         closed: f32,
-        current_limit: u32,
+        current_limit: Option<u32>,
         duration: Duration,
     ) -> Result<()>;
     async fn query_motor_status(&mut self) -> Result<ArmMotorStatus>;
@@ -427,19 +427,19 @@ impl ArmDriver for SerialArmDriver {
     async fn move_gripper(
         &mut self,
         closed: f32,
-        current_limit: u32,
+        current_limit: Option<u32>,
         duration: Duration,
     ) -> Result<()> {
         let desired_position = calc_gripper(closed);
+        let modifiers = match current_limit {
+            Some(current) => vec![
+                CommandModifier::CurrentHold(current),
+                CommandModifier::TimedDuration(duration),
+            ],
+            None => vec![CommandModifier::TimedDuration(duration)],
+        };
         self.driver
-            .move_to_position_with_modifiers(
-                self.config.gripper_id,
-                desired_position,
-                &[
-                    CommandModifier::CurrentHold(current_limit),
-                    CommandModifier::TimedDuration(duration),
-                ],
-            )
+            .move_to_position_with_modifiers(self.config.gripper_id, desired_position, &modifiers)
             .await?;
         Ok(())
     }
@@ -699,21 +699,21 @@ impl ArmDriver for SharedSerialArmDriver {
     async fn move_gripper(
         &mut self,
         closed: f32,
-        current_limit: u32,
+        current_limit: Option<u32>,
         duration: Duration,
     ) -> Result<()> {
         let desired_position = calc_gripper(closed);
+        let modifiers = match current_limit {
+            Some(current) => vec![
+                CommandModifier::CurrentHold(current),
+                CommandModifier::TimedDuration(duration),
+            ],
+            None => vec![CommandModifier::TimedDuration(duration)],
+        };
         self.driver
             .lock()
             .await
-            .move_to_position_with_modifiers(
-                self.config.gripper_id,
-                desired_position,
-                &[
-                    CommandModifier::TimedDuration(duration),
-                    CommandModifier::CurrentHold(current_limit),
-                ],
-            )
+            .move_to_position_with_modifiers(self.config.gripper_id, desired_position, &modifiers)
             .await?;
         Ok(())
     }

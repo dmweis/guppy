@@ -191,13 +191,15 @@ impl MotionController for LssMotionController {
         }
     }
 
-    async fn open_gripper(&mut self, _current_limit: bool) -> Result<()> {
-        self.arm_controller.move_gripper(0.0).await?;
+    async fn open_gripper(&mut self, current_limit: bool) -> Result<()> {
+        let current_limit = if current_limit { Some(400) } else { None };
+        self.arm_controller.move_gripper(0.0, current_limit).await?;
         Ok(())
     }
 
-    async fn close_gripper(&mut self, _current_limit: bool) -> Result<()> {
-        self.arm_controller.move_gripper(1.0).await?;
+    async fn close_gripper(&mut self, current_limit: bool) -> Result<()> {
+        let current_limit = if current_limit { Some(400) } else { None };
+        self.arm_controller.move_gripper(1.0, current_limit).await?;
         Ok(())
     }
 

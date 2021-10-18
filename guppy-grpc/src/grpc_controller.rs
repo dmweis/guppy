@@ -138,7 +138,7 @@ impl GuppyController for GuppyControllerHandler {
         let gripper_position = request.into_inner();
         let mut driver = self.driver.lock().await;
         driver
-            .move_gripper(gripper_position.gripper)
+            .move_gripper(gripper_position.gripper, None)
             .await
             .map_err(|_| Status::internal("failed to move gripper"))?;
         Ok(Response::new(guppy_service::SetGripperResponse {}))
