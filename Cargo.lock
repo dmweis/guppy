@@ -1046,6 +1046,7 @@ dependencies = [
  "approx 0.4.0",
  "async-std",
  "async-trait",
+ "lazy_static",
  "lss_driver",
  "nalgebra",
  "parry3d",

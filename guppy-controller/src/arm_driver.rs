@@ -1,5 +1,6 @@
 use crate::arm_config;
 use async_trait::async_trait;
+use lazy_static::lazy_static;
 pub use lss_driver::LedColor;
 use lss_driver::{CommandModifier, LSSDriver};
 use serde::{Deserialize, Serialize};
@@ -72,6 +73,19 @@ impl ServoControlSettings {
     }
 }
 
+lazy_static! {
+    static ref INCLUDED_TRAJECTORY: ArmControlSettings = {
+        let json =
+            str::from_utf8(include_bytes!("../config/motor_settings_trajectory.json")).unwrap();
+        ArmControlSettings::parse_json(json).unwrap()
+    };
+    static ref INCLUDED_CONTINUOUS: ArmControlSettings = {
+        let json =
+            str::from_utf8(include_bytes!("../config/motor_settings_continuous.json")).unwrap();
+        ArmControlSettings::parse_json(json).unwrap()
+    };
+}
+
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
 pub struct ArmControlSettings {
     /// Settings for each servo in the arm
@@ -110,9 +124,8 @@ impl ArmControlSettings {
     /// This file is packaged with the binary
     /// This method retrieves this included version
     pub fn included_continuous() -> ArmControlSettings {
-        let json =
-            str::from_utf8(include_bytes!("../config/motor_settings_continuous.json")).unwrap();
-        ArmControlSettings::parse_json(json).unwrap()
+        // TODO (David): These don't need to be clones
+        INCLUDED_CONTINUOUS.clone()
     }
 
     /// Guppy comes with an included config file.
@@ -120,9 +133,8 @@ impl ArmControlSettings {
     /// This file is packaged with the binary
     /// This method retrieves this included version
     pub fn included_trajectory() -> ArmControlSettings {
-        let json =
-            str::from_utf8(include_bytes!("../config/motor_settings_trajectory.json")).unwrap();
-        ArmControlSettings::parse_json(json).unwrap()
+        // TODO (David): These don't need to be clones
+        INCLUDED_TRAJECTORY.clone()
     }
 }
 
