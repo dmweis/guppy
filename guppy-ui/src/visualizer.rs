@@ -165,31 +165,23 @@ impl ArmRenderer {
 
     fn update_pose(&mut self, window: &mut Window, arm_pose: &ArmPositions) {
         let base = convert_coordinates(arm_pose.base);
-        self.base_sphere
-            .set_local_translation(Translation3::new(base.x, base.y, base.z));
+        self.base_sphere.set_local_translation(base.into());
 
         let shoulder = convert_coordinates(arm_pose.shoulder);
         window.draw_line(&base, &shoulder, &self.color);
-        self.shoulder_sphere
-            .set_local_translation(Translation3::new(shoulder.x, shoulder.y, shoulder.z));
+        self.shoulder_sphere.set_local_translation(shoulder.into());
 
         let elbow = convert_coordinates(arm_pose.elbow);
         window.draw_line(&shoulder, &elbow, &self.color);
-        self.elbow_sphere
-            .set_local_translation(Translation3::new(elbow.x, elbow.y, elbow.z));
+        self.elbow_sphere.set_local_translation(elbow.into());
 
         let wrist = convert_coordinates(arm_pose.wrist);
         window.draw_line(&elbow, &wrist, &self.color);
-        self.wrist_sphere
-            .set_local_translation(Translation3::new(wrist.x, wrist.y, wrist.z));
+        self.wrist_sphere.set_local_translation(wrist.into());
 
         let end_effector = convert_coordinates(arm_pose.end_effector);
         self.end_effector_sphere
-            .set_local_translation(Translation3::new(
-                end_effector.x,
-                end_effector.y,
-                end_effector.z,
-            ));
+            .set_local_translation(end_effector.into());
         window.draw_line(&wrist, &end_effector, &self.color);
     }
 }
