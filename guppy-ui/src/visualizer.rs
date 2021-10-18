@@ -26,42 +26,38 @@ impl DesiredState {
             gripper_state,
         }
     }
+
     pub fn pose(&self) -> &EndEffectorPose {
         &self.pose
+    }
+
+    pub fn pose_mut(&mut self) -> &mut EndEffectorPose {
+        &mut self.pose
     }
 
     pub fn gripper_state(&self) -> bool {
         self.gripper_state
     }
+
+    pub fn set_gripper_state(&mut self, gripper_state: bool) {
+        self.gripper_state = gripper_state;
+    }
 }
 
 pub struct VisualizerInterface {
-    current_arm_pose: Arc<Mutex<Option<ArmPositions>>>,
-    desired_state: Arc<Mutex<DesiredState>>,
-    keep_running: Arc<AtomicBool>,
+    state: Arc<VisualizerInterfaceInternal>,
     thread_handle: Option<std::thread::JoinHandle<()>>,
 }
 
 impl VisualizerInterface {
     pub fn new(desired_state: DesiredState) -> Self {
-        let current_arm_pose = Arc::new(Mutex::new(None));
-        let desired_state = Arc::new(Mutex::new(desired_state));
-        let keep_running = Arc::new(AtomicBool::new(true));
-
-        let keep_running_clone = keep_running.clone();
-        let current_arm_pose_clone = current_arm_pose.clone();
-        let desired_state_clone = desired_state.clone();
-        let thread_handle = std::thread::spawn(move || {
-            render_loop(
-                current_arm_pose_clone,
-                keep_running_clone,
-                desired_state_clone,
-            );
+        let state = Arc::new(VisualizerInterfaceInternal::new(desired_state));
+        let thread_handle = std::thread::spawn({
+            let internal_state = Arc::clone(&state);
+            move || render_loop(internal_state)
         });
         VisualizerInterface {
-            current_arm_pose,
-            keep_running,
-            desired_state,
+            state,
             thread_handle: Some(thread_handle),
         }
     }
@@ -73,23 +69,17 @@ impl VisualizerInterface {
     }
 
     pub fn set_position(&mut self, arm_position: ArmPositions) {
-        self.current_arm_pose
-            .lock()
-            .expect("Failed lock in set arm position")
-            .replace(arm_position);
+        self.state.set_current_pose(arm_position);
     }
 
     pub fn get_desired_state(&self) -> DesiredState {
-        self.desired_state
-            .lock()
-            .expect("Failed lock desired_state")
-            .clone()
+        self.state.get_desired_state()
     }
 }
 
 impl Drop for VisualizerInterface {
     fn drop(&mut self) {
-        self.keep_running.store(false, Ordering::Release);
+        self.state.stop_running();
         if let Some(thread_handle) = self.thread_handle.take() {
             thread_handle
                 .join()
@@ -98,15 +88,51 @@ impl Drop for VisualizerInterface {
     }
 }
 
+struct VisualizerInterfaceInternal {
+    current_arm_pose: Arc<Mutex<Option<ArmPositions>>>,
+    keep_running: Arc<AtomicBool>,
+    desired_state: Arc<Mutex<DesiredState>>,
+}
+
+impl VisualizerInterfaceInternal {
+    fn new(desired_state: DesiredState) -> Self {
+        Self {
+            current_arm_pose: Arc::default(),
+            keep_running: Arc::new(AtomicBool::new(true)),
+            desired_state: Arc::new(Mutex::new(desired_state)),
+        }
+    }
+
+    fn set_desired_state(&self, state: DesiredState) {
+        *self.desired_state.lock().unwrap() = state;
+    }
+
+    fn get_desired_state(&self) -> DesiredState {
+        self.desired_state.lock().unwrap().clone()
+    }
+
+    fn set_current_pose(&self, pose: ArmPositions) {
+        *self.current_arm_pose.lock().unwrap() = Some(pose);
+    }
+
+    fn get_current_pose(&self) -> Option<ArmPositions> {
+        self.current_arm_pose.lock().unwrap().clone()
+    }
+
+    fn keep_running(&self) -> bool {
+        self.keep_running.load(Ordering::SeqCst)
+    }
+
+    fn stop_running(&self) {
+        self.keep_running.store(false, Ordering::SeqCst);
+    }
+}
+
 fn convert_coordinates(position: Vector3<f32>) -> Point3<f32> {
     Point3::new(position.y, position.z, position.x)
 }
 
-fn render_loop(
-    current_arm_pose: Arc<Mutex<Option<ArmPositions>>>,
-    keep_running: Arc<AtomicBool>,
-    desired_state: Arc<Mutex<DesiredState>>,
-) {
+fn render_loop(state: Arc<VisualizerInterfaceInternal>) {
     let white = Point3::new(1.0, 1.0, 1.0);
     let mut window = Window::new("Guppy");
     let mut frame_counter = Instant::now();
@@ -126,8 +152,8 @@ fn render_loop(
 
     add_ground_plane(&mut window);
 
-    while !window.should_close() && keep_running.load(Ordering::Acquire) {
-        let arm_pose = current_arm_pose.lock().expect("Render failed").clone();
+    while !window.should_close() && state.keep_running() {
+        let arm_pose = state.get_current_pose();
         if let Some(arm_pose) = arm_pose {
             primary_arm.update_pose(&mut window, &arm_pose);
             window.draw_text(
@@ -147,44 +173,46 @@ fn render_loop(
             );
         }
 
-        let mut pos_copy = desired_state.lock().unwrap().pose.clone();
+        let mut desired_state = state.get_desired_state();
         if window.get_key(Key::D) == Action::Press {
-            pos_copy.position.y -= frame_counter.elapsed().as_secs_f32() * 0.1;
+            desired_state.pose_mut().position.y -= frame_counter.elapsed().as_secs_f32() * 0.1;
         }
         if window.get_key(Key::A) == Action::Press {
-            pos_copy.position.y += frame_counter.elapsed().as_secs_f32() * 0.1;
+            desired_state.pose_mut().position.y += frame_counter.elapsed().as_secs_f32() * 0.1;
         }
         if window.get_key(Key::W) == Action::Press {
-            pos_copy.position.x += frame_counter.elapsed().as_secs_f32() * 0.1;
+            desired_state.pose_mut().position.x += frame_counter.elapsed().as_secs_f32() * 0.1;
         }
         if window.get_key(Key::S) == Action::Press {
-            pos_copy.position.x -= frame_counter.elapsed().as_secs_f32() * 0.1;
+            desired_state.pose_mut().position.x -= frame_counter.elapsed().as_secs_f32() * 0.1;
         }
         if window.get_key(Key::E) == Action::Press {
-            pos_copy.position.z += frame_counter.elapsed().as_secs_f32() * 0.1;
+            desired_state.pose_mut().position.z += frame_counter.elapsed().as_secs_f32() * 0.1;
         }
         if window.get_key(Key::Q) == Action::Press {
-            pos_copy.position.z -= frame_counter.elapsed().as_secs_f32() * 0.1;
+            desired_state.pose_mut().position.z -= frame_counter.elapsed().as_secs_f32() * 0.1;
         }
         if window.get_key(Key::R) == Action::Press {
-            pos_copy.end_effector_angle -= frame_counter.elapsed().as_secs_f32() * 20.;
+            desired_state.pose_mut().end_effector_angle -=
+                frame_counter.elapsed().as_secs_f32() * 20.;
         }
         if window.get_key(Key::F) == Action::Press {
-            pos_copy.end_effector_angle += frame_counter.elapsed().as_secs_f32() * 20.;
+            desired_state.pose_mut().end_effector_angle +=
+                frame_counter.elapsed().as_secs_f32() * 20.;
         }
         if window.get_key(Key::B) == Action::Press {
-            desired_state.lock().unwrap().gripper_state = true;
+            desired_state.set_gripper_state(true);
         }
         if window.get_key(Key::V) == Action::Press {
-            desired_state.lock().unwrap().gripper_state = false;
+            desired_state.set_gripper_state(false);
         }
         if window.get_key(Key::Return) == Action::Press {
-            pos_copy.end_effector_angle = 0.0;
-            pos_copy.position.x = 0.2;
-            pos_copy.position.y = 0.0;
-            pos_copy.position.z = 0.2;
+            desired_state.pose_mut().end_effector_angle = 0.0;
+            desired_state.pose_mut().position.x = 0.2;
+            desired_state.pose_mut().position.y = 0.0;
+            desired_state.pose_mut().position.z = 0.2;
         }
-        desired_state.lock().unwrap().pose = pos_copy;
+        state.set_desired_state(desired_state);
         frame_counter = Instant::now();
         window.render_with_camera(&mut camera);
     }
