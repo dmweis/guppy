@@ -4,7 +4,7 @@ use guppy_controller::arm_controller;
 use guppy_controller::arm_controller::ArmController;
 use guppy_controller::arm_driver::{self, ArmDriver, LedColor};
 use guppy_controller::collision_handler;
-use guppy_controller::{arm_config, motion_planner::MotionController};
+use guppy_controller::{arm_config, motion_planner::LssMotionController};
 use guppy_ui::{arm_driver::ArmControlSettings, visualizer::VisualizerInterface};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
@@ -87,7 +87,7 @@ async fn move_run(args: Args) -> Result<()> {
     }
     arm_controller.halt().await?;
     let mut motion_planner =
-        MotionController::new(arm_controller, collision_handler, 0.15, 10.0).await?;
+        LssMotionController::new(arm_controller, collision_handler, 0.15, 10.0).await?;
     motion_planner.home().await?;
     sleep(Duration::from_secs_f32(0.5)).await;
     Ok(())

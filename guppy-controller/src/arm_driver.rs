@@ -192,7 +192,7 @@ pub trait ArmDriver: Send + Sync {
     async fn halt(&mut self) -> Result<()>;
     async fn limp(&mut self) -> Result<()>;
     async fn move_to(&mut self, position: JointPositions) -> Result<()>;
-    async fn move_to_timed(&mut self, position: JointPositions, duration: Duration) -> Result<()>;
+    async fn move_to_timed(&mut self, position: &JointPositions, duration: Duration) -> Result<()>;
     async fn read_position(&mut self) -> Result<JointPositions>;
     /// 0.0 is fully open
     /// 1.0 is fully closed
@@ -365,7 +365,7 @@ impl ArmDriver for SerialArmDriver {
         Ok(())
     }
 
-    async fn move_to_timed(&mut self, position: JointPositions, duration: Duration) -> Result<()> {
+    async fn move_to_timed(&mut self, position: &JointPositions, duration: Duration) -> Result<()> {
         self.driver
             .move_to_position_with_modifier(
                 self.config.base_id,
@@ -628,7 +628,7 @@ impl ArmDriver for SharedSerialArmDriver {
         Ok(())
     }
 
-    async fn move_to_timed(&mut self, position: JointPositions, duration: Duration) -> Result<()> {
+    async fn move_to_timed(&mut self, position: &JointPositions, duration: Duration) -> Result<()> {
         let mut driver = self.driver.lock().await;
         driver
             .move_to_position_with_modifier(
