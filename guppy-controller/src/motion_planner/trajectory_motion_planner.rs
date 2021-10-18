@@ -8,25 +8,6 @@ use nalgebra as na;
 use std::time::Duration;
 use tokio::time::sleep;
 
-/// Selects time it would take to take this trajectory at given speed
-/// Picks the longer time for motion wether it is the rotation or translation
-fn estimate_time(
-    start: &EndEffectorPose,
-    target: &EndEffectorPose,
-    translation_speed: f32,
-    rotational_speed: f32,
-) -> Duration {
-    let linear_distance = na::distance(&start.position.into(), &target.position.into());
-    let angular_distance = (start.end_effector_angle - target.end_effector_angle).abs();
-
-    let translation_time_sec = linear_distance / translation_speed;
-    let angular_time_sec = angular_distance / rotational_speed;
-
-    let bigger_time = translation_time_sec.max(angular_time_sec);
-
-    Duration::from_secs_f32(bigger_time)
-}
-
 pub struct MotionController {
     arm_controller: Box<dyn ArmController>,
     collision_handler: CollisionHandler,
@@ -141,6 +122,25 @@ impl MotionController {
         self.arm_controller.limp().await?;
         Ok(())
     }
+}
+
+/// Selects time it would take to take this trajectory at given speed
+/// Picks the longer time for motion wether it is the rotation or translation
+fn estimate_time(
+    start: &EndEffectorPose,
+    target: &EndEffectorPose,
+    translation_speed: f32,
+    rotational_speed: f32,
+) -> Duration {
+    let linear_distance = na::distance(&start.position.into(), &target.position.into());
+    let angular_distance = (start.end_effector_angle - target.end_effector_angle).abs();
+
+    let translation_time_sec = linear_distance / translation_speed;
+    let angular_time_sec = angular_distance / rotational_speed;
+
+    let bigger_time = translation_time_sec.max(angular_time_sec);
+
+    Duration::from_secs_f32(bigger_time)
 }
 
 #[cfg(test)]
