@@ -70,9 +70,16 @@ impl LssMotionController {
         })
     }
 
-    pub async fn apply_settings(&mut self) -> Result<()> {
+    pub async fn apply_trajectory_settings(&mut self) -> Result<()> {
         self.arm_controller
             .setup_motors(&ArmControlSettings::included_trajectory())
+            .await?;
+        Ok(())
+    }
+
+    pub async fn apply_continuous_settings(&mut self) -> Result<()> {
+        self.arm_controller
+            .setup_motors(&ArmControlSettings::included_continuous())
             .await?;
         Ok(())
     }
@@ -129,8 +136,27 @@ impl MotionController for LssMotionController {
         Ok(self.arm_controller.read_position().await?)
     }
 
-    async fn move_to_jogging(&mut self, _target: &EndEffectorPose) -> Result<JointPositions> {
-        todo!();
+    async fn move_to_jogging(&mut self, target: &EndEffectorPose) -> Result<JointPositions> {
+        match self.arm_controller.calculate_full_poses(target) {
+            Ok((positions, joints)) => {
+                if self.collision_handler.pose_collision_free(&positions) {
+                    self.arm_controller.move_joints_to(&joints).await?;
+                    self.last_pose = target.clone();
+                    Ok(joints)
+                } else {
+                    self.arm_controller
+                        .set_color(lss_driver::LedColor::Yellow)
+                        .await?;
+                    Err(PlannerError::CollisionError)
+                }
+            }
+            Err(error) => {
+                self.arm_controller
+                    .set_color(lss_driver::LedColor::Red)
+                    .await?;
+                Err(PlannerError::ControllerError(error))
+            }
+        }
     }
 
     async fn move_to_trajectory(&mut self, target: &EndEffectorPose) -> Result<JointPositions> {
