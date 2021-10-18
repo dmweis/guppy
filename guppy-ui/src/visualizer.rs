@@ -10,7 +10,7 @@ use std::{
         atomic::{AtomicBool, Ordering},
         Arc, Mutex,
     },
-    time::Instant,
+    time::{Duration, Instant},
 };
 
 #[derive(Default, Clone)]
@@ -188,50 +188,53 @@ fn render_loop(state: Arc<VisualizerInterfaceInternal>) {
         }
 
         let mut desired_state = state.get_desired_state();
-        if window.get_key(Key::D) == Action::Press {
-            desired_state.pose_mut().position.y -= frame_counter.elapsed().as_secs_f32() * 0.1;
-        }
-        if window.get_key(Key::A) == Action::Press {
-            desired_state.pose_mut().position.y += frame_counter.elapsed().as_secs_f32() * 0.1;
-        }
-        if window.get_key(Key::W) == Action::Press {
-            desired_state.pose_mut().position.x += frame_counter.elapsed().as_secs_f32() * 0.1;
-        }
-        if window.get_key(Key::S) == Action::Press {
-            desired_state.pose_mut().position.x -= frame_counter.elapsed().as_secs_f32() * 0.1;
-        }
-        if window.get_key(Key::E) == Action::Press {
-            desired_state.pose_mut().position.z += frame_counter.elapsed().as_secs_f32() * 0.1;
-        }
-        if window.get_key(Key::Q) == Action::Press {
-            desired_state.pose_mut().position.z -= frame_counter.elapsed().as_secs_f32() * 0.1;
-        }
-        if window.get_key(Key::R) == Action::Press {
-            desired_state.pose_mut().end_effector_angle -=
-                frame_counter.elapsed().as_secs_f32() * 20.;
-        }
-        if window.get_key(Key::F) == Action::Press {
-            desired_state.pose_mut().end_effector_angle +=
-                frame_counter.elapsed().as_secs_f32() * 20.;
-        }
-        if window.get_key(Key::B) == Action::Press {
-            desired_state.set_gripper_state(true);
-        }
-        if window.get_key(Key::V) == Action::Press {
-            desired_state.set_gripper_state(false);
-        }
-        if window.get_key(Key::Return) == Action::Press {
-            desired_state.pose_mut().end_effector_angle = 0.0;
-            desired_state.pose_mut().position.x = 0.2;
-            desired_state.pose_mut().position.y = 0.0;
-            desired_state.pose_mut().position.z = 0.2;
-        }
+        process_keyboard_input(&window, &mut desired_state, frame_counter.elapsed());
         state.set_desired_state(desired_state);
         frame_counter = Instant::now();
         window.render_with_camera(&mut camera);
     }
     window.close();
     state.set_window_closed();
+}
+
+fn process_keyboard_input(window: &Window, desired_state: &mut DesiredState, frame_time: Duration) {
+    let elapsed_seconds = frame_time.as_secs_f32();
+    if window.get_key(Key::D) == Action::Press {
+        desired_state.pose_mut().position.y -= elapsed_seconds * 0.1;
+    }
+    if window.get_key(Key::A) == Action::Press {
+        desired_state.pose_mut().position.y += elapsed_seconds * 0.1;
+    }
+    if window.get_key(Key::W) == Action::Press {
+        desired_state.pose_mut().position.x += elapsed_seconds * 0.1;
+    }
+    if window.get_key(Key::S) == Action::Press {
+        desired_state.pose_mut().position.x -= elapsed_seconds * 0.1;
+    }
+    if window.get_key(Key::E) == Action::Press {
+        desired_state.pose_mut().position.z += elapsed_seconds * 0.1;
+    }
+    if window.get_key(Key::Q) == Action::Press {
+        desired_state.pose_mut().position.z -= elapsed_seconds * 0.1;
+    }
+    if window.get_key(Key::R) == Action::Press {
+        desired_state.pose_mut().end_effector_angle -= elapsed_seconds * 20.;
+    }
+    if window.get_key(Key::F) == Action::Press {
+        desired_state.pose_mut().end_effector_angle += elapsed_seconds * 20.;
+    }
+    if window.get_key(Key::B) == Action::Press {
+        desired_state.set_gripper_state(true);
+    }
+    if window.get_key(Key::V) == Action::Press {
+        desired_state.set_gripper_state(false);
+    }
+    if window.get_key(Key::Return) == Action::Press {
+        desired_state.pose_mut().end_effector_angle = 0.0;
+        desired_state.pose_mut().position.x = 0.2;
+        desired_state.pose_mut().position.y = 0.0;
+        desired_state.pose_mut().position.z = 0.2;
+    }
 }
 
 struct ArmRenderer {
