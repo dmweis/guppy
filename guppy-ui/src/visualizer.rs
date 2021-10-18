@@ -59,7 +59,6 @@ impl DesiredState {
 
 pub struct VisualizerInterface {
     current_arm_pose: Arc<Mutex<Option<ArmPositions>>>,
-    motion_plan: Arc<Mutex<Option<Vec<ArmPositions>>>>,
     desired_state: Arc<Mutex<DesiredState>>,
     keep_running: Arc<AtomicBool>,
     thread_handle: Option<std::thread::JoinHandle<()>>,
@@ -68,25 +67,21 @@ pub struct VisualizerInterface {
 impl VisualizerInterface {
     pub fn new(desired_state: DesiredState) -> Self {
         let current_arm_pose = Arc::new(Mutex::new(None));
-        let motion_plan = Arc::new(Mutex::new(None));
         let desired_state = Arc::new(Mutex::new(desired_state));
         let keep_running = Arc::new(AtomicBool::new(true));
 
         let keep_running_clone = keep_running.clone();
         let current_arm_pose_clone = current_arm_pose.clone();
         let desired_state_clone = desired_state.clone();
-        let motion_plan_clone = motion_plan.clone();
         let thread_handle = std::thread::spawn(move || {
             render_loop(
                 current_arm_pose_clone,
-                motion_plan_clone,
                 keep_running_clone,
                 desired_state_clone,
             );
         });
         VisualizerInterface {
             current_arm_pose,
-            motion_plan,
             keep_running,
             desired_state,
             thread_handle: Some(thread_handle),
@@ -111,23 +106,6 @@ impl VisualizerInterface {
             .lock()
             .expect("Failed lock desired_state")
             .clone()
-    }
-
-    pub fn set_motion_plan(&mut self, motion_plan: Option<Vec<ArmPositions>>) {
-        match motion_plan {
-            Some(plan) => {
-                self.motion_plan
-                    .lock()
-                    .expect("Failed lock in set_motion_plan")
-                    .replace(plan);
-            }
-            None => {
-                self.motion_plan
-                    .lock()
-                    .expect("Failed lock in set_motion_plan")
-                    .take();
-            }
-        }
     }
 }
 
@@ -228,7 +206,6 @@ impl Drop for ArmRenderer {
 
 fn render_loop(
     current_arm_pose: Arc<Mutex<Option<ArmPositions>>>,
-    motion_plan: Arc<Mutex<Option<Vec<ArmPositions>>>>,
     keep_running: Arc<AtomicBool>,
     desired_state: Arc<Mutex<DesiredState>>,
 ) {
@@ -253,7 +230,6 @@ fn render_loop(
 
     while !window.should_close() && keep_running.load(Ordering::Acquire) {
         let arm_pose = current_arm_pose.lock().expect("Render failed").clone();
-        let motion_plan_poses = motion_plan.lock().expect("Render failed").clone();
         if let Some(arm_pose) = arm_pose {
             primary_arm.step(&mut window, &arm_pose);
             window.draw_text(
@@ -272,18 +248,7 @@ fn render_loop(
                 &white,
             );
         }
-        let mut arm_renders = vec![];
-        if let Some(motion_plan) = motion_plan_poses {
-            for step in motion_plan {
-                let mut arm_render = ArmRenderer::new(
-                    &mut window,
-                    Point3::new(1.0, 0.0, 0.0),
-                    Point3::new(0.0, 1.0, 0.0),
-                );
-                arm_render.step(&mut window, &step);
-                arm_renders.push(arm_render);
-            }
-        }
+
         let mut pos_copy = desired_state.lock().unwrap().pose.clone();
         if window.get_key(Key::D) == Action::Press {
             pos_copy.position.y -= frame_counter.elapsed().as_secs_f32() * 0.1;
