@@ -187,11 +187,11 @@ impl ArmMotorStatus {
 #[async_trait]
 pub trait ArmDriver: Send + Sync {
     async fn set_color(&mut self, color: lss_driver::LedColor) -> Result<()>;
-    async fn setup_motors(&mut self, settings: ArmControlSettings) -> Result<()>;
+    async fn setup_motors(&mut self, settings: &ArmControlSettings) -> Result<()>;
     async fn load_motor_settings(&mut self) -> Result<ArmControlSettings>;
     async fn halt(&mut self) -> Result<()>;
     async fn limp(&mut self) -> Result<()>;
-    async fn move_to(&mut self, position: JointPositions) -> Result<()>;
+    async fn move_to(&mut self, position: &JointPositions) -> Result<()>;
     async fn move_to_timed(&mut self, position: &JointPositions, duration: Duration) -> Result<()>;
     async fn read_position(&mut self) -> Result<JointPositions>;
     /// 0.0 is fully open
@@ -214,7 +214,7 @@ impl SerialArmDriver {
     pub async fn new(
         port: &str,
         config: arm_config::ArmConfig,
-        control_settings: ArmControlSettings,
+        control_settings: &ArmControlSettings,
     ) -> Result<Box<Self>> {
         let driver = lss_driver::LSSDriver::new(port)?;
         let mut arm_driver = SerialArmDriver { driver, config };
@@ -232,7 +232,7 @@ impl ArmDriver for SerialArmDriver {
         Ok(())
     }
 
-    async fn setup_motors(&mut self, settings: ArmControlSettings) -> Result<()> {
+    async fn setup_motors(&mut self, settings: &ArmControlSettings) -> Result<()> {
         async fn set_motor(
             driver: &mut lss_driver::LSSDriver,
             motor_id: u8,
@@ -349,7 +349,7 @@ impl ArmDriver for SerialArmDriver {
         Ok(())
     }
 
-    async fn move_to(&mut self, position: JointPositions) -> Result<()> {
+    async fn move_to(&mut self, position: &JointPositions) -> Result<()> {
         self.driver
             .move_to_position(self.config.base_id, position.base)
             .await?;
@@ -472,7 +472,7 @@ impl SharedSerialArmDriver {
     pub async fn new(
         driver: Arc<Mutex<LSSDriver>>,
         config: arm_config::ArmConfig,
-        control_settings: ArmControlSettings,
+        control_settings: &ArmControlSettings,
     ) -> Result<Box<Self>> {
         let mut arm_driver = Self { driver, config };
         arm_driver.setup_motors(control_settings).await?;
@@ -490,7 +490,7 @@ impl ArmDriver for SharedSerialArmDriver {
         Ok(())
     }
 
-    async fn setup_motors(&mut self, settings: ArmControlSettings) -> Result<()> {
+    async fn setup_motors(&mut self, settings: &ArmControlSettings) -> Result<()> {
         async fn set_motor(
             driver: &mut lss_driver::LSSDriver,
             motor_id: u8,
@@ -611,7 +611,7 @@ impl ArmDriver for SharedSerialArmDriver {
         Ok(())
     }
 
-    async fn move_to(&mut self, position: JointPositions) -> Result<()> {
+    async fn move_to(&mut self, position: &JointPositions) -> Result<()> {
         let mut driver = self.driver.lock().await;
         driver
             .move_to_position(self.config.base_id, position.base)

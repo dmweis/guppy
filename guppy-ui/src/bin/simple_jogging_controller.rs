@@ -43,7 +43,7 @@ async fn move_run(args: Args) -> Result<()> {
     let mut driver = arm_driver::SerialArmDriver::new(
         &args.port,
         arm_config::ArmConfig::included(),
-        ArmControlSettings::included_continuous(),
+        &ArmControlSettings::included_continuous(),
     )
     .await?;
     driver.set_color(LedColor::Magenta).await?;
@@ -55,9 +55,7 @@ async fn move_run(args: Args) -> Result<()> {
 
     while running.load(Ordering::Acquire) {
         let desired_state = visualizer.get_desired_state().clone();
-        if let Ok((pose, joints)) =
-            arm_controller.calculate_full_poses(desired_state.pose().clone())
-        {
+        if let Ok((pose, joints)) = arm_controller.calculate_full_poses(&desired_state.pose()) {
             // check collisions
             if !collision_handler.pose_collision_free(&pose) {
                 arm_controller.set_color(LedColor::Yellow).await?;
@@ -66,7 +64,7 @@ async fn move_run(args: Args) -> Result<()> {
 
             arm_controller.set_color(LedColor::Magenta).await?;
 
-            if let Ok(_arm_positions) = arm_controller.move_joints_to(joints).await {
+            if let Ok(_arm_positions) = arm_controller.move_joints_to(&joints).await {
                 visualizer.set_position(pose);
             } else {
                 eprintln!("Message error");

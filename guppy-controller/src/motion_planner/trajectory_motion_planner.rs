@@ -23,11 +23,11 @@ type Result<T> = std::result::Result<T, PlannerError>;
 pub trait MotionController: Send + Sync {
     fn calculate_full_poses(
         &self,
-        target: EndEffectorPose,
+        target: &EndEffectorPose,
     ) -> Result<(ArmPositions, JointPositions)>;
     async fn read_position(&mut self) -> Result<ArmPositions>;
-    async fn move_to_jogging(&mut self, pose: EndEffectorPose) -> Result<JointPositions>;
-    async fn move_to_trajectory(&mut self, pose: EndEffectorPose) -> Result<JointPositions>;
+    async fn move_to_jogging(&mut self, pose: &EndEffectorPose) -> Result<JointPositions>;
+    async fn move_to_trajectory(&mut self, pose: &EndEffectorPose) -> Result<JointPositions>;
     async fn open_gripper(&mut self, current_limit: bool) -> Result<()>;
     async fn close_gripper(&mut self, current_limit: bool) -> Result<()>;
     async fn halt(&mut self) -> Result<()>;
@@ -55,7 +55,7 @@ impl LssMotionController {
         rotational_speed: f32,
     ) -> Result<Self> {
         arm_controller
-            .setup_motors(ArmControlSettings::included_trajectory())
+            .setup_motors(&ArmControlSettings::included_trajectory())
             .await?;
         let last_pose = arm_controller
             .read_position()
@@ -72,7 +72,7 @@ impl LssMotionController {
 
     pub async fn apply_settings(&mut self) -> Result<()> {
         self.arm_controller
-            .setup_motors(ArmControlSettings::included_trajectory())
+            .setup_motors(&ArmControlSettings::included_trajectory())
             .await?;
         Ok(())
     }
@@ -102,7 +102,7 @@ impl LssMotionController {
             ..Default::default()
         };
         self.arm_controller
-            .setup_motors(relaxed_arm_settings)
+            .setup_motors(&relaxed_arm_settings)
             .await?;
         self.arm_controller
             .set_color(lss_driver::LedColor::Red)
@@ -117,11 +117,10 @@ impl LssMotionController {
 }
 
 #[async_trait]
-
 impl MotionController for LssMotionController {
     fn calculate_full_poses(
         &self,
-        target: EndEffectorPose,
+        target: &EndEffectorPose,
     ) -> Result<(ArmPositions, JointPositions)> {
         Ok(self.arm_controller.calculate_full_poses(target)?)
     }
@@ -130,11 +129,11 @@ impl MotionController for LssMotionController {
         Ok(self.arm_controller.read_position().await?)
     }
 
-    async fn move_to_jogging(&mut self, _target: EndEffectorPose) -> Result<JointPositions> {
+    async fn move_to_jogging(&mut self, _target: &EndEffectorPose) -> Result<JointPositions> {
         todo!();
     }
 
-    async fn move_to_trajectory(&mut self, target: EndEffectorPose) -> Result<JointPositions> {
+    async fn move_to_trajectory(&mut self, target: &EndEffectorPose) -> Result<JointPositions> {
         let duration = estimate_time(
             &self.last_pose,
             &target,
@@ -142,13 +141,13 @@ impl MotionController for LssMotionController {
             self.rotational_speed,
         );
 
-        match self.arm_controller.calculate_full_poses(target.clone()) {
+        match self.arm_controller.calculate_full_poses(&target) {
             Ok((positions, joints)) => {
                 if self.collision_handler.pose_collision_free(&positions) {
                     self.arm_controller
                         .move_joints_timed(&joints, duration)
                         .await?;
-                    self.last_pose = target;
+                    self.last_pose = target.clone();
                     Ok(joints)
                 } else {
                     self.arm_controller

@@ -74,15 +74,15 @@ pub trait ArmController: Send + Sync {
     /// 0.0 is fully open
     /// 1.0 is fully closed
     async fn move_gripper(&mut self, closed: f32) -> Result<()>;
-    fn calculate_ik(&self, pose: EndEffectorPose) -> Result<JointPositions>;
-    fn calculate_fk(&self, joints: JointPositions) -> ArmPositions;
+    fn calculate_ik(&self, pose: &EndEffectorPose) -> Result<JointPositions>;
+    fn calculate_fk(&self, joints: &JointPositions) -> ArmPositions;
     fn calculate_full_poses(
         &self,
-        target: EndEffectorPose,
+        target: &EndEffectorPose,
     ) -> Result<(ArmPositions, JointPositions)>;
     async fn read_position(&mut self) -> Result<ArmPositions>;
-    async fn move_to(&mut self, pose: EndEffectorPose) -> Result<JointPositions>;
-    async fn move_joints_to(&mut self, joints: JointPositions) -> Result<()>;
+    async fn move_to(&mut self, pose: &EndEffectorPose) -> Result<JointPositions>;
+    async fn move_joints_to(&mut self, joints: &JointPositions) -> Result<()>;
     async fn move_joints_timed(
         &mut self,
         joints: &JointPositions,
@@ -90,7 +90,7 @@ pub trait ArmController: Send + Sync {
     ) -> Result<()>;
     async fn halt(&mut self) -> Result<()>;
     async fn limp(&mut self) -> Result<()>;
-    async fn setup_motors(&mut self, settings: arm_driver::ArmControlSettings) -> Result<()>;
+    async fn setup_motors(&mut self, settings: &arm_driver::ArmControlSettings) -> Result<()>;
     async fn load_motor_settings(&mut self) -> Result<arm_driver::ArmControlSettings>;
     async fn check_motors_okay(&mut self) -> Result<bool>;
 }
@@ -128,38 +128,38 @@ impl ArmController for LssArmController {
 
     /// calculate Ik
     /// This method expects a point translated from arm base
-    fn calculate_ik(&self, pose: EndEffectorPose) -> Result<JointPositions> {
+    fn calculate_ik(&self, pose: &EndEffectorPose) -> Result<JointPositions> {
         self.kinematic_solver.calculate_ik(pose)
     }
 
-    fn calculate_fk(&self, joints: JointPositions) -> ArmPositions {
+    fn calculate_fk(&self, joints: &JointPositions) -> ArmPositions {
         self.kinematic_solver.calculate_fk(joints)
     }
 
     fn calculate_full_poses(
         &self,
-        target: EndEffectorPose,
+        target: &EndEffectorPose,
     ) -> Result<(ArmPositions, JointPositions)> {
         // This should really be one call.
         // I don't know why I solve the poses so awkwardly
-        let joints = self.kinematic_solver.calculate_ik(target)?;
-        let pose = self.kinematic_solver.calculate_fk(joints.clone());
+        let joints = self.kinematic_solver.calculate_ik(&target)?;
+        let pose = self.kinematic_solver.calculate_fk(&joints);
         Ok((pose, joints))
     }
 
     async fn read_position(&mut self) -> Result<ArmPositions> {
         let motor_positions = self.driver.read_position().await?;
-        let arm_positions = self.calculate_fk(motor_positions);
+        let arm_positions = self.calculate_fk(&motor_positions);
         Ok(arm_positions)
     }
 
-    async fn move_to(&mut self, pose: EndEffectorPose) -> Result<JointPositions> {
+    async fn move_to(&mut self, pose: &EndEffectorPose) -> Result<JointPositions> {
         let joint_positions = self.calculate_ik(pose)?;
-        self.driver.move_to(joint_positions.clone()).await?;
+        self.driver.move_to(&joint_positions).await?;
         Ok(joint_positions)
     }
 
-    async fn move_joints_to(&mut self, joints: JointPositions) -> Result<()> {
+    async fn move_joints_to(&mut self, joints: &JointPositions) -> Result<()> {
         self.driver.move_to(joints).await?;
         Ok(())
     }
@@ -183,7 +183,7 @@ impl ArmController for LssArmController {
         Ok(())
     }
 
-    async fn setup_motors(&mut self, settings: arm_driver::ArmControlSettings) -> Result<()> {
+    async fn setup_motors(&mut self, settings: &arm_driver::ArmControlSettings) -> Result<()> {
         self.driver.setup_motors(settings).await?;
         Ok(())
     }
@@ -207,7 +207,7 @@ impl KinematicSolver {
         KinematicSolver { config }
     }
 
-    pub fn calculate_ik(&self, pose: EndEffectorPose) -> Result<JointPositions> {
+    pub fn calculate_ik(&self, pose: &EndEffectorPose) -> Result<JointPositions> {
         let effector_angle = pose.end_effector_angle.to_radians();
         let base_angle = (-pose.position.y).atan2(pose.position.x);
         let horizontal_distance = (pose.position.x.powi(2) + pose.position.y.powi(2)).sqrt();
@@ -272,7 +272,7 @@ impl KinematicSolver {
         ))
     }
 
-    pub fn calculate_fk(&self, joints: JointPositions) -> ArmPositions {
+    pub fn calculate_fk(&self, joints: &JointPositions) -> ArmPositions {
         let base = na::Vector3::new(0.0, 0.0, 0.0);
         let base_rotation =
             na::Rotation3::from_axis_angle(&na::Vector3::z_axis(), -joints.base.to_radians());
