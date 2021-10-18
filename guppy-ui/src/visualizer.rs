@@ -13,28 +13,6 @@ use std::{
     time::Instant,
 };
 
-fn add_ground_plane(window: &mut Window) {
-    let size = 0.5;
-    for i in 0..4 {
-        for j in 0..4 {
-            let mut cube = window.add_cube(size, size, 0.001);
-            if (i + j) % 2 == 0 {
-                cube.set_color(0.0, 0.0, 0.0);
-            } else {
-                cube.set_color(1.0, 1.0, 1.0);
-            }
-            let distance = (1_f32.powi(2) + 1_f32.powi(2)).sqrt();
-            let x_ind = j as f32 - distance;
-            let y_ind = i as f32 - distance;
-            let trans = Isometry3::from_parts(
-                Translation3::new(size * x_ind, 0.0, size * y_ind),
-                UnitQuaternion::from_euler_angles(0.0, -1.57, -1.57),
-            );
-            cube.set_local_transformation(trans);
-        }
-    }
-}
-
 #[derive(Default, Clone)]
 pub struct DesiredState {
     pose: EndEffectorPose,
@@ -124,78 +102,6 @@ fn convert_coordinates(position: Vector3<f32>) -> Point3<f32> {
     Point3::new(position.y, position.z, position.x)
 }
 
-struct ArmRenderer {
-    base_sphere: SceneNode,
-    shoulder_sphere: SceneNode,
-    elbow_sphere: SceneNode,
-    wrist_sphere: SceneNode,
-    end_effector_sphere: SceneNode,
-    color: Point3<f32>,
-}
-
-impl ArmRenderer {
-    fn new(
-        window: &mut Window,
-        color: Point3<f32>,
-        end_effector_color: Point3<f32>,
-    ) -> ArmRenderer {
-        let mut base_sphere = window.add_sphere(0.01);
-        base_sphere.set_color(color.x, color.y, color.z);
-        let mut shoulder_sphere = window.add_sphere(0.01);
-        shoulder_sphere.set_color(color.x, color.y, color.z);
-        let mut elbow_sphere = window.add_sphere(0.01);
-        elbow_sphere.set_color(color.x, color.y, color.z);
-        let mut wrist_sphere = window.add_sphere(0.01);
-        wrist_sphere.set_color(color.x, color.y, color.z);
-        let mut end_effector_sphere = window.add_sphere(0.01);
-        end_effector_sphere.set_color(
-            end_effector_color.x,
-            end_effector_color.y,
-            end_effector_color.z,
-        );
-        ArmRenderer {
-            base_sphere,
-            shoulder_sphere,
-            elbow_sphere,
-            wrist_sphere,
-            end_effector_sphere,
-            color,
-        }
-    }
-
-    fn update_pose(&mut self, window: &mut Window, arm_pose: &ArmPositions) {
-        let base = convert_coordinates(arm_pose.base);
-        self.base_sphere.set_local_translation(base.into());
-
-        let shoulder = convert_coordinates(arm_pose.shoulder);
-        window.draw_line(&base, &shoulder, &self.color);
-        self.shoulder_sphere.set_local_translation(shoulder.into());
-
-        let elbow = convert_coordinates(arm_pose.elbow);
-        window.draw_line(&shoulder, &elbow, &self.color);
-        self.elbow_sphere.set_local_translation(elbow.into());
-
-        let wrist = convert_coordinates(arm_pose.wrist);
-        window.draw_line(&elbow, &wrist, &self.color);
-        self.wrist_sphere.set_local_translation(wrist.into());
-
-        let end_effector = convert_coordinates(arm_pose.end_effector);
-        self.end_effector_sphere
-            .set_local_translation(end_effector.into());
-        window.draw_line(&wrist, &end_effector, &self.color);
-    }
-}
-
-impl Drop for ArmRenderer {
-    fn drop(&mut self) {
-        self.base_sphere.unlink();
-        self.shoulder_sphere.unlink();
-        self.elbow_sphere.unlink();
-        self.wrist_sphere.unlink();
-        self.end_effector_sphere.unlink();
-    }
-}
-
 fn render_loop(
     current_arm_pose: Arc<Mutex<Option<ArmPositions>>>,
     keep_running: Arc<AtomicBool>,
@@ -283,4 +189,98 @@ fn render_loop(
         window.render_with_camera(&mut camera);
     }
     window.close()
+}
+
+struct ArmRenderer {
+    base_sphere: SceneNode,
+    shoulder_sphere: SceneNode,
+    elbow_sphere: SceneNode,
+    wrist_sphere: SceneNode,
+    end_effector_sphere: SceneNode,
+    color: Point3<f32>,
+}
+
+impl ArmRenderer {
+    fn new(
+        window: &mut Window,
+        color: Point3<f32>,
+        end_effector_color: Point3<f32>,
+    ) -> ArmRenderer {
+        let mut base_sphere = window.add_sphere(0.01);
+        base_sphere.set_color(color.x, color.y, color.z);
+        let mut shoulder_sphere = window.add_sphere(0.01);
+        shoulder_sphere.set_color(color.x, color.y, color.z);
+        let mut elbow_sphere = window.add_sphere(0.01);
+        elbow_sphere.set_color(color.x, color.y, color.z);
+        let mut wrist_sphere = window.add_sphere(0.01);
+        wrist_sphere.set_color(color.x, color.y, color.z);
+        let mut end_effector_sphere = window.add_sphere(0.01);
+        end_effector_sphere.set_color(
+            end_effector_color.x,
+            end_effector_color.y,
+            end_effector_color.z,
+        );
+        ArmRenderer {
+            base_sphere,
+            shoulder_sphere,
+            elbow_sphere,
+            wrist_sphere,
+            end_effector_sphere,
+            color,
+        }
+    }
+
+    fn update_pose(&mut self, window: &mut Window, arm_pose: &ArmPositions) {
+        let base = convert_coordinates(arm_pose.base);
+        self.base_sphere.set_local_translation(base.into());
+
+        let shoulder = convert_coordinates(arm_pose.shoulder);
+        window.draw_line(&base, &shoulder, &self.color);
+        self.shoulder_sphere.set_local_translation(shoulder.into());
+
+        let elbow = convert_coordinates(arm_pose.elbow);
+        window.draw_line(&shoulder, &elbow, &self.color);
+        self.elbow_sphere.set_local_translation(elbow.into());
+
+        let wrist = convert_coordinates(arm_pose.wrist);
+        window.draw_line(&elbow, &wrist, &self.color);
+        self.wrist_sphere.set_local_translation(wrist.into());
+
+        let end_effector = convert_coordinates(arm_pose.end_effector);
+        self.end_effector_sphere
+            .set_local_translation(end_effector.into());
+        window.draw_line(&wrist, &end_effector, &self.color);
+    }
+}
+
+impl Drop for ArmRenderer {
+    fn drop(&mut self) {
+        self.base_sphere.unlink();
+        self.shoulder_sphere.unlink();
+        self.elbow_sphere.unlink();
+        self.wrist_sphere.unlink();
+        self.end_effector_sphere.unlink();
+    }
+}
+
+fn add_ground_plane(window: &mut Window) {
+    let size = 0.5;
+    for i in 0..4 {
+        for j in 0..4 {
+            let mut cube = window.add_cube(size, size, 0.001);
+            if (i + j) % 2 == 0 {
+                cube.set_color(0.0, 0.0, 0.0);
+            } else {
+                cube.set_color(1.0, 1.0, 1.0);
+            }
+            let distance = (1_f32.powi(2) + 1_f32.powi(2)).sqrt();
+            let x_ind = j as f32 - distance;
+            let y_ind = i as f32 - distance;
+            let trans = Isometry3::from_parts(
+                Translation3::new(size * x_ind, 0.0, size * y_ind),
+                UnitQuaternion::from_euler_angles(0.0, -1.57, -1.57),
+            );
+            cube.set_local_transformation(trans);
+        }
+    }
 }
