@@ -97,39 +97,6 @@ impl MotionController {
         Ok(())
     }
 
-    pub async fn move_to_blocking(&mut self, target: EndEffectorPose) -> Result<()> {
-        let duration = estimate_time(
-            &self.last_pose,
-            &target,
-            self.translation_speed,
-            self.rotational_speed,
-        );
-        if let Ok((positions, joints)) = self.arm_controller.calculate_full_poses(target.clone()) {
-            if self.collision_handler.pose_collision_free(&positions) {
-                self.arm_controller
-                    .set_color(lss_driver::LedColor::Cyan)
-                    .await?;
-                self.arm_controller
-                    .move_joints_timed(joints, duration)
-                    .await?;
-                self.last_pose = target;
-                sleep(duration).await;
-                self.arm_controller
-                    .set_color(lss_driver::LedColor::Magenta)
-                    .await?;
-            } else {
-                self.arm_controller
-                    .set_color(lss_driver::LedColor::Yellow)
-                    .await?;
-            }
-        } else {
-            self.arm_controller
-                .set_color(lss_driver::LedColor::Red)
-                .await?;
-        }
-        Ok(())
-    }
-
     pub async fn apply_settings(&mut self) -> Result<()> {
         self.arm_controller
             .setup_motors(ArmControlSettings::included_trajectory())
