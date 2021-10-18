@@ -136,12 +136,12 @@ impl MotionController for LssMotionController {
     async fn move_to_trajectory(&mut self, target: &EndEffectorPose) -> Result<JointPositions> {
         let duration = estimate_time(
             &self.last_pose,
-            &target,
+            target,
             self.translation_speed,
             self.rotational_speed,
         );
 
-        match self.arm_controller.calculate_full_poses(&target) {
+        match self.arm_controller.calculate_full_poses(target) {
             Ok((positions, joints)) => {
                 if self.collision_handler.pose_collision_free(&positions) {
                     self.arm_controller

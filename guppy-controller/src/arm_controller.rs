@@ -142,7 +142,7 @@ impl ArmController for LssArmController {
     ) -> Result<(ArmPositions, JointPositions)> {
         // This should really be one call.
         // I don't know why I solve the poses so awkwardly
-        let joints = self.kinematic_solver.calculate_ik(&target)?;
+        let joints = self.kinematic_solver.calculate_ik(target)?;
         let pose = self.kinematic_solver.calculate_fk(&joints);
         Ok((pose, joints))
     }

@@ -55,7 +55,7 @@ async fn move_run(args: Args) -> Result<()> {
 
     while running.load(Ordering::Acquire) {
         let desired_state = visualizer.get_desired_state().clone();
-        if let Ok((pose, joints)) = arm_controller.calculate_full_poses(&desired_state.pose()) {
+        if let Ok((pose, joints)) = arm_controller.calculate_full_poses(desired_state.pose()) {
             // check collisions
             if !collision_handler.pose_collision_free(&pose) {
                 arm_controller.set_color(LedColor::Yellow).await?;
