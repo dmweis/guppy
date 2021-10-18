@@ -163,7 +163,7 @@ impl ArmRenderer {
         }
     }
 
-    fn step(&mut self, window: &mut Window, arm_pose: &ArmPositions) {
+    fn update_pose(&mut self, window: &mut Window, arm_pose: &ArmPositions) {
         let base = convert_coordinates(arm_pose.base);
         self.base_sphere
             .set_local_translation(Translation3::new(base.x, base.y, base.z));
@@ -231,7 +231,7 @@ fn render_loop(
     while !window.should_close() && keep_running.load(Ordering::Acquire) {
         let arm_pose = current_arm_pose.lock().expect("Render failed").clone();
         if let Some(arm_pose) = arm_pose {
-            primary_arm.step(&mut window, &arm_pose);
+            primary_arm.update_pose(&mut window, &arm_pose);
             window.draw_text(
                 &format!(
                     "End effector:\n   x: {}\n   y: {}\n   z: {}\n   angle: {}\nCamera dist: {}\nframe time: {}ms",
