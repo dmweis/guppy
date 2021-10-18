@@ -4,7 +4,7 @@ use lazy_static::lazy_static;
 pub use lss_driver::LedColor;
 use lss_driver::{CommandModifier, LSSDriver};
 use serde::{Deserialize, Serialize};
-use std::{fs, include_bytes, str, sync::Arc, time::Duration};
+use std::{fs, str, sync::Arc, time::Duration};
 use thiserror::Error;
 use tokio::sync::Mutex;
 
@@ -75,13 +75,11 @@ impl ServoControlSettings {
 
 lazy_static! {
     static ref INCLUDED_TRAJECTORY: ArmControlSettings = {
-        let json =
-            str::from_utf8(include_bytes!("../config/motor_settings_trajectory.json")).unwrap();
+        let json = include_str!("../config/motor_settings_trajectory.json");
         ArmControlSettings::parse_json(json).unwrap()
     };
     static ref INCLUDED_CONTINUOUS: ArmControlSettings = {
-        let json =
-            str::from_utf8(include_bytes!("../config/motor_settings_continuous.json")).unwrap();
+        let json = include_str!("../config/motor_settings_continuous.json");
         ArmControlSettings::parse_json(json).unwrap()
     };
 }
