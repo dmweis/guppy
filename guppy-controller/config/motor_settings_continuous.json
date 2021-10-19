@@ -8,13 +8,13 @@
   "shoulder": {
     "motion_profile": false,
     "angular_holding_stiffness": -2,
-    "angular_stiffness": 0,
+    "angular_stiffness": 2,
     "filter_position_count": 5
   },
   "elbow": {
     "motion_profile": false,
     "angular_holding_stiffness": -2,
-    "angular_stiffness": 0,
+    "angular_stiffness": 2,
     "filter_position_count": 5
   },
   "wrist": {
