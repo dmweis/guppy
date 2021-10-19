@@ -5,6 +5,7 @@ use guppy_controller::arm_driver::{self, ArmDriver, LedColor};
 use guppy_controller::collision_handler;
 use guppy_controller::motion_planner::MotionController;
 use guppy_controller::{arm_config, motion_planner::LssMotionController};
+use guppy_ui::visualizer::ArmMotionCommand;
 use guppy_ui::{arm_driver::ArmControlSettings, visualizer::VisualizerInterface};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
@@ -33,7 +34,7 @@ async fn main() -> Result<()> {
 
 async fn move_run(args: Args) -> Result<()> {
     let running = Arc::new(AtomicBool::new(true));
-    let mut visualizer = VisualizerInterface::sensible_default();
+    let mut visualizer = VisualizerInterface::default();
     let collision_handler =
         collision_handler::CollisionHandler::new(arm_config::ArmConfig::included());
 
@@ -59,31 +60,55 @@ async fn move_run(args: Args) -> Result<()> {
         LssMotionController::new(arm_controller, collision_handler, 0.15, 10.0).await?;
 
     motion_planner.open_gripper(false).await?;
-    // smoothly transition to home
-    let initial_state = visualizer.get_desired_state();
-    motion_planner
-        .move_to_trajectory(initial_state.pose())
-        .await?;
-
-    sleep(Duration::from_secs(2)).await;
 
     let mut gripper_opened = false;
+    let mut trajectory_mode_on = false;
 
     motion_planner.apply_continuous_settings().await?;
     while running.load(Ordering::Acquire) && visualizer.window_opened() {
-        let desired_state = visualizer.get_desired_state().clone();
-        if let Ok(arm_positions) = motion_planner.move_to_jogging(desired_state.pose()).await {
-            visualizer.set_position(arm_positions);
-        }
-        if gripper_opened != desired_state.gripper_state() {
-            gripper_opened = desired_state.gripper_state();
-            if gripper_opened {
-                motion_planner.close_gripper(true).await?;
-            } else {
-                motion_planner.open_gripper(false).await?;
+        let command = visualizer.get_latest_arm_command();
+        match command {
+            ArmMotionCommand::Jogging(desired_state) => {
+                if trajectory_mode_on {
+                    trajectory_mode_on = false;
+                    motion_planner.apply_continuous_settings().await?;
+                }
+                if let Ok(arm_positions) =
+                    motion_planner.move_to_jogging(desired_state.pose()).await
+                {
+                    visualizer.set_position(arm_positions);
+                }
+                if gripper_opened != desired_state.gripper_state() {
+                    gripper_opened = desired_state.gripper_state();
+                    if gripper_opened {
+                        motion_planner.close_gripper(true).await?;
+                    } else {
+                        motion_planner.open_gripper(false).await?;
+                    }
+                }
             }
+            ArmMotionCommand::Trajectory(desired_state) => {
+                if !trajectory_mode_on {
+                    trajectory_mode_on = true;
+                    motion_planner.apply_trajectory_settings().await?;
+                }
+                if let Ok((arm_positions, _duration)) = motion_planner
+                    .move_to_trajectory(desired_state.pose())
+                    .await
+                {
+                    visualizer.set_position(arm_positions);
+                }
+                if gripper_opened != desired_state.gripper_state() {
+                    gripper_opened = desired_state.gripper_state();
+                    if gripper_opened {
+                        motion_planner.close_gripper(true).await?;
+                    } else {
+                        motion_planner.open_gripper(false).await?;
+                    }
+                }
+            }
+            ArmMotionCommand::None => (),
         }
-
         sleep(Duration::from_millis(20)).await;
     }
 

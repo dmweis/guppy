@@ -50,8 +50,22 @@ pub struct VisualizerInterface {
 }
 
 impl VisualizerInterface {
-    pub fn new(desired_state: DesiredState) -> Self {
-        let state = Arc::new(VisualizerInterfaceInternal::new(desired_state));
+    pub fn set_position(&mut self, arm_position: ArmPositions) {
+        self.state.set_current_pose(arm_position);
+    }
+
+    pub fn get_latest_arm_command(&self) -> ArmMotionCommand {
+        self.state.get_latest_arm_command()
+    }
+
+    pub fn window_opened(&self) -> bool {
+        self.state.window_opened()
+    }
+}
+
+impl Default for VisualizerInterface {
+    fn default() -> Self {
+        let state = Arc::new(VisualizerInterfaceInternal::new());
         let thread_handle = std::thread::spawn({
             let internal_state = Arc::clone(&state);
             move || render_loop(internal_state)
@@ -60,24 +74,6 @@ impl VisualizerInterface {
             state,
             thread_handle: Some(thread_handle),
         }
-    }
-
-    pub fn sensible_default() -> Self {
-        let desired_state =
-            DesiredState::new(EndEffectorPose::new(Vector3::new(0.2, 0., 0.2), 0.0), false);
-        Self::new(desired_state)
-    }
-
-    pub fn set_position(&mut self, arm_position: ArmPositions) {
-        self.state.set_current_pose(arm_position);
-    }
-
-    pub fn get_desired_state(&self) -> DesiredState {
-        self.state.get_desired_state()
-    }
-
-    pub fn window_opened(&self) -> bool {
-        self.state.window_opened()
     }
 }
 
@@ -92,29 +88,51 @@ impl Drop for VisualizerInterface {
     }
 }
 
+pub enum ArmMotionCommand {
+    None,
+    Trajectory(DesiredState),
+    Jogging(DesiredState),
+}
+
+impl ArmMotionCommand {
+    pub fn take(&mut self) -> Self {
+        std::mem::take(self)
+    }
+
+    pub fn is_some(&self) -> bool {
+        !matches!(self, ArmMotionCommand::None)
+    }
+}
+
+impl Default for ArmMotionCommand {
+    fn default() -> Self {
+        ArmMotionCommand::None
+    }
+}
+
 struct VisualizerInterfaceInternal {
     current_arm_pose: Arc<Mutex<Option<ArmPositions>>>,
     keep_running: Arc<AtomicBool>,
-    desired_state: Arc<Mutex<DesiredState>>,
+    desired_state: Arc<Mutex<ArmMotionCommand>>,
     window_opened: Arc<AtomicBool>,
 }
 
 impl VisualizerInterfaceInternal {
-    fn new(desired_state: DesiredState) -> Self {
+    fn new() -> Self {
         Self {
             current_arm_pose: Arc::default(),
             keep_running: Arc::new(AtomicBool::new(true)),
-            desired_state: Arc::new(Mutex::new(desired_state)),
+            desired_state: Arc::default(),
             window_opened: Arc::new(AtomicBool::new(true)),
         }
     }
 
-    fn set_desired_state(&self, state: DesiredState) {
-        *self.desired_state.lock().unwrap() = state;
+    fn send_new_arm_command(&self, command: ArmMotionCommand) {
+        *self.desired_state.lock().unwrap() = command;
     }
 
-    fn get_desired_state(&self) -> DesiredState {
-        self.desired_state.lock().unwrap().clone()
+    fn get_latest_arm_command(&self) -> ArmMotionCommand {
+        self.desired_state.lock().unwrap().take()
     }
 
     fn set_current_pose(&self, pose: ArmPositions) {
@@ -166,6 +184,11 @@ fn render_loop(state: Arc<VisualizerInterfaceInternal>) {
 
     add_ground_plane(&mut window);
 
+    let mut desired_state =
+        DesiredState::new(EndEffectorPose::new(Vector3::new(0.2, 0., 0.2), 0.0), false);
+
+    state.send_new_arm_command(ArmMotionCommand::Trajectory(desired_state.clone()));
+
     while !window.should_close() && state.keep_running() {
         let arm_pose = state.get_current_pose();
         if let Some(arm_pose) = arm_pose {
@@ -187,9 +210,10 @@ fn render_loop(state: Arc<VisualizerInterfaceInternal>) {
             );
         }
 
-        let mut desired_state = state.get_desired_state();
-        process_keyboard_input(&window, &mut desired_state, frame_counter.elapsed());
-        state.set_desired_state(desired_state);
+        let command = process_keyboard_input(&window, &mut desired_state, frame_counter.elapsed());
+        if command.is_some() {
+            state.send_new_arm_command(command);
+        }
         frame_counter = Instant::now();
         window.render_with_camera(&mut camera);
     }
@@ -197,54 +221,76 @@ fn render_loop(state: Arc<VisualizerInterfaceInternal>) {
     state.set_window_closed();
 }
 
-fn process_keyboard_input(window: &Window, desired_state: &mut DesiredState, frame_time: Duration) {
-    let elapsed_seconds = frame_time.as_secs_f32();
-    let xy = desired_state.pose().position.xy();
-    let (mut distance, mut angle) = cartesian_to_polar((xy.x, xy.y));
-    if window.get_key(Key::D) == Action::Press {
-        angle -= elapsed_seconds * 0.8;
-    }
-    if window.get_key(Key::A) == Action::Press {
-        angle += elapsed_seconds * 0.8;
-    }
-    if window.get_key(Key::W) == Action::Press {
-        distance += elapsed_seconds * 0.1;
-    }
-    if window.get_key(Key::S) == Action::Press {
-        distance -= elapsed_seconds * 0.1;
-    }
-    if window.get_key(Key::E) == Action::Press {
-        desired_state.pose_mut().position.z += elapsed_seconds * 0.1;
-    }
-    if window.get_key(Key::Q) == Action::Press {
-        desired_state.pose_mut().position.z -= elapsed_seconds * 0.1;
-    }
-    if window.get_key(Key::R) == Action::Press {
-        desired_state.pose_mut().end_effector_angle -= elapsed_seconds * 20.;
-    }
-    if window.get_key(Key::F) == Action::Press {
-        desired_state.pose_mut().end_effector_angle += elapsed_seconds * 20.;
-    }
-    if window.get_key(Key::B) == Action::Press {
-        desired_state.set_gripper_state(true);
-    }
-    if window.get_key(Key::V) == Action::Press {
-        desired_state.set_gripper_state(false);
-    }
-    // add small parts to clamp to prevent overflowing
-    // TODO (David): Find a smarter way to do this
-    angle = angle.clamp(
-        -std::f32::consts::PI + 0.0001,
-        std::f32::consts::PI - 0.0001,
-    );
-    let (x, y) = polar_to_cartesian((distance, angle));
-    desired_state.pose_mut().position.x = x;
-    desired_state.pose_mut().position.y = y;
+fn process_keyboard_input(
+    window: &Window,
+    desired_state: &mut DesiredState,
+    frame_time: Duration,
+) -> ArmMotionCommand {
     if window.get_key(Key::Return) == Action::Press {
         desired_state.pose_mut().end_effector_angle = 0.0;
         desired_state.pose_mut().position.x = 0.2;
         desired_state.pose_mut().position.y = 0.0;
         desired_state.pose_mut().position.z = 0.2;
+        return ArmMotionCommand::Trajectory(desired_state.clone());
+    }
+    let elapsed_seconds = frame_time.as_secs_f32();
+    let xy = desired_state.pose().position.xy();
+    let (mut distance, mut angle) = cartesian_to_polar((xy.x, xy.y));
+
+    let mut input_detected = false;
+    if window.get_key(Key::D) == Action::Press {
+        angle -= elapsed_seconds * 0.8;
+        input_detected = true;
+    }
+    if window.get_key(Key::A) == Action::Press {
+        angle += elapsed_seconds * 0.8;
+        input_detected = true;
+    }
+    if window.get_key(Key::W) == Action::Press {
+        distance += elapsed_seconds * 0.1;
+        input_detected = true;
+    }
+    if window.get_key(Key::S) == Action::Press {
+        distance -= elapsed_seconds * 0.1;
+        input_detected = true;
+    }
+    if window.get_key(Key::E) == Action::Press {
+        desired_state.pose_mut().position.z += elapsed_seconds * 0.1;
+        input_detected = true;
+    }
+    if window.get_key(Key::Q) == Action::Press {
+        desired_state.pose_mut().position.z -= elapsed_seconds * 0.1;
+        input_detected = true;
+    }
+    if window.get_key(Key::R) == Action::Press {
+        desired_state.pose_mut().end_effector_angle -= elapsed_seconds * 20.;
+        input_detected = true;
+    }
+    if window.get_key(Key::F) == Action::Press {
+        desired_state.pose_mut().end_effector_angle += elapsed_seconds * 20.;
+        input_detected = true;
+    }
+    if window.get_key(Key::B) == Action::Press {
+        desired_state.set_gripper_state(true);
+        input_detected = true;
+    }
+    if window.get_key(Key::V) == Action::Press {
+        desired_state.set_gripper_state(false);
+        input_detected = true;
+    }
+    if input_detected {
+        // add small parts to clamp to prevent overflowing
+        // TODO (David): Find a smarter way to do this
+        angle = angle.clamp(
+            -std::f32::consts::PI + 0.0001,
+            std::f32::consts::PI - 0.0001,
+        );
+        let (x, y) = polar_to_cartesian((distance, angle));
+        desired_state.pose_mut().position.x = x;
+        desired_state.pose_mut().position.y = y;
+        ArmMotionCommand::Jogging(desired_state.clone())
+    } else {
+        ArmMotionCommand::None
     }
 }
 
@@ -420,5 +466,16 @@ mod test {
         let (x, y) = polar_to_cartesian((0.1, std::f32::consts::PI + std::f32::consts::FRAC_PI_2));
         assert_relative_eq!(x, 0.0);
         assert_relative_eq!(y, -0.1);
+    }
+
+    #[test]
+    fn arm_motion_command_is_some_() {
+        let command = ArmMotionCommand::Trajectory(DesiredState::new(
+            EndEffectorPose::new(na::Vector3::zeros(), 0.0),
+            true,
+        ));
+        assert!(command.is_some());
+        let command = ArmMotionCommand::None;
+        assert!(!command.is_some());
     }
 }
