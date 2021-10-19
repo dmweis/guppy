@@ -10,6 +10,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::time::sleep;
+use tracing_subscriber::filter::LevelFilter;
 
 #[derive(Clap)]
 #[clap()]
@@ -22,6 +23,10 @@ struct Args {
 #[tokio::main]
 async fn main() -> Result<()> {
     let args: Args = Args::parse();
+    tracing_subscriber::fmt()
+        .pretty()
+        .with_max_level(LevelFilter::INFO)
+        .init();
     move_run(args).await?;
     Ok(())
 }

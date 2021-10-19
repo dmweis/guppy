@@ -8,6 +8,7 @@ use nalgebra as na;
 use std::time::Duration;
 use thiserror::Error;
 use tokio::time::sleep;
+use tracing::*;
 
 #[derive(Error, Debug)]
 pub enum PlannerError {
@@ -54,23 +55,23 @@ impl LssMotionController {
         translation_speed: f32,
         rotational_speed: f32,
     ) -> Result<Self> {
-        arm_controller
-            .setup_motors(&ArmControlSettings::included_trajectory())
-            .await?;
         let last_pose = arm_controller
             .read_position()
             .await?
             .get_end_effector_pose();
-        Ok(Self {
+        let mut motion_planner = Self {
             arm_controller,
             collision_handler,
             translation_speed,
             rotational_speed,
             last_pose,
-        })
+        };
+        motion_planner.apply_trajectory_settings().await?;
+        Ok(motion_planner)
     }
 
     pub async fn apply_trajectory_settings(&mut self) -> Result<()> {
+        info!("Applying trajectory settings");
         self.arm_controller
             .setup_motors(&ArmControlSettings::included_trajectory())
             .await?;
@@ -78,6 +79,7 @@ impl LssMotionController {
     }
 
     pub async fn apply_continuous_settings(&mut self) -> Result<()> {
+        info!("Applying continuous settings");
         self.arm_controller
             .setup_motors(&ArmControlSettings::included_continuous())
             .await?;
