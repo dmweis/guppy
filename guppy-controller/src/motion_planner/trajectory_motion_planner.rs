@@ -28,7 +28,10 @@ pub trait MotionController: Send + Sync {
     ) -> Result<(ArmPositions, JointPositions)>;
     async fn read_position(&mut self) -> Result<ArmPositions>;
     async fn move_to_jogging(&mut self, pose: &EndEffectorPose) -> Result<ArmPositions>;
-    async fn move_to_trajectory(&mut self, pose: &EndEffectorPose) -> Result<ArmPositions>;
+    async fn move_to_trajectory(
+        &mut self,
+        pose: &EndEffectorPose,
+    ) -> Result<(ArmPositions, Duration)>;
     async fn open_gripper(&mut self, current_limit: bool) -> Result<()>;
     async fn close_gripper(&mut self, current_limit: bool) -> Result<()>;
     async fn halt(&mut self) -> Result<()>;
@@ -161,7 +164,10 @@ impl MotionController for LssMotionController {
         }
     }
 
-    async fn move_to_trajectory(&mut self, target: &EndEffectorPose) -> Result<ArmPositions> {
+    async fn move_to_trajectory(
+        &mut self,
+        target: &EndEffectorPose,
+    ) -> Result<(ArmPositions, Duration)> {
         let duration = estimate_time(
             &self.last_pose,
             target,
@@ -176,7 +182,7 @@ impl MotionController for LssMotionController {
                         .move_joints_timed(&joints, duration)
                         .await?;
                     self.last_pose = target.clone();
-                    Ok(positions)
+                    Ok((positions, duration))
                 } else {
                     self.arm_controller
                         .set_color(lss_driver::LedColor::Yellow)
