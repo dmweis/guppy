@@ -10,7 +10,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::time::sleep;
-use tracing_subscriber::filter::LevelFilter;
+use tracing::*;
 
 #[derive(Clap)]
 #[clap()]
@@ -25,7 +25,7 @@ async fn main() -> Result<()> {
     let args: Args = Args::parse();
     tracing_subscriber::fmt()
         .pretty()
-        .with_max_level(LevelFilter::INFO)
+        .with_env_filter("off,guppy=info,simple_jogging_controller=info")
         .init();
     move_run(args).await?;
     Ok(())
@@ -41,7 +41,7 @@ async fn move_run(args: Args) -> Result<()> {
         let running = Arc::clone(&running);
         move || {
             running.store(false, Ordering::Release);
-            println!("Caught interrupt\nExiting...");
+            info!("Caught interrupt\nExiting...");
         }
     })?;
 
