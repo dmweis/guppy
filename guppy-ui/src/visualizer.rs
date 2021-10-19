@@ -4,7 +4,7 @@ use kiss3d::{
     scene::SceneNode,
     window::Window,
 };
-use nalgebra::{Isometry3, Point2, Point3, Translation3, UnitQuaternion, Vector3};
+use nalgebra as na;
 use std::{
     sync::{
         atomic::{AtomicBool, Ordering},
@@ -160,17 +160,19 @@ impl VisualizerInterfaceInternal {
     }
 }
 
-fn convert_coordinates(position: Vector3<f32>) -> Point3<f32> {
-    Point3::new(position.y, position.z, position.x)
+fn convert_coordinates(position: na::Vector3<f32>) -> na::Point3<f32> {
+    na::Point3::new(position.y, position.z, position.x)
 }
 
 fn render_loop(state: Arc<VisualizerInterfaceInternal>) {
-    let white = Point3::new(1.0, 1.0, 1.0);
+    let white = na::Point3::new(1.0, 1.0, 1.0);
     let mut window = Window::new("Guppy");
     let mut frame_counter = Instant::now();
 
-    let mut camera =
-        kiss3d::camera::ArcBall::new(Point3::new(1.0, 1.0, 1.0), Point3::new(0.0, 0.0, 0.0));
+    let mut camera = kiss3d::camera::ArcBall::new(
+        na::Point3::new(1.0, 1.0, 1.0),
+        na::Point3::new(0.0, 0.0, 0.0),
+    );
     camera.set_dist_step(10.0);
 
     window.set_background_color(0.5, 0.5, 0.5);
@@ -178,14 +180,16 @@ fn render_loop(state: Arc<VisualizerInterfaceInternal>) {
 
     let mut primary_arm = ArmRenderer::new(
         &mut window,
-        Point3::new(1.0, 0.0, 1.0),
-        Point3::new(0.0, 1.0, 1.0),
+        na::Point3::new(1.0, 0.0, 1.0),
+        na::Point3::new(0.0, 1.0, 1.0),
     );
 
     add_ground_plane(&mut window);
 
-    let mut desired_state =
-        DesiredState::new(EndEffectorPose::new(Vector3::new(0.2, 0., 0.2), 0.0), false);
+    let mut desired_state = DesiredState::new(
+        EndEffectorPose::new(na::Vector3::new(0.2, 0., 0.2), 0.0),
+        false,
+    );
 
     state.send_new_arm_command(ArmMotionCommand::Trajectory(desired_state.clone()));
 
@@ -203,7 +207,7 @@ fn render_loop(state: Arc<VisualizerInterfaceInternal>) {
                     camera.dist(),
                     frame_counter.elapsed().as_millis(),
                 ),
-                &Point2::new(1.0, 1.0),
+                &na::Point2::new(1.0, 1.0),
                 50.0,
                 &kiss3d::text::Font::default(),
                 &white,
@@ -311,14 +315,14 @@ struct ArmRenderer {
     elbow_sphere: SceneNode,
     wrist_sphere: SceneNode,
     end_effector_sphere: SceneNode,
-    color: Point3<f32>,
+    color: na::Point3<f32>,
 }
 
 impl ArmRenderer {
     fn new(
         window: &mut Window,
-        color: Point3<f32>,
-        end_effector_color: Point3<f32>,
+        color: na::Point3<f32>,
+        end_effector_color: na::Point3<f32>,
     ) -> ArmRenderer {
         let mut base_sphere = window.add_sphere(0.01);
         base_sphere.set_color(color.x, color.y, color.z);
@@ -390,9 +394,9 @@ fn add_ground_plane(window: &mut Window) {
             let distance = (1_f32.powi(2) + 1_f32.powi(2)).sqrt();
             let x_ind = j as f32 - distance;
             let y_ind = i as f32 - distance;
-            let trans = Isometry3::from_parts(
-                Translation3::new(size * x_ind, 0.0, size * y_ind),
-                UnitQuaternion::from_euler_angles(0.0, -1.57, -1.57),
+            let trans = na::Isometry3::from_parts(
+                na::Translation3::new(size * x_ind, 0.0, size * y_ind),
+                na::UnitQuaternion::from_euler_angles(0.0, -1.57, -1.57),
             );
             cube.set_local_transformation(trans);
         }
