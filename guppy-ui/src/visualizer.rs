@@ -236,7 +236,6 @@ fn process_keyboard_input(
     let elapsed_seconds = frame_time.as_secs_f32();
     let xy = desired_state.pose().position.xy();
     let (mut distance, mut angle) = cartesian_to_polar((xy.x, xy.y));
-
     let mut input_detected = false;
     if window.get_key(Key::D) == Action::Press {
         angle -= elapsed_seconds * 0.8;
