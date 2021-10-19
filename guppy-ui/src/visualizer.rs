@@ -199,17 +199,19 @@ fn render_loop(state: Arc<VisualizerInterfaceInternal>) {
 
 fn process_keyboard_input(window: &Window, desired_state: &mut DesiredState, frame_time: Duration) {
     let elapsed_seconds = frame_time.as_secs_f32();
+    let xy = desired_state.pose().position.xy();
+    let (mut distance, mut angle) = cartesian_to_polar((xy.x, xy.y));
     if window.get_key(Key::D) == Action::Press {
-        desired_state.pose_mut().position.y -= elapsed_seconds * 0.1;
+        angle -= elapsed_seconds * 0.8;
     }
     if window.get_key(Key::A) == Action::Press {
-        desired_state.pose_mut().position.y += elapsed_seconds * 0.1;
+        angle += elapsed_seconds * 0.8;
     }
     if window.get_key(Key::W) == Action::Press {
-        desired_state.pose_mut().position.x += elapsed_seconds * 0.1;
+        distance += elapsed_seconds * 0.1;
     }
     if window.get_key(Key::S) == Action::Press {
-        desired_state.pose_mut().position.x -= elapsed_seconds * 0.1;
+        distance -= elapsed_seconds * 0.1;
     }
     if window.get_key(Key::E) == Action::Press {
         desired_state.pose_mut().position.z += elapsed_seconds * 0.1;
@@ -229,12 +231,33 @@ fn process_keyboard_input(window: &Window, desired_state: &mut DesiredState, fra
     if window.get_key(Key::V) == Action::Press {
         desired_state.set_gripper_state(false);
     }
+    // add small parts to clamp to prevent overflowing
+    // TODO (David): Find a smarter way to do this
+    angle = angle.clamp(
+        -std::f32::consts::PI + 0.0001,
+        std::f32::consts::PI - 0.0001,
+    );
+    let (x, y) = polar_to_cartesian((distance, angle));
+    desired_state.pose_mut().position.x = x;
+    desired_state.pose_mut().position.y = y;
     if window.get_key(Key::Return) == Action::Press {
         desired_state.pose_mut().end_effector_angle = 0.0;
         desired_state.pose_mut().position.x = 0.2;
         desired_state.pose_mut().position.y = 0.0;
         desired_state.pose_mut().position.z = 0.2;
     }
+}
+
+fn cartesian_to_polar((x, y): (f32, f32)) -> (f32, f32) {
+    let distance = (x.powi(2) + y.powi(2)).sqrt();
+    let angle = y.atan2(x);
+    (distance, angle)
+}
+
+fn polar_to_cartesian((distance, angle): (f32, f32)) -> (f32, f32) {
+    let x = distance * angle.cos();
+    let y = distance * angle.sin();
+    (x, y)
 }
 
 struct ArmRenderer {
@@ -328,5 +351,74 @@ fn add_ground_plane(window: &mut Window) {
             );
             cube.set_local_transformation(trans);
         }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use approx::assert_relative_eq;
+
+    #[test]
+    fn cartesian_to_polar_zero() {
+        let (distance, angle) = cartesian_to_polar((0.0, 0.0));
+        assert_relative_eq!(distance, 0.0);
+        assert_relative_eq!(angle, 0.0);
+    }
+
+    #[test]
+    fn cartesian_to_polar_front() {
+        let (distance, angle) = cartesian_to_polar((0.1, 0.0));
+        assert_relative_eq!(distance, 0.1);
+        assert_relative_eq!(angle, 0.0);
+    }
+
+    #[test]
+    fn cartesian_to_polar_left() {
+        let (distance, angle) = cartesian_to_polar((0.0, 0.1));
+        assert_relative_eq!(distance, 0.1);
+        assert_relative_eq!(angle, std::f32::consts::FRAC_PI_2);
+    }
+
+    #[test]
+    fn cartesian_to_polar_right() {
+        let (distance, angle) = cartesian_to_polar((0.0, -0.1));
+        assert_relative_eq!(distance, 0.1);
+        assert_relative_eq!(angle, -std::f32::consts::FRAC_PI_2);
+    }
+
+    #[test]
+    fn polar_to_cartesian_zero() {
+        let (x, y) = polar_to_cartesian((0.0, 0.0));
+        assert_relative_eq!(x, 0.0);
+        assert_relative_eq!(y, 0.0);
+    }
+
+    #[test]
+    fn polar_to_cartesian_front() {
+        let (x, y) = polar_to_cartesian((0.1, 0.0));
+        assert_relative_eq!(x, 0.1);
+        assert_relative_eq!(y, 0.0);
+    }
+
+    #[test]
+    fn polar_to_cartesian_left() {
+        let (x, y) = polar_to_cartesian((0.1, std::f32::consts::FRAC_PI_2));
+        assert_relative_eq!(x, 0.0);
+        assert_relative_eq!(y, 0.1);
+    }
+
+    #[test]
+    fn polar_to_cartesian_right_negative() {
+        let (x, y) = polar_to_cartesian((0.1, -std::f32::consts::FRAC_PI_2));
+        assert_relative_eq!(x, 0.0);
+        assert_relative_eq!(y, -0.1);
+    }
+
+    #[test]
+    fn polar_to_cartesian_right_wrap() {
+        let (x, y) = polar_to_cartesian((0.1, std::f32::consts::PI + std::f32::consts::FRAC_PI_2));
+        assert_relative_eq!(x, 0.0);
+        assert_relative_eq!(y, -0.1);
     }
 }
