@@ -57,7 +57,7 @@ async fn move_run(args: Args) -> Result<()> {
         arm_controller::LssArmController::new(driver, arm_config::ArmConfig::included());
 
     let mut motion_planner =
-        LssMotionController::new(arm_controller, collision_handler, 0.15, 10.0).await?;
+        LssMotionController::new(arm_controller, collision_handler, 0.15, 20.0).await?;
 
     motion_planner.open_gripper(false).await?;
 
