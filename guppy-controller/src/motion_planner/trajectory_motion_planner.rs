@@ -89,6 +89,10 @@ impl LssMotionController {
         Ok(())
     }
 
+    pub async fn read_settings(&mut self) -> Result<ArmControlSettings> {
+        Ok(self.arm_controller.load_motor_settings().await?)
+    }
+
     pub async fn home(&mut self) -> Result<()> {
         let lifted_home = JointPositions::new(0.0, -80.0, 82.0, 15.0);
         self.arm_controller

@@ -111,6 +111,10 @@ impl ArmControlSettings {
         Ok(config)
     }
 
+    pub fn as_json(&self) -> Result<String> {
+        Ok(serde_json::to_string_pretty(self)?)
+    }
+
     pub fn save_json(&self, path: &str) -> Result<()> {
         let json = serde_json::to_string_pretty(self)?;
         fs::write(path, &json)?;

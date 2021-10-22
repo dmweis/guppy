@@ -92,6 +92,7 @@ pub enum ArmMotionCommand {
     None,
     Trajectory(DesiredState),
     Jogging(DesiredState),
+    PrintSettings,
 }
 
 impl ArmMotionCommand {
@@ -236,6 +237,9 @@ fn process_keyboard_input(
         desired_state.pose_mut().position.y = 0.0;
         desired_state.pose_mut().position.z = 0.2;
         return ArmMotionCommand::Trajectory(desired_state.clone());
+    }
+    if window.get_key(Key::P) == Action::Press {
+        return ArmMotionCommand::PrintSettings;
     }
     let elapsed_seconds = frame_time.as_secs_f32();
     let xy = desired_state.pose().position.xy();

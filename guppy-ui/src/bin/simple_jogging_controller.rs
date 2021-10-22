@@ -107,6 +107,9 @@ async fn move_run(args: Args) -> Result<()> {
                     }
                 }
             }
+            ArmMotionCommand::PrintSettings => {
+                info!("{}", motion_planner.read_settings().await?.as_json()?);
+            }
             ArmMotionCommand::None => (),
         }
         sleep(Duration::from_millis(20)).await;
