@@ -96,6 +96,7 @@ impl LssMotionController {
     pub async fn home(&mut self) -> Result<()> {
         self.apply_trajectory_settings().await?;
         let lifted_home = JointPositions::new(0.0, -80.0, 90.0, 15.0);
+        self.close_gripper(true).await?;
         self.arm_controller
             .move_joints_timed(&lifted_home, Duration::from_millis(900))
             .await?;
