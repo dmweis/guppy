@@ -19,7 +19,7 @@ pub async fn connect_to_arm(port: &str) -> Result<ControllerWrapper> {
     let driver = arm_driver::SerialArmDriver::new(
         port,
         config.clone(),
-        ArmControlSettings::included_continuous(),
+        &ArmControlSettings::included_continuous(),
     )
     .await?;
     let controller = arm_controller::LssArmController::new(driver, config);
@@ -72,7 +72,7 @@ impl GuppyConfigure for GuppyConfigHandler {
         let config_proto = request.into_inner();
         let mut driver = self.driver.lock().await;
         driver
-            .setup_motors(config_proto.into())
+            .setup_motors(&config_proto.into())
             .await
             .map_err(|_| Status::unimplemented("message"))?;
         Ok(Response::new(guppy_service::ConfigurationResponse {}))
@@ -121,13 +121,13 @@ impl GuppyController for GuppyControllerHandler {
             .ok_or_else(|| Status::invalid_argument("missing position"))?;
         let mut driver = self.driver.lock().await;
         let joint_positions = driver
-            .move_to(arm_controller::EndEffectorPose::new(
+            .move_to(&arm_controller::EndEffectorPose::new(
                 position.into(),
                 inner.effector_angle,
             ))
             .await
             .map_err(|_| Status::internal("Failed to move"))?;
-        let arm_positions = driver.calculate_fk(joint_positions);
+        let arm_positions = driver.calculate_fk(&joint_positions);
         Ok(Response::new(arm_positions.into()))
     }
 
@@ -138,7 +138,7 @@ impl GuppyController for GuppyControllerHandler {
         let gripper_position = request.into_inner();
         let mut driver = self.driver.lock().await;
         driver
-            .move_gripper(gripper_position.gripper)
+            .move_gripper(gripper_position.gripper, None)
             .await
             .map_err(|_| Status::internal("failed to move gripper"))?;
         Ok(Response::new(guppy_service::SetGripperResponse {}))

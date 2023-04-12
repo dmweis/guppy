@@ -4,38 +4,14 @@ use kiss3d::{
     scene::SceneNode,
     window::Window,
 };
-use nalgebra::{Isometry3, Point2, Point3, Translation3, UnitQuaternion, Vector3};
+use nalgebra as na;
 use std::{
     sync::{
         atomic::{AtomicBool, Ordering},
         Arc, Mutex,
     },
-    time::Instant,
+    time::{Duration, Instant},
 };
-
-fn add_ground_plane(window: &mut Window) {
-    let size = 0.5;
-    for i in 0..4 {
-        for j in 0..4 {
-            let mut cube = window.add_cube(size, size, 0.001);
-            if (i + j) % 2 == 0 {
-                // cube.set_color(1.0, 0.3, 0.2);
-                cube.set_color(0.0, 0.0, 0.0);
-            } else {
-                // cube.set_color(0.5, 0.04, 0.17);
-                cube.set_color(1.0, 1.0, 1.0);
-            }
-            let distance = (1_f32.powi(2) + 1_f32.powi(2)).sqrt();
-            let x_ind = j as f32 - distance;
-            let y_ind = i as f32 - distance;
-            let trans = Isometry3::from_parts(
-                Translation3::new(size * x_ind, 0.0, size * y_ind),
-                UnitQuaternion::from_euler_angles(0.0, -1.57, -1.57),
-            );
-            cube.set_local_transformation(trans);
-        }
-    }
-}
 
 #[derive(Default, Clone)]
 pub struct DesiredState {
@@ -50,92 +26,60 @@ impl DesiredState {
             gripper_state,
         }
     }
+
     pub fn pose(&self) -> &EndEffectorPose {
         &self.pose
+    }
+
+    pub fn pose_mut(&mut self) -> &mut EndEffectorPose {
+        &mut self.pose
     }
 
     pub fn gripper_state(&self) -> bool {
         self.gripper_state
     }
+
+    pub fn set_gripper_state(&mut self, gripper_state: bool) {
+        self.gripper_state = gripper_state;
+    }
 }
 
 pub struct VisualizerInterface {
-    current_arm_pose: Arc<Mutex<Option<ArmPositions>>>,
-    motion_plan: Arc<Mutex<Option<Vec<ArmPositions>>>>,
-    desired_state: Arc<Mutex<DesiredState>>,
-    keep_running: Arc<AtomicBool>,
+    state: Arc<VisualizerInterfaceInternal>,
     thread_handle: Option<std::thread::JoinHandle<()>>,
 }
 
 impl VisualizerInterface {
-    pub fn new(desired_state: DesiredState) -> Self {
-        let current_arm_pose = Arc::new(Mutex::new(None));
-        let motion_plan = Arc::new(Mutex::new(None));
-        let desired_state = Arc::new(Mutex::new(desired_state));
-        let keep_running = Arc::new(AtomicBool::new(true));
+    pub fn set_position(&mut self, arm_position: ArmPositions) {
+        self.state.set_current_pose(arm_position);
+    }
 
-        let keep_running_clone = keep_running.clone();
-        let current_arm_pose_clone = current_arm_pose.clone();
-        let desired_state_clone = desired_state.clone();
-        let motion_plan_clone = motion_plan.clone();
-        let thread_handle = std::thread::spawn(move || {
-            render_loop(
-                current_arm_pose_clone,
-                motion_plan_clone,
-                keep_running_clone,
-                desired_state_clone,
-            );
+    pub fn get_latest_arm_command(&self) -> ArmMotionCommand {
+        self.state.get_latest_arm_command()
+    }
+
+    pub fn window_opened(&self) -> bool {
+        self.state.window_opened()
+    }
+}
+
+impl Default for VisualizerInterface {
+    fn default() -> Self {
+        let state = Arc::new(VisualizerInterfaceInternal::new());
+        let thread_handle = std::thread::spawn({
+            let internal_state = Arc::clone(&state);
+            move || render_loop(internal_state)
         });
         VisualizerInterface {
-            current_arm_pose,
-            motion_plan,
-            keep_running,
-            desired_state,
+            state,
             thread_handle: Some(thread_handle),
-        }
-    }
-
-    pub fn sensible_default() -> Self {
-        let desired_state =
-            DesiredState::new(EndEffectorPose::new(Vector3::new(0.2, 0., 0.2), 0.0), false);
-        Self::new(desired_state)
-    }
-
-    pub fn set_position(&mut self, arm_position: ArmPositions) {
-        self.current_arm_pose
-            .lock()
-            .expect("Failed lock in set arm position")
-            .replace(arm_position);
-    }
-
-    pub fn get_desired_state(&self) -> DesiredState {
-        self.desired_state
-            .lock()
-            .expect("Failed lock desired_state")
-            .clone()
-    }
-
-    pub fn set_motion_plan(&mut self, motion_plan: Option<Vec<ArmPositions>>) {
-        match motion_plan {
-            Some(plan) => {
-                self.motion_plan
-                    .lock()
-                    .expect("Failed lock in set_motion_plan")
-                    .replace(plan);
-            }
-            None => {
-                self.motion_plan
-                    .lock()
-                    .expect("Failed lock in set_motion_plan")
-                    .take();
-            }
         }
     }
 }
 
 impl Drop for VisualizerInterface {
     fn drop(&mut self) {
-        self.keep_running.store(false, Ordering::Release);
+        self.state.stop_running();
         if let Some(thread_handle) = self.thread_handle.take() {
             thread_handle
                 .join()
@@ -144,8 +88,229 @@ impl Drop for VisualizerInterface {
     }
 }
 
-fn convert_coordinates(position: Vector3<f32>) -> Point3<f32> {
-    Point3::new(position.y, position.z, position.x)
+pub enum ArmMotionCommand {
+    None,
+    Trajectory(DesiredState),
+    Jogging(DesiredState),
+    PrintSettings,
+}
+
+impl ArmMotionCommand {
+    pub fn take(&mut self) -> Self {
+        std::mem::take(self)
+    }
+
+    pub fn is_some(&self) -> bool {
+        !matches!(self, ArmMotionCommand::None)
+    }
+}
+
+impl Default for ArmMotionCommand {
+    fn default() -> Self {
+        ArmMotionCommand::None
+    }
+}
+
+struct VisualizerInterfaceInternal {
+    current_arm_pose: Arc<Mutex<Option<ArmPositions>>>,
+    keep_running: Arc<AtomicBool>,
+    desired_state: Arc<Mutex<ArmMotionCommand>>,
+    window_opened: Arc<AtomicBool>,
+}
+
+impl VisualizerInterfaceInternal {
+    fn new() -> Self {
+        Self {
+            current_arm_pose: Arc::default(),
+            keep_running: Arc::new(AtomicBool::new(true)),
+            desired_state: Arc::default(),
+            window_opened: Arc::new(AtomicBool::new(true)),
+        }
+    }
+
+    fn send_new_arm_command(&self, command: ArmMotionCommand) {
+        *self.desired_state.lock().unwrap() = command;
+    }
+
+    fn get_latest_arm_command(&self) -> ArmMotionCommand {
+        self.desired_state.lock().unwrap().take()
+    }
+
+    fn set_current_pose(&self, pose: ArmPositions) {
+        *self.current_arm_pose.lock().unwrap() = Some(pose);
+    }
+
+    fn get_current_pose(&self) -> Option<ArmPositions> {
+        self.current_arm_pose.lock().unwrap().clone()
+    }
+
+    fn keep_running(&self) -> bool {
+        self.keep_running.load(Ordering::SeqCst)
+    }
+
+    fn stop_running(&self) {
+        self.keep_running.store(false, Ordering::SeqCst);
+    }
+
+    fn window_opened(&self) -> bool {
+        self.window_opened.load(Ordering::SeqCst)
+    }
+
+    fn set_window_closed(&self) {
+        self.window_opened.store(false, Ordering::SeqCst);
+    }
+}
+
+fn convert_coordinates(position: na::Vector3<f32>) -> na::Point3<f32> {
+    na::Point3::new(position.y, position.z, position.x)
+}
+
+fn render_loop(state: Arc<VisualizerInterfaceInternal>) {
+    let white = na::Point3::new(1.0, 1.0, 1.0);
+    let mut window = Window::new("Guppy");
+    let mut frame_counter = Instant::now();
+
+    let mut camera = kiss3d::camera::ArcBall::new(
+        na::Point3::new(1.0, 1.0, 1.0),
+        na::Point3::new(0.0, 0.0, 0.0),
+    );
+    camera.set_dist_step(10.0);
+
+    window.set_background_color(0.5, 0.5, 0.5);
+    window.set_framerate_limit(Some(240));
+
+    let mut primary_arm = ArmRenderer::new(
+        &mut window,
+        na::Point3::new(1.0, 0.0, 1.0),
+        na::Point3::new(0.0, 1.0, 1.0),
+    );
+
+    add_ground_plane(&mut window);
+
+    let mut desired_state = DesiredState::new(
+        EndEffectorPose::new(na::Vector3::new(0.2, 0., 0.2), 0.0),
+        false,
+    );
+
+    state.send_new_arm_command(ArmMotionCommand::Trajectory(desired_state.clone()));
+
+    while !window.should_close() && state.keep_running() {
+        let arm_pose = state.get_current_pose();
+        if let Some(arm_pose) = arm_pose {
+            primary_arm.update_pose(&mut window, &arm_pose);
+            window.draw_text(
+                &format!(
+                    "End effector:\n   x: {}\n   y: {}\n   z: {}\n   angle: {}\nCamera dist: {}\nframe time: {}ms",
+                    arm_pose.end_effector.x,
+                    arm_pose.end_effector.y,
+                    arm_pose.end_effector.z,
+                    arm_pose.end_effector_angle,
+                    camera.dist(),
+                    frame_counter.elapsed().as_millis(),
+                ),
+                &na::Point2::new(1.0, 1.0),
+                50.0,
+                &kiss3d::text::Font::default(),
+                &white,
+            );
+        }
+
+        let command = process_keyboard_input(&window, &mut desired_state, frame_counter.elapsed());
+        if command.is_some() {
+            state.send_new_arm_command(command);
+        }
+        frame_counter = Instant::now();
+        window.render_with_camera(&mut camera);
+    }
+    window.close();
+    state.set_window_closed();
+}
+
+fn process_keyboard_input(
+    window: &Window,
+    desired_state: &mut DesiredState,
+    frame_time: Duration,
+) -> ArmMotionCommand {
+    if window.get_key(Key::Return) == Action::Press {
+        desired_state.pose_mut().end_effector_angle = 0.0;
+        desired_state.pose_mut().position.x = 0.2;
+        desired_state.pose_mut().position.y = 0.0;
+        desired_state.pose_mut().position.z = 0.2;
+        return ArmMotionCommand::Trajectory(desired_state.clone());
+    }
+    if window.get_key(Key::P) == Action::Press {
+        return ArmMotionCommand::PrintSettings;
+    }
+    let elapsed_seconds = frame_time.as_secs_f32();
+    let xy = desired_state.pose().position.xy();
+    let (mut distance, mut angle) = cartesian_to_polar((xy.x, xy.y));
+    let mut input_detected = false;
+    if window.get_key(Key::D) == Action::Press {
+        angle -= elapsed_seconds * 0.8;
+        input_detected = true;
+    }
+    if window.get_key(Key::A) == Action::Press {
+        angle += elapsed_seconds * 0.8;
+        input_detected = true;
+    }
+    if window.get_key(Key::W) == Action::Press {
+        distance += elapsed_seconds * 0.1;
+        input_detected = true;
+    }
+    if window.get_key(Key::S) == Action::Press {
+        distance -= elapsed_seconds * 0.1;
+        input_detected = true;
+    }
+    if window.get_key(Key::E) == Action::Press {
+        desired_state.pose_mut().position.z += elapsed_seconds * 0.1;
+        input_detected = true;
+    }
+    if window.get_key(Key::Q) == Action::Press {
+        desired_state.pose_mut().position.z -= elapsed_seconds * 0.1;
+        input_detected = true;
+    }
+    if window.get_key(Key::R) == Action::Press {
+        desired_state.pose_mut().end_effector_angle -= elapsed_seconds * 20.;
+        input_detected = true;
+    }
+    if window.get_key(Key::F) == Action::Press {
+        desired_state.pose_mut().end_effector_angle += elapsed_seconds * 20.;
+        input_detected = true;
+    }
+    if window.get_key(Key::B) == Action::Press {
+        desired_state.set_gripper_state(true);
+        input_detected = true;
+    }
+    if window.get_key(Key::V) == Action::Press {
+        desired_state.set_gripper_state(false);
+        input_detected = true;
+    }
+    if input_detected {
+        // add small parts to clamp to prevent overflowing
+        // TODO (David): Find a smarter way to do this
+        angle = angle.clamp(
+            -std::f32::consts::PI + 0.0001,
+            std::f32::consts::PI - 0.0001,
+        );
+        let (x, y) = polar_to_cartesian((distance, angle));
+        desired_state.pose_mut().position.x = x;
+        desired_state.pose_mut().position.y = y;
+        ArmMotionCommand::Jogging(desired_state.clone())
+    } else {
+        ArmMotionCommand::None
+    }
+}
+
+fn cartesian_to_polar((x, y): (f32, f32)) -> (f32, f32) {
+    let distance = (x.powi(2) + y.powi(2)).sqrt();
+    let angle = y.atan2(x);
+    (distance, angle)
+}
+
+fn polar_to_cartesian((distance, angle): (f32, f32)) -> (f32, f32) {
+    let x = distance * angle.cos();
+    let y = distance * angle.sin();
+    (x, y)
 }
 
 struct ArmRenderer {
@@ -154,14 +319,14 @@ struct ArmRenderer {
     elbow_sphere: SceneNode,
     wrist_sphere: SceneNode,
     end_effector_sphere: SceneNode,
-    color: Point3<f32>,
+    color: na::Point3<f32>,
 }
 
 impl ArmRenderer {
     fn new(
         window: &mut Window,
-        color: Point3<f32>,
-        end_effector_color: Point3<f32>,
+        color: na::Point3<f32>,
+        end_effector_color: na::Point3<f32>,
     ) -> ArmRenderer {
         let mut base_sphere = window.add_sphere(0.01);
         base_sphere.set_color(color.x, color.y, color.z);
@@ -187,33 +352,25 @@ impl ArmRenderer {
         }
     }
 
-    fn step(&mut self, window: &mut Window, arm_pose: &ArmPositions) {
+    fn update_pose(&mut self, window: &mut Window, arm_pose: &ArmPositions) {
         let base = convert_coordinates(arm_pose.base);
-        self.base_sphere
-            .set_local_translation(Translation3::new(base.x, base.y, base.z));
+        self.base_sphere.set_local_translation(base.into());
 
         let shoulder = convert_coordinates(arm_pose.shoulder);
         window.draw_line(&base, &shoulder, &self.color);
-        self.shoulder_sphere
-            .set_local_translation(Translation3::new(shoulder.x, shoulder.y, shoulder.z));
+        self.shoulder_sphere.set_local_translation(shoulder.into());
 
         let elbow = convert_coordinates(arm_pose.elbow);
         window.draw_line(&shoulder, &elbow, &self.color);
-        self.elbow_sphere
-            .set_local_translation(Translation3::new(elbow.x, elbow.y, elbow.z));
+        self.elbow_sphere.set_local_translation(elbow.into());
 
         let wrist = convert_coordinates(arm_pose.wrist);
         window.draw_line(&elbow, &wrist, &self.color);
-        self.wrist_sphere
-            .set_local_translation(Translation3::new(wrist.x, wrist.y, wrist.z));
+        self.wrist_sphere.set_local_translation(wrist.into());
 
         let end_effector = convert_coordinates(arm_pose.end_effector);
         self.end_effector_sphere
-            .set_local_translation(Translation3::new(
-                end_effector.x,
-                end_effector.y,
-                end_effector.z,
-            ));
+            .set_local_translation(end_effector.into());
         window.draw_line(&wrist, &end_effector, &self.color);
     }
 }
@@ -228,104 +385,104 @@ impl Drop for ArmRenderer {
     }
 }
 
-fn render_loop(
-    current_arm_pose: Arc<Mutex<Option<ArmPositions>>>,
-    motion_plan: Arc<Mutex<Option<Vec<ArmPositions>>>>,
-    keep_running: Arc<AtomicBool>,
-    desired_state: Arc<Mutex<DesiredState>>,
-) {
-    let white = Point3::new(1.0, 1.0, 1.0);
-    let mut window = Window::new("Guppy");
-    let mut frame_counter = Instant::now();
-
-    let mut camera =
-        kiss3d::camera::ArcBall::new(Point3::new(1.0, 1.0, 1.0), Point3::new(0.0, 0.0, 0.0));
-    camera.set_dist_step(10.0);
-
-    window.set_background_color(0.5, 0.5, 0.5);
-    window.set_framerate_limit(Some(240));
-
-    let mut primary_arm = ArmRenderer::new(
-        &mut window,
-        Point3::new(1.0, 0.0, 1.0),
-        Point3::new(0.0, 1.0, 1.0),
-    );
-
-    add_ground_plane(&mut window);
-
-    while !window.should_close() && keep_running.load(Ordering::Acquire) {
-        let arm_pose = current_arm_pose.lock().expect("Render failed").clone();
-        let motion_plan_poses = motion_plan.lock().expect("Render failed").clone();
-        if let Some(arm_pose) = arm_pose {
-            primary_arm.step(&mut window, &arm_pose);
-            window.draw_text(
-                &format!(
-                    "End effector:\n   x: {}\n   y: {}\n   z: {}\n   angle: {}\nCamera dist: {}\nframe time: {}ms",
-                    arm_pose.end_effector.x,
-                    arm_pose.end_effector.y,
-                    arm_pose.end_effector.z,
-                    arm_pose.end_effector_angle,
-                    camera.dist(),
-                    frame_counter.elapsed().as_millis(),
-                ),
-                &Point2::new(1.0, 1.0),
-                50.0,
-                &kiss3d::text::Font::default(),
-                &white,
-            );
-        }
-        let mut arm_renders = vec![];
-        if let Some(motion_plan) = motion_plan_poses {
-            for step in motion_plan {
-                let mut arm_render = ArmRenderer::new(
-                    &mut window,
-                    Point3::new(1.0, 0.0, 0.0),
-                    Point3::new(0.0, 1.0, 0.0),
-                );
-                arm_render.step(&mut window, &step);
-                arm_renders.push(arm_render);
+fn add_ground_plane(window: &mut Window) {
+    let size = 0.5;
+    for i in 0..4 {
+        for j in 0..4 {
+            let mut cube = window.add_cube(size, size, 0.001);
+            if (i + j) % 2 == 0 {
+                cube.set_color(0.0, 0.0, 0.0);
+            } else {
+                cube.set_color(1.0, 1.0, 1.0);
             }
+            let distance = (1_f32.powi(2) + 1_f32.powi(2)).sqrt();
+            let x_ind = j as f32 - distance;
+            let y_ind = i as f32 - distance;
+            let trans = na::Isometry3::from_parts(
+                na::Translation3::new(size * x_ind, 0.0, size * y_ind),
+                na::UnitQuaternion::from_euler_angles(0.0, -1.57, -1.57),
+            );
+            cube.set_local_transformation(trans);
         }
-        let mut pos_copy = desired_state.lock().unwrap().pose.clone();
-        if window.get_key(Key::D) == Action::Press {
-            pos_copy.position.y -= frame_counter.elapsed().as_secs_f32() * 0.1;
-        }
-        if window.get_key(Key::A) == Action::Press {
-            pos_copy.position.y += frame_counter.elapsed().as_secs_f32() * 0.1;
-        }
-        if window.get_key(Key::W) == Action::Press {
-            pos_copy.position.x += frame_counter.elapsed().as_secs_f32() * 0.1;
-        }
-        if window.get_key(Key::S) == Action::Press {
-            pos_copy.position.x -= frame_counter.elapsed().as_secs_f32() * 0.1;
-        }
-        if window.get_key(Key::E) == Action::Press {
-            pos_copy.position.z += frame_counter.elapsed().as_secs_f32() * 0.1;
-        }
-        if window.get_key(Key::Q) == Action::Press {
-            pos_copy.position.z -= frame_counter.elapsed().as_secs_f32() * 0.1;
-        }
-        if window.get_key(Key::R) == Action::Press {
-            pos_copy.end_effector_angle -= frame_counter.elapsed().as_secs_f32() * 20.;
-        }
-        if window.get_key(Key::F) == Action::Press {
-            pos_copy.end_effector_angle += frame_counter.elapsed().as_secs_f32() * 20.;
-        }
-        if window.get_key(Key::B) == Action::Press {
-            desired_state.lock().unwrap().gripper_state = true;
-        }
-        if window.get_key(Key::V) == Action::Press {
-            desired_state.lock().unwrap().gripper_state = false;
-        }
-        if window.get_key(Key::Return) == Action::Press {
-            pos_copy.end_effector_angle = 0.0;
-            pos_copy.position.x = 0.2;
-            pos_copy.position.y = 0.0;
-            pos_copy.position.z = 0.2;
-        }
-        desired_state.lock().unwrap().pose = pos_copy;
-        frame_counter = Instant::now();
-        window.render_with_camera(&mut camera);
     }
-    window.close()
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use approx::assert_relative_eq;
+
+    #[test]
+    fn cartesian_to_polar_zero() {
+        let (distance, angle) = cartesian_to_polar((0.0, 0.0));
+        assert_relative_eq!(distance, 0.0);
+        assert_relative_eq!(angle, 0.0);
+    }
+
+    #[test]
+    fn cartesian_to_polar_front() {
+        let (distance, angle) = cartesian_to_polar((0.1, 0.0));
+        assert_relative_eq!(distance, 0.1);
+        assert_relative_eq!(angle, 0.0);
+    }
+
+    #[test]
+    fn cartesian_to_polar_left() {
+        let (distance, angle) = cartesian_to_polar((0.0, 0.1));
+        assert_relative_eq!(distance, 0.1);
+        assert_relative_eq!(angle, std::f32::consts::FRAC_PI_2);
+    }
+
+    #[test]
+    fn cartesian_to_polar_right() {
+        let (distance, angle) = cartesian_to_polar((0.0, -0.1));
+        assert_relative_eq!(distance, 0.1);
+        assert_relative_eq!(angle, -std::f32::consts::FRAC_PI_2);
+    }
+
+    #[test]
+    fn polar_to_cartesian_zero() {
+        let (x, y) = polar_to_cartesian((0.0, 0.0));
+        assert_relative_eq!(x, 0.0);
+        assert_relative_eq!(y, 0.0);
+    }
+
+    #[test]
+    fn polar_to_cartesian_front() {
+        let (x, y) = polar_to_cartesian((0.1, 0.0));
+        assert_relative_eq!(x, 0.1);
+        assert_relative_eq!(y, 0.0);
+    }
+
+    #[test]
+    fn polar_to_cartesian_left() {
+        let (x, y) = polar_to_cartesian((0.1, std::f32::consts::FRAC_PI_2));
+        assert_relative_eq!(x, 0.0);
+        assert_relative_eq!(y, 0.1);
+    }
+
+    #[test]
+    fn polar_to_cartesian_right_negative() {
+        let (x, y) = polar_to_cartesian((0.1, -std::f32::consts::FRAC_PI_2));
+        assert_relative_eq!(x, 0.0);
+        assert_relative_eq!(y, -0.1);
+    }
+
+    #[test]
+    fn polar_to_cartesian_right_wrap() {
+        let (x, y) = polar_to_cartesian((0.1, std::f32::consts::PI + std::f32::consts::FRAC_PI_2));
+        assert_relative_eq!(x, 0.0);
+        assert_relative_eq!(y, -0.1);
+    }
+
+    #[test]
+    fn arm_motion_command_is_some_() {
+        let command = ArmMotionCommand::Trajectory(DesiredState::new(
+            EndEffectorPose::new(na::Vector3::zeros(), 0.0),
+            true,
+        ));
+        assert!(command.is_some());
+        let command = ArmMotionCommand::None;
+        assert!(!command.is_some());
+    }
 }

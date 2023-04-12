@@ -111,12 +111,12 @@ enum MotionCommand {
     MoveTo(EndEffectorPose),
 }
 
-pub struct ContinuousMotionController {
+pub struct InterpolatingMotionController {
     sender: mpsc::Sender<MotionCommand>,
     _join_handle: task::JoinHandle<()>,
 }
 
-impl ContinuousMotionController {
+impl InterpolatingMotionController {
     pub async fn new(
         arm_controller: Box<dyn ArmController>,
         collision_handler: CollisionHandler,
@@ -225,13 +225,13 @@ impl MotionControllerInternal {
                 (self.rotational_speed * elapsed.as_secs_f32()).abs(),
             );
             if let Some(next) = next {
-                let (positions, joints) = self.arm_controller.calculate_full_poses(next.clone())?;
+                let (positions, joints) = self.arm_controller.calculate_full_poses(&next)?;
                 if self.collision_handler.pose_collision_free(&positions) {
                     self.last_pose = next;
                     self.arm_controller
                         .set_color(lss_driver::LedColor::Cyan)
                         .await?;
-                    self.arm_controller.move_joints_to(joints).await?;
+                    self.arm_controller.move_joints_to(&joints).await?;
                 } else {
                     self.arm_controller
                         .set_color(lss_driver::LedColor::Red)

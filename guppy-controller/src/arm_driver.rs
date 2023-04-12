@@ -1,9 +1,10 @@
 use crate::arm_config;
 use async_trait::async_trait;
+use lazy_static::lazy_static;
 pub use lss_driver::LedColor;
 use lss_driver::{CommandModifier, LSSDriver};
 use serde::{Deserialize, Serialize};
-use std::{fs, include_bytes, str, sync::Arc, time::Duration};
+use std::{fs, str, sync::Arc, time::Duration};
 use thiserror::Error;
 use tokio::sync::Mutex;
 
@@ -72,6 +73,17 @@ impl ServoControlSettings {
     }
 }
 
+lazy_static! {
+    static ref INCLUDED_TRAJECTORY: ArmControlSettings = {
+        let json = include_str!("../config/motor_settings_trajectory.json");
+        ArmControlSettings::parse_json(json).unwrap()
+    };
+    static ref INCLUDED_CONTINUOUS: ArmControlSettings = {
+        let json = include_str!("../config/motor_settings_continuous.json");
+        ArmControlSettings::parse_json(json).unwrap()
+    };
+}
+
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
 pub struct ArmControlSettings {
     /// Settings for each servo in the arm
@@ -99,6 +111,10 @@ impl ArmControlSettings {
         Ok(config)
     }
 
+    pub fn as_json(&self) -> Result<String> {
+        Ok(serde_json::to_string_pretty(self)?)
+    }
+
     pub fn save_json(&self, path: &str) -> Result<()> {
         let json = serde_json::to_string_pretty(self)?;
         fs::write(path, &json)?;
@@ -110,9 +126,8 @@ impl ArmControlSettings {
     /// This file is packaged with the binary
     /// This method retrieves this included version
     pub fn included_continuous() -> ArmControlSettings {
-        let json =
-            str::from_utf8(include_bytes!("../config/motor_settings_continuous.json")).unwrap();
-        ArmControlSettings::parse_json(json).unwrap()
+        // TODO (David): These don't need to be clones
+        INCLUDED_CONTINUOUS.clone()
     }
 
     /// Guppy comes with an included config file.
@@ -120,9 +135,8 @@ impl ArmControlSettings {
     /// This file is packaged with the binary
     /// This method retrieves this included version
     pub fn included_trajectory() -> ArmControlSettings {
-        let json =
-            str::from_utf8(include_bytes!("../config/motor_settings_trajectory.json")).unwrap();
-        ArmControlSettings::parse_json(json).unwrap()
+        // TODO (David): These don't need to be clones
+        INCLUDED_TRAJECTORY.clone()
     }
 }
 
@@ -187,22 +201,23 @@ impl ArmMotorStatus {
 #[async_trait]
 pub trait ArmDriver: Send + Sync {
     async fn set_color(&mut self, color: lss_driver::LedColor) -> Result<()>;
-    async fn setup_motors(&mut self, settings: ArmControlSettings) -> Result<()>;
+    async fn setup_motors(&mut self, settings: &ArmControlSettings) -> Result<()>;
     async fn load_motor_settings(&mut self) -> Result<ArmControlSettings>;
     async fn halt(&mut self) -> Result<()>;
     async fn limp(&mut self) -> Result<()>;
-    async fn move_to(&mut self, position: JointPositions) -> Result<()>;
-    async fn move_to_timed(&mut self, position: JointPositions, duration: Duration) -> Result<()>;
+    async fn move_to(&mut self, position: &JointPositions) -> Result<()>;
+    async fn move_to_timed(&mut self, position: &JointPositions, duration: Duration) -> Result<()>;
     async fn read_position(&mut self) -> Result<JointPositions>;
     /// 0.0 is fully open
     /// 1.0 is fully closed
     async fn move_gripper(
         &mut self,
         closed: f32,
-        current_limit: u32,
+        current_limit: Option<u32>,
         duration: Duration,
     ) -> Result<()>;
     async fn query_motor_status(&mut self) -> Result<ArmMotorStatus>;
+    async fn restart_motors(&mut self) -> Result<()>;
 }
 
 pub struct SerialArmDriver {
@@ -214,7 +229,7 @@ impl SerialArmDriver {
     pub async fn new(
         port: &str,
         config: arm_config::ArmConfig,
-        control_settings: ArmControlSettings,
+        control_settings: &ArmControlSettings,
     ) -> Result<Box<Self>> {
         let driver = lss_driver::LSSDriver::new(port)?;
         let mut arm_driver = SerialArmDriver { driver, config };
@@ -232,7 +247,7 @@ impl ArmDriver for SerialArmDriver {
         Ok(())
     }
 
-    async fn setup_motors(&mut self, settings: ArmControlSettings) -> Result<()> {
+    async fn setup_motors(&mut self, settings: &ArmControlSettings) -> Result<()> {
         async fn set_motor(
             driver: &mut lss_driver::LSSDriver,
             motor_id: u8,
@@ -349,7 +364,7 @@ impl ArmDriver for SerialArmDriver {
         Ok(())
     }
 
-    async fn move_to(&mut self, position: JointPositions) -> Result<()> {
+    async fn move_to(&mut self, position: &JointPositions) -> Result<()> {
         self.driver
             .move_to_position(self.config.base_id, position.base)
             .await?;
@@ -365,7 +380,7 @@ impl ArmDriver for SerialArmDriver {
         Ok(())
     }
 
-    async fn move_to_timed(&mut self, position: JointPositions, duration: Duration) -> Result<()> {
+    async fn move_to_timed(&mut self, position: &JointPositions, duration: Duration) -> Result<()> {
         self.driver
             .move_to_position_with_modifier(
                 self.config.base_id,
@@ -416,19 +431,19 @@ impl ArmDriver for SerialArmDriver {
     async fn move_gripper(
         &mut self,
         closed: f32,
-        current_limit: u32,
+        current_limit: Option<u32>,
         duration: Duration,
     ) -> Result<()> {
         let desired_position = calc_gripper(closed);
+        let modifiers = match current_limit {
+            Some(current) => vec![
+                CommandModifier::CurrentHold(current),
+                CommandModifier::TimedDuration(duration),
+            ],
+            None => vec![CommandModifier::TimedDuration(duration)],
+        };
         self.driver
-            .move_to_position_with_modifiers(
-                self.config.gripper_id,
-                desired_position,
-                &[
-                    CommandModifier::CurrentHold(current_limit),
-                    CommandModifier::TimedDuration(duration),
-                ],
-            )
+            .move_to_position_with_modifiers(self.config.gripper_id, desired_position, &modifiers)
             .await?;
         Ok(())
     }
@@ -461,6 +476,13 @@ impl ArmDriver for SerialArmDriver {
             gripper,
         })
     }
+
+    async fn restart_motors(&mut self) -> Result<()> {
+        for id in self.config.get_ids() {
+            self.driver.reset(id).await?;
+        }
+        Ok(())
+    }
 }
 
 pub struct SharedSerialArmDriver {
@@ -472,7 +494,7 @@ impl SharedSerialArmDriver {
     pub async fn new(
         driver: Arc<Mutex<LSSDriver>>,
         config: arm_config::ArmConfig,
-        control_settings: ArmControlSettings,
+        control_settings: &ArmControlSettings,
     ) -> Result<Box<Self>> {
         let mut arm_driver = Self { driver, config };
         arm_driver.setup_motors(control_settings).await?;
@@ -490,7 +512,7 @@ impl ArmDriver for SharedSerialArmDriver {
         Ok(())
     }
 
-    async fn setup_motors(&mut self, settings: ArmControlSettings) -> Result<()> {
+    async fn setup_motors(&mut self, settings: &ArmControlSettings) -> Result<()> {
         async fn set_motor(
             driver: &mut lss_driver::LSSDriver,
             motor_id: u8,
@@ -611,7 +633,7 @@ impl ArmDriver for SharedSerialArmDriver {
         Ok(())
     }
 
-    async fn move_to(&mut self, position: JointPositions) -> Result<()> {
+    async fn move_to(&mut self, position: &JointPositions) -> Result<()> {
         let mut driver = self.driver.lock().await;
         driver
             .move_to_position(self.config.base_id, position.base)
@@ -628,7 +650,7 @@ impl ArmDriver for SharedSerialArmDriver {
         Ok(())
     }
 
-    async fn move_to_timed(&mut self, position: JointPositions, duration: Duration) -> Result<()> {
+    async fn move_to_timed(&mut self, position: &JointPositions, duration: Duration) -> Result<()> {
         let mut driver = self.driver.lock().await;
         driver
             .move_to_position_with_modifier(
@@ -681,21 +703,21 @@ impl ArmDriver for SharedSerialArmDriver {
     async fn move_gripper(
         &mut self,
         closed: f32,
-        current_limit: u32,
+        current_limit: Option<u32>,
         duration: Duration,
     ) -> Result<()> {
         let desired_position = calc_gripper(closed);
+        let modifiers = match current_limit {
+            Some(current) => vec![
+                CommandModifier::CurrentHold(current),
+                CommandModifier::TimedDuration(duration),
+            ],
+            None => vec![CommandModifier::TimedDuration(duration)],
+        };
         self.driver
             .lock()
             .await
-            .move_to_position_with_modifiers(
-                self.config.gripper_id,
-                desired_position,
-                &[
-                    CommandModifier::TimedDuration(duration),
-                    CommandModifier::CurrentHold(current_limit),
-                ],
-            )
+            .move_to_position_with_modifiers(self.config.gripper_id, desired_position, &modifiers)
             .await?;
         Ok(())
     }
@@ -724,6 +746,14 @@ impl ArmDriver for SharedSerialArmDriver {
             wrist,
             gripper,
         })
+    }
+
+    async fn restart_motors(&mut self) -> Result<()> {
+        let mut driver = self.driver.lock().await;
+        for id in self.config.get_ids() {
+            driver.reset(id).await?;
+        }
+        Ok(())
     }
 }
 
