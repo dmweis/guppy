@@ -1,0 +1,3 @@
+(function() {var implementors = {
+"guppy_controller":[["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.74.0/core/iter/traits/iterator/trait.Iterator.html\" title=\"trait core::iter::traits::iterator::Iterator\">Iterator</a> for <a class=\"struct\" href=\"guppy_controller/motion_planner/struct.LinearMotion.html\" title=\"struct guppy_controller::motion_planner::LinearMotion\">LinearMotion</a>"]]
+};if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

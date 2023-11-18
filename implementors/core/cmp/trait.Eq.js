@@ -1,0 +1,3 @@
+(function() {var implementors = {
+"guppy_controller":[["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.74.0/core/cmp/trait.Eq.html\" title=\"trait core::cmp::Eq\">Eq</a> for <a class=\"enum\" href=\"guppy_controller/arm_driver/enum.MotorStatus.html\" title=\"enum guppy_controller::arm_driver::MotorStatus\">MotorStatus</a>"]]
+};if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

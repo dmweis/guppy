@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":["guppy_configure_client","guppy_configure_server","guppy_controller_client","guppy_controller_server"],"struct":["ArmControlSettings","ArmPositions","ConfigurationRequest","ConfigurationResponse","JointPositions","MoveToCommand","ServoControlSettings","SetGripperRequest","SetGripperResponse","SetLedRequest","SetLedResponse","Vector"]};
