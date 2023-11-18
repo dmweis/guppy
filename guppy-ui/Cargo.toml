@@ -2,7 +2,7 @@
 name = "guppy-ui"
 version = "0.1.0"
 authors = ["David Michael Weis <dweis7@gmail.com>"]
-edition = "2018"
+edition = "2021"
 
 
 [dependencies]
@@ -10,9 +10,9 @@ guppy-controller = { path = "../guppy-controller" }
 guppy-grpc = { path = "../guppy-grpc" }
 tokio = { version = "1.12", features = ["macros", "time", "rt-multi-thread"] }
 clap = "3.0.0-beta.1"
-nalgebra = { version = "0.26" }
+nalgebra = {version = "0.32.3", features = ["serde-serialize"]}
 async-std = "1.6"
 ctrlc = "3.1"
-kiss3d = "0.31"
+kiss3d = "0.35"
 anyhow = "^1.0"
 

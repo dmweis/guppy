@@ -2,22 +2,22 @@
 name = "guppy-controller"
 version = "0.1.0"
 authors = ["David Michael Weis <dweis7@gmail.com>"]
-edition = "2018"
+edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-lss_driver = "0.6"
+lss_driver = "0.8.4"
 tokio = { version = "1.12", features = ["time"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-serde_yaml = "0.8"
+serde_yaml = "0.9"
 async-trait = "0.1"
-nalgebra = { version = "0.26", features = ["serde-serialize"] }
+nalgebra = {version = "0.32.3", features = ["serde-serialize"]}
 async-std = "1.6"
 anyhow = "^1.0"
 thiserror = "1.0"
-parry3d = "0.4"
+parry3d = "0.13"
 
 [dev-dependencies]
-approx = "0.4"
+approx = "0.5.1"
