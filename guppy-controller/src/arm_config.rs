@@ -16,9 +16,9 @@ pub struct ArmConfig {
     pub end_effector: Vector3<f32>,
 }
 
-impl ArmConfig {
+impl Default for ArmConfig {
     /// Arm configuration with default values
-    pub fn default() -> ArmConfig {
+    fn default() -> ArmConfig {
         ArmConfig {
             base_id: 1,
             shoulder_id: 2,
@@ -31,7 +31,9 @@ impl ArmConfig {
             end_effector: Vector3::new(0.0, 0.0, 0.0),
         }
     }
+}
 
+impl ArmConfig {
     pub fn get_ids(&self) -> [u8; 5] {
         [
             self.base_id,
@@ -72,12 +74,12 @@ impl ArmConfig {
     }
 
     pub fn save_json(&self, path: &str) -> Result<()> {
-        fs::write(path, &self.serialize_to_json()?)?;
+        fs::write(path, self.serialize_to_json()?)?;
         Ok(())
     }
 
     pub fn save_yaml(&self, path: &str) -> Result<()> {
-        fs::write(path, &self.serialize_to_yaml()?)?;
+        fs::write(path, self.serialize_to_yaml()?)?;
         Ok(())
     }
 

@@ -101,7 +101,7 @@ impl ArmControlSettings {
 
     pub fn save_json(&self, path: &str) -> Result<()> {
         let json = serde_json::to_string_pretty(self)?;
-        fs::write(path, &json)?;
+        fs::write(path, json)?;
         Ok(())
     }
 
