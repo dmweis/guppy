@@ -1,5 +1,5 @@
 use anyhow::Result;
-use clap::Clap;
+use clap::Parser;
 use guppy_grpc::grpc_controller::{
     connect_to_arm, GuppyConfigHandler, GuppyConfigureServer, GuppyControllerHandler,
     GuppyControllerServer,
@@ -7,9 +7,11 @@ use guppy_grpc::grpc_controller::{
 use std::sync::Arc;
 use tonic::transport::Server;
 
-#[derive(Clap)]
+#[derive(Parser)]
+#[command(author, version)]
 struct Args {
-    #[clap(about = "Serial port to use")]
+    /// Serial port to use
+    #[arg()]
     port: String,
 }
 
