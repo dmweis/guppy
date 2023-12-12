@@ -1,0 +1,14 @@
+readonly udev_path="/etc/udev/rules.d/40-guppy.rules"
+
+echo "writing udev rules to $udev_path"
+
+cat <<EOT | sudo tee $udev_path > /dev/null
+
+
+# CH340
+KERNEL=="ttyUSB*", ATTRS{idVendor}=="1a86", ATTRS{idProduct}=="7523", MODE:="0777", SYMLINK+="guppy"
+
+EOT
+
+sudo udevadm control --reload-rules && udevadm trigger
+echo "Done"
