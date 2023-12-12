@@ -139,10 +139,12 @@ impl MotionController {
 
     pub async fn home(&mut self) -> Result<()> {
         let lifted_home = JointPositions::new(0.0, -80.0, 82.0, 15.0);
+        let homing_move_duration = Duration::from_secs(3);
         self.arm_controller
-            .move_joints_timed(lifted_home, Duration::from_millis(900))
+            .move_joints_timed(lifted_home, homing_move_duration)
             .await?;
-        sleep(Duration::from_millis(900)).await;
+        // give 1 extra second after motion is finished
+        sleep(homing_move_duration + Duration::from_secs(1)).await;
         let relaxed_arm_settings = ArmControlSettings {
             shoulder: Some(ServoControlSettings {
                 angular_holding_stiffness: Some(-40),
@@ -167,7 +169,15 @@ impl MotionController {
         self.arm_controller
             .set_color(lss_driver::LedColor::Red)
             .await?;
-        sleep(Duration::from_secs(4)).await;
+
+        // slowly lower
+        let lowering_duration = Duration::from_secs(2);
+        let final_home = JointPositions::new(0.0, -89.0, 89.0, 15.0);
+        self.arm_controller
+            .move_joints_timed(final_home, lowering_duration)
+            .await?;
+        sleep(lowering_duration).await;
+
         self.arm_controller
             .set_color(lss_driver::LedColor::Off)
             .await?;
