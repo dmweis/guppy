@@ -1,0 +1,17 @@
+[Unit]
+Description=guppy
+After=network-online.target nss-lookup.target
+Wants=network-online.target
+
+[Service]
+User=guppy
+DynamicUser=yes
+StateDirectory=guppy
+CacheDirectory=guppy
+Type=simple
+Restart=on-failure
+RestartSec=5s
+ExecStart=/usr/bin/guppy_zenoh --config /etc/guppy/settings
+
+[Install]
+WantedBy=default.target
