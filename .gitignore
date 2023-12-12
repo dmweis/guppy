@@ -1,2 +1,7 @@
 /target
 .vscode
+
+# Local dev sample cache
+dev_settings.yaml
+
+docker_out/
