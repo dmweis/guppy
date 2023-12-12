@@ -17,7 +17,7 @@ pub enum IkError {
     DriverError(#[from] arm_driver::DriverError),
 }
 
-type Result<T> = std::result::Result<T, IkError>;
+pub type Result<T> = std::result::Result<T, IkError>;
 
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct EndEffectorPose {

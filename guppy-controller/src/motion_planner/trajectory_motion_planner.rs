@@ -174,6 +174,32 @@ impl MotionController {
         self.arm_controller.limp().await?;
         Ok(())
     }
+
+    pub async fn set_color(&mut self, color: lss_driver::LedColor) -> Result<()> {
+        self.arm_controller.set_color(color).await?;
+        Ok(())
+    }
+
+    /// 0.0 is fully open
+    /// 1.0 is fully closed
+    pub async fn move_gripper(&mut self, closed: f32) -> Result<()> {
+        self.arm_controller.move_gripper(closed).await?;
+        Ok(())
+    }
+
+    pub async fn halt(&mut self) -> Result<()> {
+        self.arm_controller.halt().await?;
+        Ok(())
+    }
+
+    pub async fn limp(&mut self) -> Result<()> {
+        self.arm_controller.limp().await?;
+        Ok(())
+    }
+
+    pub async fn check_motors_okay(&mut self) -> Result<bool> {
+        Ok(self.arm_controller.check_motors_okay().await?)
+    }
 }
 
 #[cfg(test)]
