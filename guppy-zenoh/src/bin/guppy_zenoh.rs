@@ -1,5 +1,3 @@
-use std::time::Duration;
-
 use anyhow::Result;
 use clap::Parser;
 use guppy_controller::{
@@ -9,7 +7,15 @@ use guppy_controller::{
     collision_handler::CollisionHandler,
     motion_planner::MotionController,
 };
+use guppy_zenoh::logging;
 use nalgebra as na;
+use std::{
+    sync::{
+        atomic::{AtomicBool, Ordering},
+        Arc,
+    },
+    time::Duration,
+};
 use tokio::time::sleep;
 
 #[derive(Parser)]
@@ -18,11 +24,17 @@ struct Args {
     /// Serial port to use
     #[arg()]
     port: String,
+
+    /// Sets the level of verbosity
+    #[arg(short, long, action = clap::ArgAction::Count)]
+    verbose: u8,
 }
 
 #[tokio::main]
 async fn main() -> Result<()> {
     let args = Args::parse();
+    logging::setup_tracing(args.verbose);
+
     let config = ArmConfig::included();
     let driver = SerialArmDriver::new(
         &args.port,
@@ -32,7 +44,7 @@ async fn main() -> Result<()> {
     .await?;
     let mut controller = LssArmController::new(driver, config.clone());
     let okay = controller.check_motors_okay().await?;
-    println!("Motors okay: {}", okay);
+    tracing::info!("Motors okay: {}", okay);
     controller.set_color(lss_driver::LedColor::Magenta).await?;
 
     let collision_handler = CollisionHandler::new(config);
@@ -40,7 +52,20 @@ async fn main() -> Result<()> {
     let mut motion_controller =
         MotionController::new(controller, collision_handler, 0.15, 10.0).await?;
 
-    loop {
+    let keep_running = Arc::new(AtomicBool::new(true));
+
+    tokio::spawn({
+        let keep_running = keep_running.clone();
+        async move {
+            tokio::signal::ctrl_c()
+                .await
+                .expect("Failed to wait for Ctrl+c");
+            tracing::info!("Detected Ctrl+c");
+            keep_running.store(false, Ordering::Relaxed);
+        }
+    });
+
+    while keep_running.load(Ordering::Relaxed) {
         motion_controller
             .move_to_blocking(EndEffectorPose::new(
                 na::Vector3::new(0.18, 0.06, 0.22),
@@ -48,6 +73,11 @@ async fn main() -> Result<()> {
             ))
             .await?;
         motion_controller.open_gripper().await?;
+
+        if !keep_running.load(Ordering::Relaxed) {
+            continue;
+        }
+
         sleep(Duration::from_secs(4)).await;
 
         motion_controller
@@ -57,10 +87,16 @@ async fn main() -> Result<()> {
             ))
             .await?;
         motion_controller.close_gripper().await?;
+
+        if !keep_running.load(Ordering::Relaxed) {
+            continue;
+        }
+
         sleep(Duration::from_secs(4)).await;
     }
 
-    // motion_controller.home().await?;
+    tracing::info!("Moving to home");
+    motion_controller.home().await?;
 
     // motion_controller.open_gripper().await?;
 
