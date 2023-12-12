@@ -4,6 +4,7 @@ resolver = "2"
 
 members = [
     "guppy-controller",
-    # "guppy-ui",
+    "guppy-ui",
     "guppy-grpc",
+    "guppy-zenoh",
 ]
