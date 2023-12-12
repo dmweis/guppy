@@ -43,10 +43,11 @@ build-docker:
 
 .PHONY: push-docker
 push-docker: build-docker
-	rsync -avz --delete docker_out/* $(TARGET_HOST_USER):/home/$(TARGET_USERNAME)/guppy
-	rsync -avz --delete scripts/add_udev_rules $(TARGET_HOST_USER):/home/$(TARGET_USERNAME)/guppy_add_udev_rules
+	rsync -avz --delete docker_out/* $(TARGET_HOST_USER):/home/$(TARGET_USERNAME)/guppy/
+	rsync -avz --delete scripts/add_udev_rules $(TARGET_HOST_USER):/home/$(TARGET_USERNAME)/guppy/guppy_add_udev_rules
 
 .PHONY: deploy-docker
 deploy-docker: push-docker
 	@echo "Installing guppy on $(TARGET_HOST)"
 	mosquitto_pub -h homepi -t "guppy/build" -n
+	mosquitto_pub -h homepi -t 'home_speak/say/eleven/voice/Natasha' -m "Guppy deployed"

@@ -12,9 +12,7 @@ RUN apt-get update && apt-get install -y lld \
     unzip \
     wget \
     librust-libudev-sys-dev \
-    libasound2-dev \
     libssl-dev \
-    libv4l-dev \
     libclang-dev
 
 # install protoc
@@ -49,13 +47,13 @@ COPY . .
 # Build
 RUN cargo build \
     --release \
-    --bin guppy_cli
+    --bin guppy_zenoh
 
-RUN cargo deb --no-build --fast -p guppy-controller
+RUN cargo deb --no-build --fast -p guppy-zenoh
 
 # Copy to exporter
 FROM scratch AS export
-COPY --from=builder /app/target/release/guppy_cli /
+COPY --from=builder /app/target/release/guppy_zenoh /
 # COPY --from=builder /app/target/debian/guppy-rust*.deb /
 # COPY --from=builder /app/target/debian/guppy-rust*.deb /guppy-rust.deb
 # COPY --from=builder /app/target/release/guppy /
