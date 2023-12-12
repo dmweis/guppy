@@ -1,0 +1,20 @@
+[package]
+name = "guppy-zenoh"
+version = "0.1.0"
+authors = ["David Michael Weis <dweis7@gmail.com>"]
+edition = "2021"
+
+[[bin]]
+name = "guppy_zenoh"
+
+[dependencies]
+lss_driver = "0.8.4"
+guppy-controller = { path = "../guppy-controller" }
+tokio = { version = "1.34", features = ["macros", "time", "rt-multi-thread"] }
+clap = {version = "4", features = ["derive"]}
+
+nalgebra = {version = "0.32.3", features = ["serde-serialize"]}
+ctrlc = "3.1"
+anyhow = "^1.0"
+
+
