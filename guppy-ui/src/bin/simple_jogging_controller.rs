@@ -1,5 +1,5 @@
 use anyhow::Result;
-use clap::Clap;
+use clap::Parser;
 use guppy_controller::arm_controller;
 use guppy_controller::arm_controller::ArmController;
 use guppy_controller::arm_driver::{self, ArmDriver, LedColor};
@@ -11,11 +11,11 @@ use std::sync::Arc;
 use std::time::Duration;
 use tokio::time::sleep;
 
-#[derive(Clap)]
-#[clap()]
-
+#[derive(Parser)]
+#[command(author, version)]
 struct Args {
-    #[clap(about = "Serial port to use")]
+    /// Serial port to use
+    #[arg()]
     port: String,
 }
 

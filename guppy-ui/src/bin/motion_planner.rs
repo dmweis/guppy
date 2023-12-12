@@ -1,11 +1,11 @@
 use anyhow::Result;
-use clap::Clap;
+use clap::Parser;
 use guppy_controller::arm_controller;
 use guppy_controller::arm_driver::{self, ArmDriver, LedColor};
 use guppy_controller::collision_handler;
 use guppy_controller::{arm_config, motion_planner::MotionController};
 use guppy_ui::{arm_controller::EndEffectorPose, arm_driver::ArmControlSettings};
-use nalgebra as na;
+use nalgebra_new as na;
 use std::{
     sync::{
         atomic::{AtomicBool, Ordering},
@@ -15,9 +15,10 @@ use std::{
 };
 use tokio::time::sleep;
 
-#[derive(Clap)]
+#[derive(Parser)]
 struct Args {
-    #[clap(about = "Serial port to use")]
+    /// Serial port to use
+    #[arg()]
     port: String,
 }
 

@@ -5,6 +5,9 @@ use kiss3d::{
     window::Window,
 };
 use nalgebra::{Isometry3, Point2, Point3, Translation3, UnitQuaternion, Vector3};
+
+use nalgebra_new as na_new;
+
 use std::{
     sync::{
         atomic::{AtomicBool, Ordering},
@@ -12,6 +15,8 @@ use std::{
     },
     time::Instant,
 };
+
+use crate::new_vec_to_old;
 
 fn add_ground_plane(window: &mut Window) {
     let size = 0.5;
@@ -96,8 +101,10 @@ impl VisualizerInterface {
     }
 
     pub fn sensible_default() -> Self {
-        let desired_state =
-            DesiredState::new(EndEffectorPose::new(Vector3::new(0.2, 0., 0.2), 0.0), false);
+        let desired_state = DesiredState::new(
+            EndEffectorPose::new(na_new::Vector3::new(0.2, 0., 0.2), 0.0),
+            false,
+        );
         Self::new(desired_state)
     }
 
@@ -188,26 +195,26 @@ impl ArmRenderer {
     }
 
     fn step(&mut self, window: &mut Window, arm_pose: &ArmPositions) {
-        let base = convert_coordinates(arm_pose.base);
+        let base = convert_coordinates(new_vec_to_old(arm_pose.base));
         self.base_sphere
             .set_local_translation(Translation3::new(base.x, base.y, base.z));
 
-        let shoulder = convert_coordinates(arm_pose.shoulder);
+        let shoulder = convert_coordinates(new_vec_to_old(arm_pose.shoulder));
         window.draw_line(&base, &shoulder, &self.color);
         self.shoulder_sphere
             .set_local_translation(Translation3::new(shoulder.x, shoulder.y, shoulder.z));
 
-        let elbow = convert_coordinates(arm_pose.elbow);
+        let elbow = convert_coordinates(new_vec_to_old(arm_pose.elbow));
         window.draw_line(&shoulder, &elbow, &self.color);
         self.elbow_sphere
             .set_local_translation(Translation3::new(elbow.x, elbow.y, elbow.z));
 
-        let wrist = convert_coordinates(arm_pose.wrist);
+        let wrist = convert_coordinates(new_vec_to_old(arm_pose.wrist));
         window.draw_line(&elbow, &wrist, &self.color);
         self.wrist_sphere
             .set_local_translation(Translation3::new(wrist.x, wrist.y, wrist.z));
 
-        let end_effector = convert_coordinates(arm_pose.end_effector);
+        let end_effector = convert_coordinates(new_vec_to_old(arm_pose.end_effector));
         self.end_effector_sphere
             .set_local_translation(Translation3::new(
                 end_effector.x,

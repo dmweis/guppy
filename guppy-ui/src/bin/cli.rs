@@ -1,27 +1,26 @@
 use anyhow::Result;
 use async_std::io;
-use clap::Clap;
+use clap::{Parser, Subcommand};
 use guppy_controller::arm_controller;
 use guppy_controller::arm_controller::ArmController;
 use guppy_controller::arm_driver::{self, ArmDriver, LedColor};
 use guppy_controller::collision_handler;
 use guppy_controller::{arm_config, motion_planner::MotionController};
 use guppy_ui::{arm_driver::ArmControlSettings, visualizer::VisualizerInterface};
-use nalgebra as na;
+use nalgebra_new as na;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::time::sleep;
 
-#[derive(Clap)]
-#[clap()]
+#[derive(Parser)]
 struct Args {
-    #[clap(subcommand)]
-    command: SubCommand,
+    #[command(subcommand)]
+    command: Commands,
 }
 
-#[derive(Clap)]
-enum SubCommand {
+#[derive(Subcommand)]
+enum Commands {
     DisplayPositions(GenericArgs),
     Ik(GenericArgs),
     Move(GenericArgs),
@@ -29,9 +28,10 @@ enum SubCommand {
     Viz,
 }
 
-#[derive(Clap)]
+#[derive(Parser)]
 struct GenericArgs {
-    #[clap(about = "Serial port to use")]
+    /// Serial port to use
+    #[arg()]
     port: String,
 }
 
@@ -39,19 +39,19 @@ struct GenericArgs {
 async fn main() -> Result<()> {
     let args: Args = Args::parse();
     match args.command {
-        SubCommand::DisplayPositions(args) => {
+        Commands::DisplayPositions(args) => {
             display_positions(args).await?;
         }
-        SubCommand::Ik(args) => {
+        Commands::Ik(args) => {
             ik_run(args).await?;
         }
-        SubCommand::TeachPendent(args) => {
+        Commands::TeachPendent(args) => {
             teach_pendent(args).await?;
         }
-        SubCommand::Move(args) => {
+        Commands::Move(args) => {
             move_run(args).await?;
         }
-        SubCommand::Viz => test_visualizer().await?,
+        Commands::Viz => test_visualizer().await?,
     }
     Ok(())
 }

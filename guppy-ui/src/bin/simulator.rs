@@ -3,7 +3,7 @@ use guppy_controller::arm_config;
 use guppy_controller::arm_controller::{EndEffectorPose, KinematicSolver};
 use guppy_controller::motion_planner::LinearMotion;
 use guppy_ui::visualizer::VisualizerInterface;
-use nalgebra as na;
+use nalgebra_new as na;
 use std::sync::{
     atomic::{AtomicBool, Ordering},
     Arc,
