@@ -11,7 +11,7 @@ CacheDirectory=guppy
 Type=simple
 Restart=on-failure
 RestartSec=5s
-ExecStart=/usr/bin/guppy_zenoh --config /etc/guppy/settings
+ExecStart=/usr/bin/guppy_zenoh --port /dev/guppy
 
 [Install]
 WantedBy=default.target

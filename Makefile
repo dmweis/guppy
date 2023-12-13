@@ -45,6 +45,7 @@ build-docker:
 push-docker: build-docker
 	rsync -avz --delete docker_out/* $(TARGET_HOST_USER):/home/$(TARGET_USERNAME)/guppy/
 	rsync -avz --delete scripts/add_udev_rules $(TARGET_HOST_USER):/home/$(TARGET_USERNAME)/guppy/guppy_add_udev_rules
+	rsync -avz --delete scripts/install_wait_loop $(TARGET_HOST_USER):/home/$(TARGET_USERNAME)/guppy/install_wait_loop
 
 .PHONY: deploy-docker
 deploy-docker: push-docker

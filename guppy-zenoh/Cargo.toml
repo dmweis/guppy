@@ -1,8 +1,26 @@
 [package]
 name = "guppy-zenoh"
+description = "Guppy zenoh controller"
 version = "0.1.0"
 authors = ["David Michael Weis <dweis7@gmail.com>"]
 edition = "2021"
+license = "MIT OR APACHE"
+publish = false
+readme = "README.md"
+repository = "https://github.com/dmweis/guppy"
+
+[package.metadata.deb]
+assets = [
+  [
+    "target/release/guppy_zenoh",
+    "/usr/bin/",
+    "755",
+  ],
+]
+maintainer = "David Weis <dweis7@gmail.com>"
+maintainer-scripts = "debian/"
+
+[package.metadata.deb.systemd-units]
 
 [[bin]]
 name = "guppy_zenoh"

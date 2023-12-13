@@ -45,15 +45,11 @@ RUN cargo chef cook --release --recipe-path recipe.json
 COPY . .
 
 # Build
-RUN cargo build \
-    --release \
-    --bin guppy_zenoh
-
+RUN cargo build --release --bin guppy_zenoh
 RUN cargo deb --no-build --fast -p guppy-zenoh
 
 # Copy to exporter
 FROM scratch AS export
 COPY --from=builder /app/target/release/guppy_zenoh /
-# COPY --from=builder /app/target/debian/guppy-rust*.deb /
-# COPY --from=builder /app/target/debian/guppy-rust*.deb /guppy-rust.deb
-# COPY --from=builder /app/target/release/guppy /
+COPY --from=builder /app/target/debian/guppy-zenoh*.deb /
+COPY --from=builder /app/target/debian/guppy-zenoh*.deb /guppy-zenoh.deb

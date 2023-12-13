@@ -1,0 +1,12 @@
+#!/bin/bash
+set -euo pipefail
+
+trap "exit" INT
+while true
+do
+    echo "Waiting for mqtt message"
+    mosquitto_sub -h homepi -t "guppy/build" -C 1
+    echo "Installing guppy"
+    sudo dpkg --force-confold -i guppy-zenoh.deb
+    echo "Installed new guppy version"
+done
