@@ -276,6 +276,8 @@ impl ArmDriver for SerialArmDriver {
                     .set_maximum_speed(motor_id, maximum_speed_degrees as f32)
                     .await?;
             }
+            // reset offsets
+            driver.set_origin_offset(motor_id, 0.0).await?;
             Ok(())
         }
         if let Some(base_settings) = &settings.base {
@@ -534,6 +536,8 @@ impl ArmDriver for SharedSerialArmDriver {
                     .set_maximum_speed(motor_id, maximum_speed_degrees as f32)
                     .await?;
             }
+            // reset offsets
+            driver.set_origin_offset(motor_id, 0.0).await?;
             Ok(())
         }
         let mut driver = self.driver.lock().await;
