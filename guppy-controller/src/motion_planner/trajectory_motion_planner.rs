@@ -71,6 +71,15 @@ impl MotionController {
         Ok(())
     }
 
+    pub async fn update_last_known_pose(&mut self) -> Result<()> {
+        self.last_pose = self
+            .arm_controller
+            .read_position()
+            .await?
+            .get_end_effector_pose();
+        Ok(())
+    }
+
     pub async fn move_to(&mut self, target: EndEffectorPose) -> Result<()> {
         let duration = estimate_time(
             &self.last_pose,
@@ -172,7 +181,7 @@ impl MotionController {
 
         // slowly lower
         let lowering_duration = Duration::from_secs(2);
-        let final_home = JointPositions::new(0.0, -89.0, 89.0, 15.0);
+        let final_home = JointPositions::new(0.0, -90.0, 90.0, 15.0);
         self.arm_controller
             .move_joints_timed(final_home, lowering_duration)
             .await?;
@@ -182,6 +191,10 @@ impl MotionController {
             .set_color(lss_driver::LedColor::Off)
             .await?;
         self.arm_controller.limp().await?;
+
+        // remember to update pose
+        self.update_last_known_pose().await?;
+
         Ok(())
     }
 
